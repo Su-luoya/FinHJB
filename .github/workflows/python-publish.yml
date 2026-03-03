@@ -1,0 +1,60 @@
+# 你的原始注释...
+name: Upload Python Package
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  release-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # 【修改部分 1】: 替换 setup-python，改用 setup-uv
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      # 【修改部分 2】: 让 uv 安装并设置 Python 环境
+      - name: Set up Python
+        run: uv python install
+
+      # 【修改部分 3】: 使用 uv build 替代 python -m build
+      - name: Build release distributions
+        run: uv build
+
+      - name: Upload distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-dists
+          path: dist/
+
+  pypi-publish:
+    runs-on: ubuntu-latest
+    needs:
+      - release-build
+    permissions:
+      id-token: write  # 用于免密发布的核心权限
+
+    environment:
+      name: pypi
+      # 建议取消下一行的注释，并将 YOURPROJECT 替换为 finhjb
+      # url: https://pypi.org/p/finhjb
+
+    steps:
+      - name: Retrieve release distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: release-dists
+          path: dist/
+
+      - name: Publish release distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
