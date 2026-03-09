@@ -1,4 +1,3 @@
-from finhjb.algorithm import SensitivityResult
 from finhjb.config import Config
 from finhjb.interface import (
     AbstractBoundary,
@@ -39,5 +38,4 @@ __all__ = [
     "load_sensitivity_result",
     "load_grid",
     "load_grids",
-    "SensitivityResult",
 ]
