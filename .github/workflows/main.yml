@@ -1,0 +1,47 @@
+name: Test Installation
+
+# 触发条件：当你推送到 main 分支，或者提交 PR 时触发
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    name: Install on ${{ matrix.os }} with Python ${{ matrix.python-version }}
+    # 使用矩阵策略，组合不同的操作系统和 Python 版本
+    strategy:
+      fail-fast: false # 如果 Windows 失败了，不要取消 Linux 的测试
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      # 1. 拉取你的项目代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. 安装并配置 uv
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true # 开启缓存，加速后续运行
+
+      # 3. 设置 Python 环境
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      # 4. 创建虚拟环境并安装你的包 (finhjb)
+      - name: Install package
+        run: |
+          uv venv
+          # 根据不同系统激活虚拟环境并安装（跨平台写法）
+          uv pip install -e .
+          
+      # 5. (可选) 验证能否成功导入核心库
+      - name: Verify Import
+        run: |
+          uv run python -c "import finhjb; print('Successfully imported finhjb!')"
