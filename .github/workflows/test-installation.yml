@@ -15,7 +15,7 @@ jobs:
       fail-fast: false # 如果 Windows 失败了，不要取消 Linux 的测试
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.12", "3.13", "3.14"]
+        python-version: ["3.11","3.12", "3.13", "3.14"]
 
     runs-on: ${{ matrix.os }}
 

@@ -1,22 +1,42 @@
 from pathlib import Path
+from typing import TypeVar
 
 import cloudpickle as pickle
 
 from finhjb.algorithm.continuation import SensitivityResult
 from finhjb.structure._grid import Grid, Grids
 
+Loadable = SensitivityResult | Grid | Grids
+TLoadable = TypeVar("TLoadable", SensitivityResult, Grid, Grids)
 
-def load(file_path: str | Path) -> SensitivityResult | Grid | Grids:
-    file_path = Path(file_path).with_suffix(".pkl")
-    with open(file_path, "rb") as f:
-        data = pickle.load(f)
-    if isinstance(data, SensitivityResult):
+
+def _load_pickle(file_path: str | Path) -> object:
+    path = Path(file_path).with_suffix(".pkl")
+    with open(path, "rb") as f:
+        return pickle.load(f)
+
+
+def _validate_type(data: object, expected_type: type[TLoadable]) -> TLoadable:
+    if isinstance(data, expected_type):
         return data
-    elif isinstance(data, Grid):
-        return data
-    elif isinstance(data, Grids):
-        return data
-    else:
-        raise ValueError(
-            f"This function is designed to load either a `ContinuationResult`, a `Grid`, or a `Grids` object, but the loaded data is of type {type(data)}."
-        )
+    raise TypeError(
+        f"Expected {expected_type.__name__}, but loaded object has type {type(data).__name__}."
+    )
+
+
+def load_sensitivity_result(file_path: str | Path) -> SensitivityResult:
+    """Load a ``SensitivityResult`` object from ``.pkl``."""
+    data = _load_pickle(file_path)
+    return _validate_type(data, SensitivityResult)
+
+
+def load_grid(file_path: str | Path) -> Grid:
+    """Load a ``Grid`` object from ``.pkl``."""
+    data = _load_pickle(file_path)
+    return _validate_type(data, Grid)
+
+
+def load_grids(file_path: str | Path) -> Grids:
+    """Load a ``Grids`` object from ``.pkl``."""
+    data = _load_pickle(file_path)
+    return _validate_type(data, Grids)

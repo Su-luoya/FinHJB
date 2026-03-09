@@ -1,3 +1,4 @@
+from finhjb.algorithm import SensitivityResult
 from finhjb.config import Config
 from finhjb.interface import (
     AbstractBoundary,
@@ -11,8 +12,10 @@ from finhjb.interface import (
     QuadraticInitialValue,
     explicit_policy,
     implicit_policy,
+    load_grid,
+    load_grids,
+    load_sensitivity_result,
 )
-from finhjb.interface.load import load
 from finhjb.orchestration import Solver
 from finhjb.structure import Grid, Grids, ImmutableBoundary
 
@@ -33,5 +36,8 @@ __all__ = [
     "Grid",
     "Grids",
     "ImmutableBoundary",
-    "load",
+    "load_sensitivity_result",
+    "load_grid",
+    "load_grids",
+    "SensitivityResult",
 ]
