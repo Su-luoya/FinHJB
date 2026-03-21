@@ -1,3 +1,24 @@
+"""BCW2011 Case II extension: Dynamic hedging with margin requirements.
+
+本文件基于 BCW (2011) 的 Dynamic Hedging 章节，展示在融资摩擦下，
+投资、现金管理与衍生品对冲如何联立决定。
+
+公式真源：同目录原文转录
+`src/example/A_unified_theory_of_tobin's_q,_corporate_investment,_financing,_and_risk_management.md`
+
+核心映射（公式编号 + 功能名称）：
+- Eq.(27) frictionless hedge ratio -> `Policy.initialize` 中 `psi_frictionless`
+- Eq.(30) interior hedge FOC solution -> `Policy.cal_policy` 中 `psi_interior`
+- Eq.(29) margin-account allocation rule -> `Model.hjb_residual` 中 `kappa`
+- Eq.(28) hedging HJB with covariance term -> `Model.hjb_residual`
+- Eq.(26) cash dynamics with margin cost term -> `cash_flow_drift`
+
+三分区（BCW Section IV.B）在代码中的实现：
+- low-cash maximum-hedging region (w <= w_-): `psi=-pi` (via clipping)
+- interior region (w_- < w < w_+): use Eq.(30)
+- high-cash zero-hedging region (w >= w_+): `psi=0` (via cost-benefit test)
+"""
+
 from dataclasses import dataclass
 
 import jax
@@ -10,27 +31,31 @@ import finhjb as fjb
 
 
 class Parameter(fjb.AbstractParameter):
-    r: float = 0.06  # Risk-free rate
-    delta: float = 0.1007  # Rate of depreciation
-    mu: float = 0.18  # Risk-neutral mean productivity shock
-    sigma: float = 0.09  # Volatility of productivity shock
-    theta: float = 1.5  # Adjustment cost parameter
-    lambda_: float = 0.01  # Proportional cash-carrying cost
-    l: float = 0.9  # Capital liquidation value  # noqa: E741
-    phi: float = 0.01  # Fixed financing cost
-    gamma: float = 0.06  # Proportional financing cost
+    # --- Baseline (Table I) ---
+    r: float = 0.06  # risk-free rate
+    delta: float = 0.1007  # depreciation rate
+    mu: float = 0.18  # risk-neutral mean productivity shock
+    sigma: float = 0.09  # productivity volatility
+    theta: float = 1.5  # adjustment-cost coefficient in g(i)=theta*i^2/2
+    lambda_: float = 0.01  # proportional cash-carrying cost
+    l: float = 0.9  # liquidation value ratio  # noqa: E741
+    phi: float = 0.01  # fixed external financing cost
+    gamma: float = 0.06  # proportional external financing cost
 
-    # rho (ρ): Correlation between the firm's productivity shock and the market return.
+    # --- Hedging extension (Section IV, Table I) ---
+    # rho (ρ): corr(productivity shock, market return)
     rho: float = 0.8
-    # sigma_m (σm): Volatility of the aggregate market portfolio (futures price).
+    # sigma_m (σ_m): volatility of market index futures
     sigma_m: float = 0.20
-    # pi (π): A constant multiple defining the margin requirement. The hedge position cannot exceed π times the cash in the margin account.
+    # pi (π): margin multiplier, i.e. |psi| <= pi * kappa
     pi: float = 5.0
-    # epsilon (ε): The additional flow cost per unit of cash held in the margin account.
+    # epsilon (ε): extra flow cost per unit of cash held in margin account
     epsilon: float = 0.005
 
 
 class PolicyDict(fjb.AbstractPolicyDict):
+    """Policy variables for the hedging case."""
+
     investment: Array
     psi: Array
 
@@ -39,21 +64,17 @@ class PolicyDict(fjb.AbstractPolicyDict):
 class Boundary(fjb.AbstractBoundary[Parameter]):
     @staticmethod
     def compute_v_left(p: Parameter) -> float:
+        # Left value boundary inherited from liquidation/refinancing setup.
         return p.l
 
     @staticmethod
     def compute_v_right(p: Parameter, s_max: float) -> float:
-        # Since the calculation of v_right depends on s_max, we ensure s_max is provided
-
-        # This term corresponds to the discriminant of the quadratic equation for p(w_bar) derived from the HJB equation.
-        # It gathers all the model parameters (r, delta, mu, theta, lambda) evaluated at the boundary s_max.
+        # Right boundary value from the asymptotic payout-side closed form.
         sqrt_term_val = (p.r + p.delta + (s_max + 1) / p.theta) ** 2 - (2 / p.theta) * (
             p.mu
             + (p.r + p.delta - p.lambda_) * s_max
             + (s_max + 1) ** 2 / (2 * p.theta)
         )
-        # Solves the quadratic equation for p(w_bar), which is denoted here as v_right.
-        # The negative sign before the square root is chosen to select the economically relevant root for the firm value.
         v_right = p.theta * (
             (p.r + p.delta + (s_max + 1) / p.theta) - (sqrt_term_val) ** 0.5
         )
@@ -64,14 +85,15 @@ class Boundary(fjb.AbstractBoundary[Parameter]):
 class Policy(fjb.AbstractPolicy):
     @staticmethod
     def initialize(grid: fjb.Grid, p: Parameter) -> PolicyDict:
-        # The optimal investment rate in the frictionless case (without financing frictions), from Equation (7).
+        # Eq.(7) / first-best investment in neoclassical benchmark.
         inv_first_best = (
             p.r
             + p.delta
             - ((p.r + p.delta) ** 2 - 2 * (p.mu - (p.r + p.delta)) / p.theta) ** 0.5
         )
-        # Initialize the hedge ratio with the optimal frictionless hedge ratio from Equation (27).
-        # In the frictionless case (no margin costs/requirements), the optimal hedge is constant.
+        # Eq.(27) / frictionless hedge ratio (functionally mapped as initial guess):
+        # psi*(w) = -(rho*sigma)/(w*sigma_m). Because our `psi` here is normalized by `s`,
+        # we initialize with a constant benchmark -rho*sigma/sigma_m.
         psi_frictionless = -p.rho * p.sigma / p.sigma_m
         return PolicyDict(
             investment=jnp.full_like(grid.s, inv_first_best),
@@ -86,11 +108,13 @@ class Policy(fjb.AbstractPolicy):
         dv = grid.dv
         s = grid.s
         d2v = grid.d2v
+
+        # Eq.(14) / investment rule under financing frictions.
         new_investment = (1 / p.theta) * (v / dv - s - 1)
 
-        # Calculate the optimal hedge ratio for the interior region, as defined in Equation (30).
-        # This balances the risk-reduction benefits of hedging against the costs from margin requirements (ε).
-        # 's' is the cash-capital ratio w, 'dv' is p'(w), and 'd2v' is p''(w).
+        # Eq.(30) / interior hedge FOC solution:
+        # psi*(w)=1/w * (-(rho*sigma)/sigma_m - (epsilon/pi)*(p'(w)/p''(w))/sigma_m^2)
+        # 代码映射：s -> w, dv -> p'(w), d2v -> p''(w)。
         psi_interior = (
             1
             / s
@@ -100,22 +124,20 @@ class Policy(fjb.AbstractPolicy):
             )
         )
 
-        # Apply the maximum-hedging boundary (w-). When cash is very low, the firm hedges at the maximum allowed level, ψ = -π.
-        # This clips the hedge ratio at -π, ensuring it doesn't exceed the constraint.
+        # w_- (maximum-hedging boundary): in low-cash states the margin constraint binds,
+        # hence psi is truncated at -pi.
         psi_clipped = jnp.maximum(psi_interior, -p.pi)
 
-        # This logic determines the zero-hedging boundary (w+).
-        # 'marginal_benefit' represents the absolute benefit of hedging from risk reduction (the frictionless component).
+        # w_+ (zero-hedging boundary): when marginal hedging benefit is below marginal cost,
+        # the firm sets psi=0.
         marginal_benefit = p.rho * p.sigma / p.sigma_m
-        # 'marginal_cost' represents the absolute marginal cost of hedging due to margin requirements.
-        # Note: The variable naming might be counter-intuitive; this term captures the cost.
         marginal_cost = jnp.abs((p.epsilon * dv) / (p.pi * d2v * p.sigma_m**2))
-        # The firm should hedge only if the benefit outweighs the cost.
         should_hedge = marginal_cost < marginal_benefit
 
-        # Combine the three hedging regions:
-        # 1. If 'should_hedge' is False (cost > benefit), set hedge ratio to 0 (zero-hedging region).
-        # 2. If 'should_hedge' is True, use the clipped value, which covers both the interior solution and the maximum-hedging boundary.
+        # Three-region policy stitching:
+        # - no hedge region -> 0
+        # - interior region -> Eq.(30)
+        # - low-cash constrained region -> -pi
         new_psi = jnp.where(should_hedge, psi_clipped, 0.0)
         grid.policy["investment"] = new_investment
         grid.policy["psi"] = new_psi
@@ -138,15 +160,15 @@ class Model(fjb.AbstractModel[Parameter, PolicyDict]):
         inv = policy["investment"]
         psi = policy["psi"]
 
-        # Calculate kappa (κ), the fraction of cash held in the margin account, from Equation (29).
-        # This is the minimum required to satisfy the margin constraint |ψ| ≤ πκ.
+        # Eq.(29) / margin account allocation:
+        # kappa = min{|psi|/pi, 1}
         kappa = jnp.minimum(jnp.abs(psi) / p.pi, 1.0)
 
-        # Drift term from capital accumulation
+        # Eq.(28), PK-channel: (i-delta)*(p-wp')
         drift_K = (inv - p.delta) * (v - s * dv)
 
-        # Drift term from cash evolution.
-        # This includes the flow cost of holding cash in the margin account (-ε * κ * w), as seen in Equation (26).
+        # Eq.(26) + Eq.(28), PW-channel:
+        # cash drift includes margin flow cost term -epsilon*kappa*w.
         cash_flow_drift = (
             (p.r - p.lambda_) * s
             + p.mu
@@ -156,9 +178,8 @@ class Model(fjb.AbstractModel[Parameter, PolicyDict]):
         )
         drift_W = cash_flow_drift * dv
 
-        # The total variance term (diffusion) from the HJB Equation (28) after normalization.
-        # It includes the firm's idiosyncratic variance (σ²), the variance from hedging (ψ²σm²w²),
-        # and the covariance term.
+        # Eq.(28), PWW-channel:
+        # sigma^2 + psi^2*sigma_m^2*w^2 + 2*rho*sigma*sigma_m*psi*w
         total_variance = (
             p.sigma**2
             + (psi**2) * (p.sigma_m**2) * (s**2)
@@ -166,38 +187,36 @@ class Model(fjb.AbstractModel[Parameter, PolicyDict]):
         )
         diffusion = 0.5 * total_variance * d2v
 
-        # Discounting term from the HJB equation
         discount = -p.r * v
 
-        # The HJB residual combines all components.
-        # A correct solution should have this residual close to zero.
+        # Residual target: close to zero at convergence.
         return drift_K + drift_W + diffusion + discount
 
     @staticmethod
     def update_boundary(grid: fjb.Grid):
-        # Find the index where dv is closest to 1 + gamma
+        # Eq.(20) smooth pasting for refinancing target m: p'(m)=1+gamma.
         i = jnp.argmin(jnp.abs(grid.dv - (1 + grid.p.gamma)))
-        # Compute the corresponding m and v(m)
         m = grid.s[i]
         v_m = grid.v[i]
-        # Update v_left using the smooth-pasting condition
+        # Eq.(19) value matching at issuance boundary w=0:
+        # p(0)=p(m)-phi-(1+gamma)m.
         new_v_left = v_m - grid.p.phi - (1 + grid.p.gamma) * m
         return {"v_left": new_v_left}, new_v_left - grid.boundary.v_left
 
     @staticmethod
     def boundary_condition():
         def s_max_condition(grid) -> float:
+            # Eq.(17) super-contact at payout boundary.
             return grid.d2v[-1]
 
         def v_left_condition(grid):
-            # Find the index where dv is closest to 1 + gamma
+            # Eq.(20) -> locate m through p'(m)=1+gamma.
             i = jax.numpy.argmin(jnp.abs(grid.dv - (1 + grid.p.gamma)))
-            # Compute the corresponding m and v(m)
             m = grid.s[i]
             v_m = grid.v[i]
-            # Update v_left using the smooth-pasting condition
+            # Eq.(19) -> value-matching for left boundary.
             new_v_left = v_m - grid.p.phi - (1 + grid.p.gamma) * m
-            return new_v_left - grid.v[0]  # current left boundary value
+            return new_v_left - grid.v[0]
 
         def v_right_condition(grid) -> float:
             p = grid.p
@@ -209,7 +228,6 @@ class Model(fjb.AbstractModel[Parameter, PolicyDict]):
                 + (p.r + p.delta - p.lambda_) * s_max_val
                 + (s_max_val + 1) ** 2 / (2 * p.theta)
             )
-            # Ensure the term under the square root is non-negative
             sqrt_term_val = jnp.maximum(sqrt_term_val, 1e-12)
             pwr = p.theta * (
                 (p.r + p.delta + (s_max_val + 1) / p.theta) - (sqrt_term_val) ** 0.5
@@ -237,13 +255,15 @@ class Model(fjb.AbstractModel[Parameter, PolicyDict]):
 
 
 if __name__ == "__main__":
+    # Step 1) Set benchmark parameters for hedging case.
     parameter = Parameter()
     boundary = Boundary(
         p=parameter,
         s_min=0.0,
-        s_max=0.13,  # 0.22198886076863805
+        s_max=0.13,
     )
-    # pp(boundary)
+
+    # Step 2) Build model + solver config.
     model = Model(policy=Policy())
     config = fjb.Config(
         derivative_method="central",
@@ -271,17 +291,14 @@ if __name__ == "__main__":
         config=config,
     )
     pp(solver._grid.boundary)
-    # final_state, history_of_errors = solver.solve()
-    # pp(final_state)
-    # final_state, history_of_errors = solver.boundary_update()
 
+    # Step 3) Boundary search (bisection) to satisfy right-side contact condition.
     final_state = solver.boundary_search(method="bisection", verbose=True)
 
+    # Step 4) Inspect solved policy/value objects.
     df = final_state.df
     grid = final_state.grid
     pp(final_state)
     pp(grid)
-    # pp(history_of_errors)
     pp(grid.d2v[-1])
     plt.plot(grid.s, grid.policy["psi"], label="before")
-    # plt.plot(grid.s, grid.d2v, label="before")
