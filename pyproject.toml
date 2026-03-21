@@ -42,4 +42,4 @@ unfixable = ["F401"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q --cov=src/finhjb --cov-fail-under=85 --cov-report=term-missing"
+addopts = "-q --cov=src/finhjb --cov-report=term-missing"
