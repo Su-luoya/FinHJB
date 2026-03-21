@@ -44,8 +44,7 @@ jobs:
 
     environment:
       name: pypi
-      # 建议取消下一行的注释，并将 YOURPROJECT 替换为 finhjb
-      # url: https://pypi.org/p/finhjb
+      # url: https://pypi.org/project/finhjb/
 
     steps:
       - name: Retrieve release distributions

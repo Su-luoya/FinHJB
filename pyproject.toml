@@ -1,6 +1,6 @@
 [project]
 name = "finhjb"
-version = "0.1.3"
+version = "0.1.4"
 description = "This is a Python library for solving Hamilton-Jacobi-Bellman (HJB) equations using JAX. It provides a framework for numerical solutions to dynamic optimization problems in finance and economics."
 readme = "README.md"
 authors = [

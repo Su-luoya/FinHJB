@@ -284,3 +284,17 @@ class Grids:
     def add(self, label: float, grid: Grid) -> "Grids":
         self.data[label] = grid
         return self
+
+    def merge(self, other: "Grids") -> "Grids":
+        if self.param_name != other.param_name:
+            raise ValueError(
+                f"Cannot merge Grids with different parameter names: "
+                f"{self.param_name} vs {other.param_name}"
+            )
+        # Raise an warning if there are duplicate keys
+        if duplicate_keys := set(self.data.keys()) & set(other.data.keys()):
+            print(
+                f"Warning: Merging Grids with duplicate keys: {duplicate_keys}. "
+                f"Values from `other` will overwrite those in `self`."
+            )
+        return Grids(param_name=self.param_name, data={**self.data, **other.data})
