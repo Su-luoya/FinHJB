@@ -21,7 +21,7 @@ The package is built around typed interfaces (`AbstractModel`, `AbstractPolicy`,
 
 ## Installation
 
-This project requires Python `>=3.13`.
+This project requires Python `>=3.10`.
 
 Install from source in editable mode:
 
@@ -170,11 +170,13 @@ Main objects support pickle-based save/load:
 - `Grid.save(path)`
 - `Grids.save(path)`
 - `SensitivityResult.save(path)`
-- `fjb.load(path)`
+- `fjb.load_grid(path)`
+- `fjb.load_grids(path)`
+- `fjb.load_sensitivity_result(path)`
 
 ```python
 state.grid.save("single_grid")
-loaded = fjb.load("single_grid")
+loaded = fjb.load_grid("single_grid")
 ```
 
 ## Public API
@@ -189,7 +191,7 @@ Top-level exports include:
 - `AbstractPolicy`, `AbstractPolicyDict`
 - `explicit_policy`, `implicit_policy`
 - `LinearInitialValue`, `QuadraticInitialValue`
-- `load`
+- `load_grid`, `load_grids`, `load_sensitivity_result`
 
 ## Examples
 

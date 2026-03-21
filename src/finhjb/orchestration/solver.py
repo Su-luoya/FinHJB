@@ -60,7 +60,15 @@ class Solver(Generic[P, D]):
         )
         return final_state, history_of_errors
 
+    def _ensure_boundary_update_available(self) -> None:
+        if type(self._grid.model).update_boundary is AbstractModel.update_boundary:
+            raise NotImplementedError(
+                "`Solver.boundary_update()` requires the model class to implement "
+                "`update_boundary(grid)`."
+            )
+
     def boundary_update(self) -> tuple[BoundaryUpdateState, Array]:
+        self._ensure_boundary_update_available()
         return self.boundary_update_solver.update(grid=self._grid)
 
     def boundary_search(self, method: SearchMethods, verbose=False):

@@ -63,7 +63,16 @@ class Grid(struct.PyTreeNode, Generic[P, PolicyDictType]):
     number: int = struct.field(pytree_node=False, repr=True, default=1000)
     config: Config = struct.field(pytree_node=False, repr=False, default_factory=Config)
 
+    @staticmethod
+    def _validate_number(number: int) -> None:
+        # Second-order one-sided boundary stencils require at least 4 points.
+        if number < 4:
+            raise ValueError(
+                f"`number` must be >= 4 for stable boundary derivatives, got {number}."
+            )
+
     def reset(self) -> Self:
+        self._validate_number(self.number)
         # Update parameters with boundary information
         p = self.p.update(self.boundary)
         # Initialize grid points
@@ -149,6 +158,7 @@ class Grid(struct.PyTreeNode, Generic[P, PolicyDictType]):
         )
 
     def update_with_v_inter(self, v_inter: ArrayInter) -> Self:
+        # self._validate_number(self.number)
         v = jnp.concatenate(
             [
                 jnp.array([self.boundary.v_left]),

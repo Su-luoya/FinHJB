@@ -39,7 +39,9 @@ This file summarizes the top-level `finhjb` API exported in `src/finhjb/__init__
 
 ## IO Utility
 
-- `load(path)`
+- `load_grid(path)`
+- `load_grids(path)`
+- `load_sensitivity_result(path)`
 
 Loads one of:
 
@@ -55,6 +57,7 @@ Loads one of:
 
 `Solver.boundary_update()`:
 
+- Requires model implementation of `update_boundary(grid)`
 - Returns `(BoundaryUpdateState, history)`
 
 `Solver.boundary_search(method, verbose=False)`:
@@ -87,7 +90,7 @@ Important methods:
 `Grids`:
 
 - mapping-like container `{parameter_value -> Grid}`
-- methods: `get`, `select_grids`, `add`, `save`
+- methods: `get`, `select_grids`, `add`, `merge`, `save`
 
 `SensitivityResult`:
 

@@ -9,7 +9,7 @@ from finhjb.types import ArrayFloat, ArrayInter
 class Config(BaseModel):
     # --- Grid ---
     enable_x64: bool = True
-    derivative_method: Literal["central", "forward", "backward", "auto"] = "central"
+    derivative_method: Literal["central", "forward", "backward"] = "central"
 
     # --- Policy Iteration (PI) ---
     policy_guess: bool = False

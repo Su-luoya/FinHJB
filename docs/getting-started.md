@@ -155,5 +155,5 @@ print(state.converged, state.best_error)
 
 ```python
 state.grid.save("solution_grid")
-loaded_grid = fjb.load("solution_grid")
+loaded_grid = fjb.load_grid("solution_grid")
 ```

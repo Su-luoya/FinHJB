@@ -38,6 +38,7 @@ state, history = solver.boundary_update()
 ```
 
 Uses boundary update algorithm to iteratively adjust boundaries according to model-defined update rules.
+Your model class must implement `update_boundary(grid)`.
 
 ## Boundary Search
 
@@ -120,4 +121,6 @@ Returns `SensitivityResult`:
 - `Grid.save(path)`
 - `Grids.save(path)`
 - `SensitivityResult.save(path)`
-- `fjb.load(path)` to restore objects
+- `fjb.load_grid(path)` to restore one grid
+- `fjb.load_grids(path)` to restore multiple grids
+- `fjb.load_sensitivity_result(path)` to restore continuation output
