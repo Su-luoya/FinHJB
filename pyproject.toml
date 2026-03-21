@@ -15,7 +15,7 @@ dependencies = [
     "jaxtyping",
     "matplotlib",
     "optimistix",
-    "orbax-checkpoint<0.11",
+    "orbax-checkpoint",
     "pandas",
     "panel-print",
     "pydantic",
