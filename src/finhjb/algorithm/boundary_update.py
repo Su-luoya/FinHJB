@@ -13,17 +13,22 @@ from finhjb.structure._state import AbstractSolverState
 
 
 class BoundaryUpdateState(AbstractSolverState):
+    """State container for iterative boundary-update solves."""
+
     pass
 
 
 @dataclass
 class BoundaryUpdate(Generic[P]):
+    """Iterative boundary update algorithm with inner HJB solves."""
+
     config: Config
     policy_iteration: PolicyIteration
 
     _run_update: Callable = field(init=False, repr=False)
 
     def __post_init__(self):
+        """Compile scan runner and bind the inner policy-iteration function."""
         self._run_update = self._setup_scan_runner()
         # if self.config.policy_iteration_config.max_iter == 1:
         #     self.inner_func = self.policy_iteration.evaluation_func

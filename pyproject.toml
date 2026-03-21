@@ -30,6 +30,8 @@ build-backend = "uv_build"
 [dependency-groups]
 dev = [
     "ipykernel>=7.2.0",
+    "pytest>=8.4.2",
+    "pytest-cov>=7.0.0",
 ]
 
 [tool.ruff.lint]
@@ -37,3 +39,7 @@ dev = [
 extend-select = ["I"]
 # 2. 关键：将 F401 (未使用导入) 设为不可自动修复
 unfixable = ["F401"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --cov=src/finhjb --cov-fail-under=85 --cov-report=term-missing"

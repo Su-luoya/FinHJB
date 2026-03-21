@@ -1,5 +1,4 @@
 import re
-import unittest
 from pathlib import Path
 
 import tomllib
@@ -15,23 +14,17 @@ def _dependency_name(requirement: str) -> str:
     return match.group(1).lower()
 
 
-class DependencyGuardTests(unittest.TestCase):
-    def test_pyproject_excludes_stdlib_backfill_packages(self) -> None:
-        pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text())
-        dependencies = pyproject["project"]["dependencies"]
-        dep_names = {_dependency_name(dep) for dep in dependencies}
-        overlap = dep_names & STDLIB_BACKFILL
-        self.assertEqual(
-            overlap,
-            set(),
-            msg=f"Remove stdlib backfill packages from dependencies: {sorted(overlap)}",
-        )
-
-    def test_lockfile_excludes_stdlib_backfill_packages(self) -> None:
-        lockfile = (ROOT / "uv.lock").read_text()
-        for package in sorted(STDLIB_BACKFILL):
-            self.assertNotIn(f'name = "{package}"', lockfile)
+def test_pyproject_excludes_stdlib_backfill_packages() -> None:
+    pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text())
+    dependencies = pyproject["project"]["dependencies"]
+    dep_names = {_dependency_name(dep) for dep in dependencies}
+    overlap = dep_names & STDLIB_BACKFILL
+    assert overlap == set(), (
+        f"Remove stdlib backfill packages from dependencies: {sorted(overlap)}"
+    )
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_lockfile_excludes_stdlib_backfill_packages() -> None:
+    lockfile = (ROOT / "uv.lock").read_text()
+    for package in sorted(STDLIB_BACKFILL):
+        assert f'name = "{package}"' not in lockfile

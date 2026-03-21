@@ -45,10 +45,13 @@ class SensitivityResult:
 
 @dataclass
 class SensitivityAnalysis:
+    """Path-following continuation for one model parameter."""
+
     config: Config = field(default_factory=Config)
     method: SearchMethods = field(default="hybr", repr=True)
 
     def __post_init__(self):
+        """Instantiate reusable policy-iteration and boundary-search components."""
         self.policy_iteration = PolicyIteration(
             config=self.config,
         )
@@ -65,6 +68,7 @@ class SensitivityAnalysis:
         param_name: str,
         param_values: Array,
     ) -> SensitivityResult:
+        """Solve the model over a sequence of parameter values."""
         results: dict[str, list] = {}
         boundary_dict: dict[BoundaryName, float] = {}
         data: dict[float, Grid] = {}

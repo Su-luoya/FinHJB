@@ -14,11 +14,15 @@ from finhjb.types import Array, ArrayInter
 
 
 class EvaluationState(AbstractSolverState):
+    """State container for policy-evaluation iterations."""
+
     hjb_residuals: Array = struct.field(pytree_node=True, repr=False)
 
 
 @dataclass
 class PolicyEvaluation(Generic[P]):
+    """Newton-style policy evaluation on a fixed policy."""
+
     config: Config = field(repr=True, default_factory=Config)
 
     value_update_func: Callable = struct.field(
@@ -29,6 +33,7 @@ class PolicyEvaluation(Generic[P]):
     )
 
     def __post_init__(self) -> None:
+        """Prepare the per-iteration value update function."""
         self.value_update_func = self._create_value_update_func()
 
     def _create_value_update_func(self):

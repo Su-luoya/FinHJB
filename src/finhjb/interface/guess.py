@@ -50,6 +50,7 @@ class AbstractValueGuess(ABC, Generic[P]):
     v_right: float = field(init=False, repr=False)
 
     def __post_init__(self):
+        """Cache boundary scalars for repeated value-guess computations."""
         self.s_min, self.s_max, self.v_left, self.v_right = (
             self.boundary.get_boundaries()
         )
@@ -93,6 +94,7 @@ class LinearInitialValue(AbstractValueGuess[P]):
     """
 
     def guess_value(self, s: ArrayN) -> ArrayN:
+        """Construct a linear initial guess linking boundary value endpoints."""
         return jnp.linspace(self.v_left, self.v_right, s.size)
 
 
@@ -137,5 +139,6 @@ class QuadraticInitialValue(AbstractValueGuess[P]):
         self.c = self.v_left - self.a * self.s_min**2 - self.b * self.s_min
 
     def guess_value(self, s: ArrayN) -> ArrayN:
+        """Evaluate the boundary-matching quadratic initial guess on grid `s`."""
         self._calculate_coefficients()
         return self.a * s**2 + self.b * s + self.c

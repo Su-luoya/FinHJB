@@ -58,9 +58,11 @@ class ImmutableBoundary(struct.PyTreeNode, Generic[P]):
     graph: list[DependencyMethod] = struct.field(pytree_node=False, repr=False)
 
     def get_boundaries(self) -> tuple[float, float, float, float]:
+        """Return `(s_min, s_max, v_left, v_right)` as a tuple."""
         return (self.s_min, self.s_max, self.v_left, self.v_right)
 
     def get_boundary_dict(self) -> dict[BoundaryName, float]:
+        """Return all boundary values as a dictionary keyed by boundary name."""
         return {
             "s_min": self.s_min,
             "s_max": self.s_max,
@@ -69,6 +71,7 @@ class ImmutableBoundary(struct.PyTreeNode, Generic[P]):
         }
 
     def update_boundaries(self, boundary_dict: dict[BoundaryName, float], p: P):
+        """Return a new boundary object after applying dependency graph updates."""
         for item in self.graph:
             boundary_dict[item["name"]] = item["method"](
                 **{
@@ -81,6 +84,7 @@ class ImmutableBoundary(struct.PyTreeNode, Generic[P]):
         return self.replace(**boundary_dict)
 
     def s_changed(self, boundary: Self):
+        """Check whether state-space limits changed versus another boundary."""
         return jnp.logical_or(
             self.s_min != boundary.s_min, self.s_max != boundary.s_max
         )

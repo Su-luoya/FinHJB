@@ -1,32 +1,32 @@
 # FinHJB
 
-[简体中文 README](./README.zh-CN.md)
+[English README](./README.md)
 
-FinHJB is a Python library for solving one-dimensional Hamilton-Jacobi-Bellman (HJB) equations with JAX.
+FinHJB 是一个基于 JAX 的一维 Hamilton-Jacobi-Bellman (HJB) 方程求解库。
 
-It provides typed interfaces for model construction and a high-level solver API for:
+它提供了类型化的建模接口和高层求解器，支持：
 
-- policy iteration,
-- boundary update/search,
-- parameter continuation (sensitivity analysis),
-- result serialization and reloading.
+- 策略迭代求解，
+- 边界更新与边界搜索，
+- 参数延拓（敏感性分析），
+- 结果保存与加载。
 
-## Installation
+## 安装
 
-- Python: `>=3.10`
-- Recommended: [`uv`](https://docs.astral.sh/uv/)
+- Python 版本：`>=3.10`
+- 推荐使用 [`uv`](https://docs.astral.sh/uv/)
 
 ```bash
 uv sync
 ```
 
-For editable installation with pip:
+也可以用 pip 可编辑安装：
 
 ```bash
 pip install -e .
 ```
 
-## Quick Start
+## 快速开始
 
 ```python
 from dataclasses import dataclass
@@ -90,9 +90,9 @@ state, history = solver.solve()
 print(state.converged, state.best_error)
 ```
 
-## Main APIs
+## 主要 API
 
-Top-level exports include:
+顶层导出包括：
 
 - `Config`
 - `Solver`
@@ -104,49 +104,49 @@ Top-level exports include:
 - `explicit_policy`, `implicit_policy`
 - `load_grid`, `load_grids`, `load_sensitivity_result`
 
-## Solver Workflows
+## 求解工作流
 
-- Solve: `state, history = solver.solve()`
-- Boundary update (model must implement `update_boundary(grid)`):
+- 求解：`state, history = solver.solve()`
+- 边界更新（模型必须实现 `update_boundary(grid)`）：
   `state, history = solver.boundary_update()`
-- Boundary search: `state = solver.boundary_search(method="hybr")`
-- Sensitivity analysis:
+- 边界搜索：`state = solver.boundary_search(method="hybr")`
+- 敏感性分析：
   `result = solver.sensitivity_analysis(method="hybr", param_name="sigma", param_values=...)`
 
-## Save / Load
+## 保存与加载
 
 ```python
 state.grid.save("solution_grid")
 loaded_grid = fjb.load_grid("solution_grid")
 ```
 
-Similarly:
+同理支持：
 
 - `grids.save(path)` + `fjb.load_grids(path)`
 - `result.save(path)` + `fjb.load_sensitivity_result(path)`
 
-## Configuration Highlights
+## 配置项重点
 
-`Config` controls derivative rules and convergence behavior:
+`Config` 主要控制导数策略和收敛参数：
 
 - `derivative_method`: `central | forward | backward`
 - `pi_method`: `scan | anderson`
-- `pe_*`, `pi_*`, `bs_*` tolerances and iteration limits
-- `aa_*` settings for Anderson acceleration
+- `pe_*`, `pi_*`, `bs_*` 容忍度与迭代上限
+- `aa_*` Anderson 加速参数
 
-## Testing
+## 测试
 
 ```bash
 uv run pytest
 ```
 
-Coverage gate (configured in project settings):
+覆盖率门槛（项目配置）：
 
 ```bash
 uv run pytest --cov=src/finhjb --cov-fail-under=85
 ```
 
-## Documentation
+## 文档
 
-- English docs: [docs/en/index.md](./docs/en/index.md)
-- Chinese docs: [docs/zh/index.md](./docs/zh/index.md)
+- 英文文档：[docs/en/index.md](./docs/en/index.md)
+- 中文文档：[docs/zh/index.md](./docs/zh/index.md)

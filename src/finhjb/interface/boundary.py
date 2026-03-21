@@ -111,6 +111,7 @@ class AbstractBoundary(Generic[P]):
     frozen_boundary: ImmutableBoundary = field(init=False, repr=False)
 
     def __post_init__(self):
+        """Compute and cache immutable boundary values at construction."""
         ...
         # Compute and store the frozen boundary upon initialization
         self.frozen_boundary = self.freeze()

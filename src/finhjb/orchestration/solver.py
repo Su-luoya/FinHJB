@@ -18,6 +18,8 @@ from finhjb.types import Array
 
 @dataclass
 class Solver(Generic[P, D]):
+    """High-level orchestrator for solving HJB models on one-dimensional grids."""
+
     boundary: Optional[AbstractBoundary] = field(repr=False, default=None)
     model: Optional[AbstractModel] = field(repr=False, default=None)
 
@@ -31,6 +33,7 @@ class Solver(Generic[P, D]):
     grid: Optional[Grid] = field(init=True, repr=False, default=None)
 
     def __post_init__(self):
+        """Initialize the working grid and algorithm backends."""
         if self.grid is None:
             if self.boundary is None or self.model is None:
                 raise ValueError(
@@ -54,6 +57,7 @@ class Solver(Generic[P, D]):
         )
 
     def solve(self) -> tuple[PolicyIterationState | EvaluationState, Array]:
+        """Run policy iteration (or one-step evaluation) on the active grid."""
         final_state, history_of_errors = self.policy_iteration.policy_iteration(
             grid=self._grid,
             jit=True,
@@ -61,6 +65,7 @@ class Solver(Generic[P, D]):
         return final_state, history_of_errors
 
     def _ensure_boundary_update_available(self) -> None:
+        """Validate model support for boundary update workflow."""
         if type(self._grid.model).update_boundary is AbstractModel.update_boundary:
             raise NotImplementedError(
                 "`Solver.boundary_update()` requires the model class to implement "
@@ -68,10 +73,12 @@ class Solver(Generic[P, D]):
             )
 
     def boundary_update(self) -> tuple[BoundaryUpdateState, Array]:
+        """Iteratively update model boundaries and re-solve the HJB system."""
         self._ensure_boundary_update_available()
         return self.boundary_update_solver.update(grid=self._grid)
 
     def boundary_search(self, method: SearchMethods, verbose=False):
+        """Search optimal boundaries by solving boundary conditions as root problems."""
         solver = get_boundary_search_solver(
             method=method,
             config=self.config,
@@ -86,6 +93,7 @@ class Solver(Generic[P, D]):
         param_name: str,
         param_values: Array,
     ) -> SensitivityResult:
+        """Solve the model along a parameter path using continuation."""
         sensitivity_solver = SensitivityAnalysis(
             config=self.config,
             method=method,

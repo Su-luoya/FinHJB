@@ -7,6 +7,14 @@ from finhjb.types import ArrayFloat, ArrayInter
 
 
 class Config(BaseModel):
+    """Runtime configuration for numerical solvers and differentiation rules.
+
+    The configuration object is validated by Pydantic and then used by
+    algorithm modules (`evaluation`, `policy_iteration`, and boundary routines)
+    to control convergence thresholds, iteration limits, and differentiation
+    behavior.
+    """
+
     # --- Grid ---
     enable_x64: bool = True
     derivative_method: Literal["central", "forward", "backward"] = "central"
@@ -62,6 +70,7 @@ class Config(BaseModel):
 
     @property
     def dv_func(self) -> Callable:
+        """Return the finite-difference function selected by configuration."""
         return self._dv_func
 
     @model_validator(mode="after")

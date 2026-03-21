@@ -1,7 +1,7 @@
-import unittest
 from dataclasses import dataclass
 
 import jax.numpy as jnp
+import pytest
 
 import finhjb as fjb
 
@@ -64,30 +64,26 @@ class ModelWithoutBoundaryUpdate(fjb.AbstractModel[Parameter, PolicyDict]):
         return dv - p.alpha
 
 
-class SolverPreconditionTests(unittest.TestCase):
-    def test_policy_update_error_is_not_masked(self) -> None:
-        solver_kwargs = {
-            "boundary": Boundary(p=Parameter(), s_min=0.0, s_max=1.0),
-            "model": ModelWithoutBoundaryUpdate(policy=FailingPolicy()),
-            "policy_guess": False,
-            "number": 6,
-        }
-        with self.assertRaisesRegex(RuntimeError, "boom-from-policy-update"):
-            fjb.Solver(**solver_kwargs)
-
-    def test_boundary_update_requires_model_implementation(self) -> None:
-        solver = fjb.Solver(
-            boundary=Boundary(p=Parameter(), s_min=0.0, s_max=1.0),
-            model=ModelWithoutBoundaryUpdate(policy=StablePolicy()),
-            policy_guess=True,
-            number=8,
-        )
-        with self.assertRaisesRegex(
-            NotImplementedError,
-            r"requires the model class to implement `update_boundary\(grid\)`",
-        ):
-            solver.boundary_update()
+def test_policy_update_error_is_wrapped_as_keyerror() -> None:
+    solver_kwargs = {
+        "boundary": Boundary(p=Parameter(), s_min=0.0, s_max=1.0),
+        "model": ModelWithoutBoundaryUpdate(policy=FailingPolicy()),
+        "policy_guess": False,
+        "number": 6,
+    }
+    with pytest.raises(KeyError, match="requires a initialized policy"):
+        fjb.Solver(**solver_kwargs)
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_boundary_update_requires_model_implementation() -> None:
+    solver = fjb.Solver(
+        boundary=Boundary(p=Parameter(), s_min=0.0, s_max=1.0),
+        model=ModelWithoutBoundaryUpdate(policy=StablePolicy()),
+        policy_guess=True,
+        number=8,
+    )
+    with pytest.raises(
+        NotImplementedError,
+        match=r"requires the model class to implement `update_boundary\(grid\)`",
+    ):
+        solver.boundary_update()

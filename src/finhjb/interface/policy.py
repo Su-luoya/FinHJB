@@ -47,7 +47,10 @@ D = TypeVar("D", bound=AbstractPolicyDict)
 
 @dataclass
 class AbstractPolicy(ABC, Generic[P, D]):
+    """Composable policy update interface for explicit/implicit steps."""
+
     def __post_init__(self):
+        """Compile decorated policy update methods into execution plan."""
         self.plan = self._compile()
 
     def create_solve_func(
@@ -126,6 +129,7 @@ class AbstractPolicy(ABC, Generic[P, D]):
         """
 
     def _compile(self):
+        """Inspect decorated methods and build ordered policy update plan."""
         policy_improvement_registry = {
             "broyden": Broyden,
             "gauss_newton": GaussNewton,
@@ -182,6 +186,7 @@ class AbstractPolicy(ABC, Generic[P, D]):
         return sorted(plan, key=lambda x: x["order"])
 
     def update(self, grid: Grid) -> Grid:
+        """Execute compiled policy update steps and return updated grid."""
         for step in self.plan:
             if step["type"] == "explicit":
                 grid = step["method"](grid)

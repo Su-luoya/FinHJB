@@ -24,6 +24,14 @@ else:
 
 
 class Grid(struct.PyTreeNode, Generic[P, PolicyDictType]):
+    """Immutable computational grid and solver state container.
+
+    `Grid` stores state-space coordinates, value function approximations,
+    derivatives, boundary values, and policy variables. The object is a Flax
+    PyTree so it can be transformed by JAX while keeping model/config objects
+    as static fields.
+    """
+
     p: P = struct.field(pytree_node=True, repr=False)
     boundary: ImmutableBoundary = struct.field(pytree_node=True, repr=True)
 
@@ -65,6 +73,7 @@ class Grid(struct.PyTreeNode, Generic[P, PolicyDictType]):
 
     @staticmethod
     def _validate_number(number: int) -> None:
+        """Validate the minimum grid size required by boundary stencils."""
         # Second-order one-sided boundary stencils require at least 4 points.
         if number < 4:
             raise ValueError(
@@ -72,6 +81,7 @@ class Grid(struct.PyTreeNode, Generic[P, PolicyDictType]):
             )
 
     def reset(self) -> Self:
+        """Rebuild the full grid from boundary/parameter/policy configuration."""
         self._validate_number(self.number)
         # Update parameters with boundary information
         p = self.p.update(self.boundary)
@@ -102,6 +112,7 @@ class Grid(struct.PyTreeNode, Generic[P, PolicyDictType]):
         # return self.replace(policy=policy)
 
     def update_grid(self, boundary: ImmutableBoundary) -> Self:
+        """Update boundary values and resample state grid if `s` bounds changed."""
         def update_s_grid():
             """Update the entire grid based on new boundary values."""
             new_h = (boundary.s_max - boundary.s_min) / (self.number - 1)
@@ -128,6 +139,7 @@ class Grid(struct.PyTreeNode, Generic[P, PolicyDictType]):
 
     @cached_property
     def optimizable_boundaries(self):
+        """Return boundary names targeted by model-defined boundary conditions."""
         return set((target.boundary_name for target in self.model.boundary_condition()))
 
     @cached_property
@@ -137,18 +149,22 @@ class Grid(struct.PyTreeNode, Generic[P, PolicyDictType]):
 
     @property
     def s_inter(self) -> ArrayInter:
+        """Interior state grid (excluding both boundary points)."""
         return self.s[1:-1]
 
     @property
     def policy_inter(self) -> PolicyDictType:
+        """Interior slices of all policy arrays."""
         return jax.tree_util.tree_map(lambda x: x[1:-1], self.policy)
 
     @property
     def number_inter(self) -> int:
+        """Number of interior grid points."""
         return self.number - 2
 
     @property
     def jump_inter(self):
+        """Evaluate model jump term on interior points."""
         return self.model.jump(
             v=self.v_inter,
             s=self.s_inter,
@@ -158,7 +174,7 @@ class Grid(struct.PyTreeNode, Generic[P, PolicyDictType]):
         )
 
     def update_with_v_inter(self, v_inter: ArrayInter) -> Self:
-        # self._validate_number(self.number)
+        """Update full value and derivative arrays from interior values."""
         v = jnp.concatenate(
             [
                 jnp.array([self.boundary.v_left]),
@@ -224,16 +240,21 @@ class Grid(struct.PyTreeNode, Generic[P, PolicyDictType]):
 
 @dataclass
 class Grids:
+    """Collection of solved grids indexed by a scalar continuation parameter."""
+
     param_name: str = field(default="???", repr=True)
     data: dict[float, Grid] = field(default_factory=dict, repr=False)
 
     def __len__(self) -> int:
+        """Return number of stored grids."""
         return len(self.data)
 
     def __iter__(self):
+        """Iterate over `(parameter_value, grid)` pairs."""
         return iter(self.data.items())
 
     def __getitem__(self, label: float) -> Grid:
+        """Get a grid by exact key."""
         return self.data[label]
 
     @property
@@ -242,6 +263,7 @@ class Grids:
         return self.data.keys()
 
     def get(self, value: float, default: Grid | None = None) -> Grid | None:
+        """Get a grid by key with a default fallback."""
         return self.data.get(float(value), default)
 
     def save(self, file_path: str | Path) -> None:
@@ -292,10 +314,12 @@ class Grids:
         return Grids(param_name=self.param_name, data=selected)
 
     def add(self, label: float, grid: Grid) -> "Grids":
+        """Insert or replace one grid at `label`."""
         self.data[label] = grid
         return self
 
     def merge(self, other: "Grids") -> "Grids":
+        """Merge two `Grids` collections with right-hand overwrite on conflicts."""
         if self.param_name != other.param_name:
             raise ValueError(
                 f"Cannot merge Grids with different parameter names: "

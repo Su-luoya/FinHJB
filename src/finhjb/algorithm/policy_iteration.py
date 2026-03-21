@@ -15,6 +15,8 @@ from finhjb.types import ArrayInt
 
 # todo: add a time counter to measure performance
 class PolicyIterationState(AbstractSolverState):
+    """State container for policy-iteration loops."""
+
     pass
 
 
@@ -50,6 +52,7 @@ class PolicyIteration(Generic[P]):
     _run_iteration: Callable = field(init=False, repr=False)
 
     def __post_init__(self):
+        """Bind policy-evaluation backend and selected PI runner."""
         self.evaluation_func = PolicyEvaluation(
             config=self.config
         ).policy_evaluation_func
@@ -228,6 +231,7 @@ class PolicyIteration(Generic[P]):
         self,
         jit: bool = True,
     ) -> Callable:
+        """Create policy-iteration callable with optional JIT compilation."""
         if self.config.pi_max_iter == 1:
             func = self.evaluation_func
         else:
@@ -241,6 +245,7 @@ class PolicyIteration(Generic[P]):
         grid: Grid,
         jit: bool = True,
     ) -> tuple[PolicyIterationState | EvaluationState, ArrayInt]:
+        """Run policy iteration and return final state plus update history."""
         return self.create_policy_iteration_func(jit=jit)(grid)
 
     def one_step(self, grid: Grid):

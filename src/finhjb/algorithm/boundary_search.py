@@ -33,7 +33,9 @@ class BoundarySearchState(AbstractSolverState):
 class JaxoptSolver(Protocol):
     """A protocol for jaxopt solvers to improve type hinting."""
 
-    def run(self, init_params: Array, *args, **kwargs) -> jaxopt.OptStep: ...
+    def run(self, init_params: Array, *args, **kwargs) -> jaxopt.OptStep:
+        """Run the solver from an initial parameter vector."""
+        ...
 
 
 @dataclass
@@ -51,6 +53,7 @@ class AbstractBoundarySearch(ABC, Generic[P]):
     # inner_solver: Literal["policy_iteration", "boundary_update"] = "policy_iteration"
 
     def __post_init__(self):
+        """Prepare the inner HJB solve function used by boundary residuals."""
         self.inner_func = self.policy_iteration.create_policy_iteration_func(jit=False)
 
     # ---------- Public API ----------
@@ -148,6 +151,7 @@ class AbstractBoundarySearch(ABC, Generic[P]):
         # return (residual_func), search_boundary_names
 
     def _extract_initial_params(self, grid: Grid, names: list[str]) -> Array:
+        """Collect initial boundary values in the target order."""
         return jnp.array([getattr(grid.boundary, n) for n in names])
 
     def parse_state(
@@ -175,6 +179,7 @@ class GaussNewtonSearch(AbstractBoundarySearch):
     """Boundary search using the Gauss-Newton algorithm for least-squares."""
 
     def _build_solver(self, residual_func: Callable) -> JaxoptSolver:
+        """Build a Gauss-Newton least-squares solver."""
         return jaxopt.GaussNewton(
             residual_fun=residual_func,
             tol=self.config.bs_tol,
@@ -189,6 +194,7 @@ class LevenbergMarquardtSearch(AbstractBoundarySearch):
     """Boundary search using the Levenberg-Marquardt algorithm for least-squares."""
 
     def _build_solver(self, residual_func: Callable) -> JaxoptSolver:
+        """Build a Levenberg-Marquardt least-squares solver."""
         return jaxopt.LevenbergMarquardt(
             residual_fun=residual_func,
             tol=self.config.bs_tol,
@@ -204,6 +210,7 @@ class BroydenSearch(AbstractBoundarySearch):
     """Boundary search using Broyden's method for root-finding."""
 
     def _build_solver(self, residual_func: Callable) -> JaxoptSolver:
+        """Build a Broyden root-finding solver."""
         return jaxopt.Broyden(
             fun=residual_func,
             tol=self.config.bs_tol,
@@ -218,6 +225,7 @@ class LBFGSSearch(AbstractBoundarySearch):
     """Boundary search using the L-BFGS optimization algorithm."""
 
     def _build_solver(self, residual_func: Callable) -> JaxoptSolver:
+        """Build an L-BFGS solver on squared residual loss."""
         def objective_func(boundary_params):
             residuals, final_grid = residual_func(boundary_params)
             # L-BFGS minimizes a scalar loss, so we use sum of squares.

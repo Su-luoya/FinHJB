@@ -11,12 +11,14 @@ TLoadable = TypeVar("TLoadable", SensitivityResult, Grid, Grids)
 
 
 def _load_pickle(file_path: str | Path) -> object:
+    """Read a `.pkl` file and return its Python object payload."""
     path = Path(file_path).with_suffix(".pkl")
     with open(path, "rb") as f:
         return pickle.load(f)
 
 
 def _validate_type(data: object, expected_type: type[TLoadable]) -> TLoadable:
+    """Validate loaded data type and cast to expected loadable class."""
     if isinstance(data, expected_type):
         return data
     raise TypeError(

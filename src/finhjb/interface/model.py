@@ -158,12 +158,14 @@ class AbstractModel(ABC, Generic[P, D]):
 
     @staticmethod
     def update_boundary(grid: Grid):
+        """Return boundary updates and update error for boundary-update algorithm."""
         raise NotImplementedError(
             "The `update_boundary` method is not implemented for this model."
         )
 
     @staticmethod
     def auxiliary(grid: Grid):
+        """Return user-defined auxiliary diagnostics derived from solved grid."""
         raise NotImplementedError(
             "The `auxiliary` method is not implemented for this model."
         )
