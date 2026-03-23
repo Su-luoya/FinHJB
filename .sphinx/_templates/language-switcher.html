@@ -1,0 +1,24 @@
+{% if language_switcher %}
+<div class="language-switcher-container navbar-item">
+  <div class="dropdown">
+    <button
+      class="btn btn-sm btn-outline-secondary dropdown-toggle"
+      type="button"
+      data-bs-toggle="dropdown"
+      aria-expanded="false"
+      aria-label="Language switcher"
+    >
+      {{ language_switcher.current_label }}
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end">
+      {% for item in language_switcher.links %}
+      <li>
+        <a class="dropdown-item{% if item.current %} active{% endif %}" href="{{ item.href }}">
+          {{ item.label }}
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endif %}

@@ -65,12 +65,12 @@ class AbstractValueGuess(ABC, Generic[P]):
         Notes
         -----
         - You can use `self.s_min`, `self.s_max`, `self.v_left`, and `self.v_right`
-        to access the boundary conditions.
+          to access the boundary conditions.
         - You can also access parameters via `self.p`.
         - The input `s` is a grid of state variable values
-        where the value function should be evaluated.
+          where the value function should be evaluated.
         - The output should be an array of the same shape as `s`,
-        representing the initial guess for the value function at those points.
+          representing the initial guess for the value function at those points.
 
         Parameters
         ----------

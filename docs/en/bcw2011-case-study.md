@@ -51,7 +51,7 @@ Notes:
 
 Paper:
 
-```math
+```{math}
 i^{FB}=r+\delta-\sqrt{(r+\delta)^2-\frac{2(\mu-(r+\delta))}{\theta}}
 ```
 
@@ -74,7 +74,7 @@ This is a useful first sanity anchor.
 
 Paper (internal-financing region):
 
-```math
+```{math}
 r p(w)= (i-\delta)(p-wp') + ((r-\lambda)w+\mu-i-g(i))p' + \frac{\sigma^2}{2}p''
 ```
 
@@ -101,7 +101,7 @@ Term-by-term mapping:
 
 Paper:
 
-```math
+```{math}
 i(w)=\frac{1}{\theta}\left(\frac{p(w)}{p'(w)}-w-1\right)
 ```
 
@@ -153,7 +153,7 @@ In code:
 
 Paper:
 
-```math
+```{math}
 rP = (I-\delta K)P_K + ((r-\lambda)W + \mu K - I - G(I,K) - \epsilon\kappa W)P_W
 + \frac{1}{2}(\sigma^2K^2 + \psi^2\sigma_m^2W^2 + 2\rho\sigma\sigma_m\psi WK)P_{WW}
 ```
@@ -185,7 +185,7 @@ Term-by-term mapping:
 
 Paper:
 
-```math
+```{math}
 \kappa = \min\{|\psi|/\pi, 1\}
 ```
 
@@ -204,7 +204,7 @@ Interpretation:
 
 Paper:
 
-```math
+```{math}
 \psi^*(w)=\frac{1}{w}\left(-\frac{\rho\sigma}{\sigma_m}-\frac{\epsilon}{\pi}\frac{p'(w)}{p''(w)}\frac{1}{\sigma_m^2}\right)
 ```
 
@@ -291,4 +291,3 @@ In `BCW2011Hedging.py`, change one parameter at a time:
 3. unstable `psi` near left endpoint
 - inspect `dv/d2v` stability in very small-`s` region;
 - validate medium/high-`w` shape first, then refine boundary-side settings.
-

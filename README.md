@@ -148,5 +148,14 @@ uv run pytest --cov=src/finhjb --cov-fail-under=85
 
 ## Documentation
 
+- Online docs: <https://su-luoya.github.io/FinHJB/>
+- Chinese site: <https://su-luoya.github.io/FinHJB/zh/>
 - English docs: [docs/en/index.md](./docs/en/index.md)
 - Chinese docs: [docs/zh/index.md](./docs/zh/index.md)
+
+Build the Sphinx site locally:
+
+```bash
+uv sync --group docs
+uv run sphinx-build -b dirhtml docs build/sphinx/dirhtml -c .sphinx -W --keep-going
+```

@@ -24,15 +24,14 @@ class AbstractPolicyDict(TypedDict):
     should be included here to avoid repeated computations.
 
     Subclass this to declare concrete policy keys and their types, for example:
-    ```python
-    class PolicyDict(AbstractPolicyDict):
-        investment: Array # Just keep the type as Array
-        consumption: Array
 
-        # If needed, you can add more variables here
-        drift: Array
-        diffusion: Array
-    ```
+    ::
+
+        class PolicyDict(AbstractPolicyDict):
+            investment: Array
+            consumption: Array
+            drift: Array
+            diffusion: Array
 
     Notes
     -----
@@ -96,9 +95,7 @@ class AbstractPolicy(ABC, Generic[P, D]):
           Then the solver will ignore this initial guess
           and perform an initial policy improvement step before starting iterations.
 
-        Availability
-        -----------
-        Implementations may freely use the following instance attributes:
+        Implementations may freely use the following inputs during initialization:
         - `p` : Parameter
         - `grid.s` : Float[Array, "N"]
         - `grid.v` : Float[Array, "N"]
@@ -114,18 +111,18 @@ class AbstractPolicy(ABC, Generic[P, D]):
 
         Examples
         --------
-        ```python
-        class PolicyDict(AbstractPolicyDict):
-            control_var1: Array
-            control_var2: Array
+        ::
 
-        def initialize_policy(self, grid: Grid, p: P) -> PolicyDict:
-            control_var1_val: Array = ...  # some computation using grid.s, grid.v, p, etc.
-            return PolicyDict(
-                control_var1=jnp.full_like(grid.s, control_var1_val),
-                control_var2=jnp.ones(grid.number),
-            )
-        ```
+            class PolicyDict(AbstractPolicyDict):
+                control_var1: Array
+                control_var2: Array
+
+            def initialize_policy(self, grid: Grid, p: P) -> PolicyDict:
+                control_var1_val: Array = ...
+                return PolicyDict(
+                    control_var1=jnp.full_like(grid.s, control_var1_val),
+                    control_var2=jnp.ones(grid.number),
+                )
         """
 
     def _compile(self):

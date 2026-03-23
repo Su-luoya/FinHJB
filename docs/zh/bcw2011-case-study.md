@@ -48,7 +48,7 @@ MPLBACKEND=Agg uv run python src/example/BCW2011Hedging.py
 
 论文：
 
-```math
+```{math}
 i^{FB}=r+\delta-\sqrt{(r+\delta)^2-\frac{2(\mu-(r+\delta))}{\theta}}
 ```
 
@@ -71,7 +71,7 @@ inv_first_best = (
 
 论文（内部融资区 ODE）：
 
-```math
+```{math}
 r p(w)= (i-\delta)(p-wp') + ((r-\lambda)w+\mu-i-g(i))p' + \frac{\sigma^2}{2}p''
 ```
 
@@ -98,7 +98,7 @@ residual = capital_drift + discount + cash_drift + diffusion
 
 论文：
 
-```math
+```{math}
 i(w)=\frac{1}{\theta}\left(\frac{p(w)}{p'(w)}-w-1\right)
 ```
 
@@ -153,7 +153,7 @@ i(w)=\frac{1}{\theta}\left(\frac{p(w)}{p'(w)}-w-1\right)
 
 论文：
 
-```math
+```{math}
 rP = (I-\delta K)P_K + ((r-\lambda)W + \mu K - I - G(I,K) - \epsilon\kappa W)P_W
 + \frac{1}{2}(\sigma^2K^2 + \psi^2\sigma_m^2W^2 + 2\rho\sigma\sigma_m\psi WK)P_{WW}
 ```
@@ -185,7 +185,7 @@ discount = -p.r * v
 
 论文：
 
-```math
+```{math}
 \kappa = \min\{|\psi|/\pi, 1\}
 ```
 
@@ -204,7 +204,7 @@ kappa = jnp.minimum(jnp.abs(psi) / p.pi, 1.0)
 
 论文：
 
-```math
+```{math}
 \psi^*(w)=\frac{1}{w}\left(-\frac{\rho\sigma}{\sigma_m}-\frac{\epsilon}{\pi}\frac{p'(w)}{p''(w)}\frac{1}{\sigma_m^2}\right)
 ```
 
@@ -291,4 +291,3 @@ new_psi = jnp.where(should_hedge, psi_clipped, 0.0)
 3. `psi` 在左端点异常抖动
 - 检查极小 `s` 区域的 `dv/d2v` 数值稳定性；
 - 先确认中高 `w` 区域形状正确，再回头调边界。
-

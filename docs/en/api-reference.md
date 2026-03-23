@@ -125,3 +125,100 @@ print(loaded.grids.get(0.10).df.head())  # full grid at one parameter value
 `Grids` methods:
 
 - `get`, `select_grids`, `add`, `merge`, `save`
+
+## API Details
+
+### Config
+
+```{eval-rst}
+.. autoclass:: finhjb.Config
+   :members:
+   :no-index:
+```
+
+### Solver
+
+```{eval-rst}
+.. autoclass:: finhjb.Solver
+   :members:
+   :no-index:
+```
+
+### Structures
+
+```{eval-rst}
+.. autoclass:: finhjb.Grid
+   :members:
+   :no-index:
+
+.. autoclass:: finhjb.Grids
+   :members:
+   :no-index:
+
+.. autoclass:: finhjb.ImmutableBoundary
+   :members:
+   :no-index:
+```
+
+### Interfaces
+
+```{eval-rst}
+.. autoclass:: finhjb.AbstractBoundary
+   :members:
+   :no-index:
+
+.. autoclass:: finhjb.BoundaryConditionTarget
+   :members:
+   :no-index:
+
+.. autoclass:: finhjb.AbstractModel
+   :members:
+   :no-index:
+
+.. autoclass:: finhjb.AbstractParameter
+   :members:
+   :no-index:
+
+.. autoclass:: finhjb.AbstractPolicy
+   :members:
+   :no-index:
+
+.. autoclass:: finhjb.AbstractPolicyDict
+   :members:
+   :no-index:
+
+.. autoclass:: finhjb.AbstractValueGuess
+   :members:
+   :no-index:
+
+.. autoclass:: finhjb.LinearInitialValue
+   :members:
+   :no-index:
+
+.. autoclass:: finhjb.QuadraticInitialValue
+   :members:
+   :no-index:
+```
+
+### Helpers
+
+```{eval-rst}
+.. autofunction:: finhjb.explicit_policy
+   :no-index:
+
+.. autofunction:: finhjb.implicit_policy
+   :no-index:
+```
+
+### Loading Functions
+
+```{eval-rst}
+.. autofunction:: finhjb.load_grid
+   :no-index:
+
+.. autofunction:: finhjb.load_grids
+   :no-index:
+
+.. autofunction:: finhjb.load_sensitivity_result
+   :no-index:
+```

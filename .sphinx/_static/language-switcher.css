@@ -1,0 +1,13 @@
+.language-switcher-container {
+  align-items: center;
+  display: flex;
+}
+
+.language-switcher-container .btn {
+  font-size: 0.875rem;
+  padding: 0.25rem 0.75rem;
+}
+
+.language-switcher-container .dropdown-item.active {
+  font-weight: 600;
+}

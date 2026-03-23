@@ -148,5 +148,14 @@ uv run pytest --cov=src/finhjb --cov-fail-under=85
 
 ## 文档
 
+- 在线文档：<https://su-luoya.github.io/FinHJB/>
+- 中文站点：<https://su-luoya.github.io/FinHJB/zh/>
 - 英文文档：[docs/en/index.md](./docs/en/index.md)
 - 中文文档：[docs/zh/index.md](./docs/zh/index.md)
+
+本地构建 Sphinx 文档站：
+
+```bash
+uv sync --group docs
+uv run sphinx-build -b dirhtml docs build/sphinx/dirhtml -c .sphinx -W --keep-going
+```

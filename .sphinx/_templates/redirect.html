@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>{{ title }}</title>
+    <meta http-equiv="refresh" content="0; url={{ redirect_target }}">
+    <link rel="canonical" href="{{ redirect_target }}">
+    <script>
+      window.location.replace({{ redirect_target | tojson }});
+    </script>
+  </head>
+  <body>
+    <p>Redirecting to <a href="{{ redirect_target }}">the English documentation</a>.</p>
+  </body>
+</html>

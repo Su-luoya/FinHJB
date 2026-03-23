@@ -63,15 +63,19 @@ class AbstractBoundary(Generic[P]):
 
     Examples
     --------
-    ```python
-    >>> class MyBoundary(AbstractBoundary):
-    ...     def compute_s_max(self) -> float:
-    ...         return self.p.x_bar
-    ...     def compute_v_right(self, s_max: float) -> float:
-    ...         return s_max * 2.0
-    >>> boundary = MyBoundary(p=params, s_min=0.0, v_left=0.0)
-    >>> frozen_boundary = boundary.frozen_boundary
-    ```
+    ::
+
+        class MyBoundary(AbstractBoundary):
+            @staticmethod
+            def compute_s_max(p) -> float:
+                return p.x_bar
+
+            @staticmethod
+            def compute_v_right(s_max: float, p) -> float:
+                return s_max * 2.0
+
+        boundary = MyBoundary(p=params, s_min=0.0, v_left=0.0)
+        frozen_boundary = boundary.frozen_boundary
 
     Attributes
     ----------

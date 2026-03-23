@@ -33,6 +33,11 @@ dev = [
     "pytest>=8.4.2",
     "pytest-cov>=7.0.0",
 ]
+docs = [
+    "myst-parser>=4.0.1,<5",
+    "pydata-sphinx-theme>=0.16.1,<1",
+    "sphinx>=7.4.7,<8",
+]
 
 [tool.ruff.lint]
 # 1. 启用排序规则 (I 代表 isort)

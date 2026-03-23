@@ -125,3 +125,100 @@ print(loaded.grids.get(0.10).df.head())  # 对应参数点的完整 Grid
 `Grids` 方法：
 
 - `get`, `select_grids`, `add`, `merge`, `save`
+
+## API 详细文档
+
+### Config
+
+```{eval-rst}
+.. autoclass:: finhjb.Config
+   :members:
+   :no-index:
+```
+
+### Solver
+
+```{eval-rst}
+.. autoclass:: finhjb.Solver
+   :members:
+   :no-index:
+```
+
+### 数据结构
+
+```{eval-rst}
+.. autoclass:: finhjb.Grid
+   :members:
+   :no-index:
+
+.. autoclass:: finhjb.Grids
+   :members:
+   :no-index:
+
+.. autoclass:: finhjb.ImmutableBoundary
+   :members:
+   :no-index:
+```
+
+### 接口类型
+
+```{eval-rst}
+.. autoclass:: finhjb.AbstractBoundary
+   :members:
+   :no-index:
+
+.. autoclass:: finhjb.BoundaryConditionTarget
+   :members:
+   :no-index:
+
+.. autoclass:: finhjb.AbstractModel
+   :members:
+   :no-index:
+
+.. autoclass:: finhjb.AbstractParameter
+   :members:
+   :no-index:
+
+.. autoclass:: finhjb.AbstractPolicy
+   :members:
+   :no-index:
+
+.. autoclass:: finhjb.AbstractPolicyDict
+   :members:
+   :no-index:
+
+.. autoclass:: finhjb.AbstractValueGuess
+   :members:
+   :no-index:
+
+.. autoclass:: finhjb.LinearInitialValue
+   :members:
+   :no-index:
+
+.. autoclass:: finhjb.QuadraticInitialValue
+   :members:
+   :no-index:
+```
+
+### 辅助函数
+
+```{eval-rst}
+.. autofunction:: finhjb.explicit_policy
+   :no-index:
+
+.. autofunction:: finhjb.implicit_policy
+   :no-index:
+```
+
+### 加载函数
+
+```{eval-rst}
+.. autofunction:: finhjb.load_grid
+   :no-index:
+
+.. autofunction:: finhjb.load_grids
+   :no-index:
+
+.. autofunction:: finhjb.load_sensitivity_result
+   :no-index:
+```

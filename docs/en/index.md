@@ -1,7 +1,18 @@
 # FinHJB Documentation (English)
 
-- [Getting Started](./getting-started.md)
-- [Modeling Guide](./modeling-guide.md)
-- [Solver Guide](./solver-guide.md)
-- [BCW2011 Case Study](./bcw2011-case-study.md)
-- [API Reference](./api-reference.md)
+```{toctree}
+:maxdepth: 2
+:caption: English Documentation
+
+getting-started
+modeling-guide
+solver-guide
+bcw2011-case-study
+api-reference
+```
+
+```{toctree}
+:hidden:
+
+../zh/index
+```

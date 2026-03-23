@@ -91,17 +91,15 @@ class AbstractModel(ABC, Generic[P, D]):
             HJB residual evaluated at each interior grid point.
 
 
-        Example
-        -------
-        ```python
-        @staticmethod # Make sure to include the @staticmethod decorator
-        def hjb_residual(v, dv, d2v, s, policy, boundary, p):
-            control1 = policy["control1"]
-            ...
-            # compute residual using v, dv, d2v, s, policy and parameters p
-            residual = ...
-            return residual
-        ```
+        Examples
+        --------
+        ::
+
+            @staticmethod
+            def hjb_residual(v, dv, d2v, s, policy, jump, boundary, p):
+                control1 = policy["control1"]
+                residual = ...
+                return residual
         """
 
     @staticmethod
