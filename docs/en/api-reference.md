@@ -1,5 +1,19 @@
 # API Reference
 
+This page is the reference companion to the tutorial pages.
+
+Use the tutorials first if you are still learning the workflow:
+
+| If you want to... | Read this first |
+|---|---|
+| install and run the first example | [Installation and Environment](./installation-and-environment.md) |
+| reproduce the BCW baseline examples | [Getting Started](./getting-started.md) |
+| understand returned objects and diagnostics | [Results and Diagnostics](./results-and-diagnostics.md) |
+| adapt BCW to your own model | [Adapting BCW to Your Model](./adapting-bcw-to-your-model.md) |
+| understand workflow choice | [Solver Guide](./solver-guide.md) |
+
+Come back here when you want exact exported names, method members, and loader behavior.
+
 ## Top-Level Exports (`finhjb`)
 
 ### Core
@@ -33,6 +47,16 @@
 - `load_grids(path)`
 - `load_sensitivity_result(path)`
 
+## API By Task
+
+| Task | Objects you will touch first |
+|---|---|
+| define a model | `AbstractParameter`, `AbstractBoundary`, `AbstractPolicy`, `AbstractModel` |
+| run one fixed-boundary solve | `Solver`, `Config` |
+| search for an endogenous boundary | `BoundaryConditionTarget`, `Solver.boundary_search()` |
+| inspect a solved object | `Grid`, `Grid.df`, `Grid.aux` |
+| store and reload results | `Grid.save`, `load_grid`, `Grids.save`, `load_grids`, `load_sensitivity_result` |
+
 ## Loading Functions In Detail
 
 The three `load_*` functions differ by what you want to restore: a single solved grid, a grid collection, or a full sensitivity result.
@@ -43,25 +67,26 @@ The three `load_*` functions differ by what you want to restore: a single solved
 | `load_grids(path)` | `Grids` | `result.grids.save(path)` | many solved grids along parameter values |
 | `load_sensitivity_result(path)` | `SensitivityResult` | `result.save(path)` | full continuation output (summary + grids) |
 
-Behavior guaranteed by implementation:
+Guaranteed behavior:
 
-- `.pkl` suffix is auto-added (`Path(path).with_suffix(".pkl")`).
-- Type is validated; using the wrong loader raises `TypeError`.
+- `.pkl` suffix is auto-added,
+- type is validated after loading,
+- using the wrong loader raises `TypeError`.
 
-### 1) `load_grid`: restore one `Grid`
+### Example: `load_grid`
 
 ```python
 import finhjb as fjb
 
 state, _ = solver.solve()
-state.grid.save("outputs/baseline_grid")  # actual file: outputs/baseline_grid.pkl
+state.grid.save("outputs/baseline_grid")
 
 grid = fjb.load_grid("outputs/baseline_grid")
-print(type(grid).__name__)  # Grid
+print(type(grid).__name__)
 print(grid.df.head())
 ```
 
-### 2) `load_grids`: restore `Grids` (a parameter-path grid set)
+### Example: `load_grids`
 
 ```python
 import finhjb as fjb
@@ -75,13 +100,11 @@ result = solver.sensitivity_analysis(
 result.grids.save("outputs/sigma_grids")
 
 grids = fjb.load_grids("outputs/sigma_grids")
-print(type(grids).__name__)  # Grids
-print(list(grids.values))    # stored parameter values
-g010 = grids.get(0.10)
-print(g010.df.head())
+print(type(grids).__name__)
+print(list(grids.values))
 ```
 
-### 3) `load_sensitivity_result`: restore full `SensitivityResult`
+### Example: `load_sensitivity_result`
 
 ```python
 import finhjb as fjb
@@ -89,16 +112,15 @@ import finhjb as fjb
 result.save("outputs/sigma_result")
 loaded = fjb.load_sensitivity_result("outputs/sigma_result")
 
-print(type(loaded).__name__)  # SensitivityResult
-print(loaded.df.head())       # continuation summary table
-print(loaded.grids.get(0.10).df.head())  # full grid at one parameter value
+print(type(loaded).__name__)
+print(loaded.df.head())
 ```
 
-### Common Mistakes
+### Common Loading Mistakes
 
-1. Reading `result.save(...)` output with `load_grid`: type mismatch (`Grid` expected, `SensitivityResult` loaded).
-2. Using inconsistent file naming: including `.pkl` is fine, but omitting it is cleaner since loaders auto-append.
-3. Over-loading data: if you only need one run, prefer `load_grid`; if you only need continuation summary, use `load_sensitivity_result(...).df`.
+1. Loading a continuation result with `load_grid`.
+2. Forgetting that the loader auto-adds `.pkl`.
+3. Loading the full continuation result when you only needed a single grid.
 
 ## Solver Methods
 
@@ -106,6 +128,8 @@ print(loaded.grids.get(0.10).df.head())  # full grid at one parameter value
 - `Solver.boundary_update() -> (BoundaryUpdateState, history)`
 - `Solver.boundary_search(method, verbose=False) -> BoundarySearchState`
 - `Solver.sensitivity_analysis(method, param_name, param_values) -> SensitivityResult`
+
+See [Solver Guide](./solver-guide.md) for when to use each one.
 
 ## Grid Convenience
 
@@ -125,6 +149,8 @@ print(loaded.grids.get(0.10).df.head())  # full grid at one parameter value
 `Grids` methods:
 
 - `get`, `select_grids`, `add`, `merge`, `save`
+
+For interpretation, go to [Results and Diagnostics](./results-and-diagnostics.md).
 
 ## API Details
 

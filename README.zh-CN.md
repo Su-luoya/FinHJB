@@ -153,6 +153,13 @@ uv run pytest --cov=src/finhjb --cov-fail-under=85
 - 英文文档：[docs/en/index.md](./docs/en/index.md)
 - 中文文档：[docs/zh/index.md](./docs/zh/index.md)
 
+推荐阅读顺序：
+
+1. 先看 [docs/zh/installation-and-environment.md](./docs/zh/installation-and-environment.md)
+2. 再按 [docs/zh/getting-started.md](./docs/zh/getting-started.md) 跑通 BCW 快速开始
+3. 用 [docs/zh/bcw2011-case-study.md](./docs/zh/bcw2011-case-study.md) 作为案例导航页
+4. 当你准备改自己的模型时，继续看 [docs/zh/adapting-bcw-to-your-model.md](./docs/zh/adapting-bcw-to-your-model.md)
+
 本地构建 Sphinx 文档站：
 
 ```bash

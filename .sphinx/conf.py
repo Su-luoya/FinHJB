@@ -13,6 +13,7 @@ LANGUAGES = {
 }
 
 sys.path.insert(0, str(SRC_ROOT))
+sys.setrecursionlimit(3000)
 
 
 def _read_project_version() -> str:

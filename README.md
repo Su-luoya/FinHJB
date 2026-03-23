@@ -153,6 +153,13 @@ uv run pytest --cov=src/finhjb --cov-fail-under=85
 - English docs: [docs/en/index.md](./docs/en/index.md)
 - Chinese docs: [docs/zh/index.md](./docs/zh/index.md)
 
+Recommended reading path for new users:
+
+1. Start with [docs/en/installation-and-environment.md](./docs/en/installation-and-environment.md)
+2. Run the BCW quickstart in [docs/en/getting-started.md](./docs/en/getting-started.md)
+3. Use [docs/en/bcw2011-case-study.md](./docs/en/bcw2011-case-study.md) as the case-study map
+4. Move to [docs/en/adapting-bcw-to-your-model.md](./docs/en/adapting-bcw-to-your-model.md) when you are ready to customize your own model
+
 Build the Sphinx site locally:
 
 ```bash

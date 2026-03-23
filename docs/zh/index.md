@@ -1,12 +1,44 @@
 # FinHJB 文档（中文）
 
-```{toctree}
-:maxdepth: 2
-:caption: 中文文档
+最推荐的学习顺序不是“先把所有 API 都看完”，而是把文档当成一条研究工作流来走：
 
+1. 先把环境搭好，
+2. 再稳定复现 BCW 基准案例，
+3. 学会判断结果是不是合理，
+4. 最后再把 BCW 模板改造成你自己的模型。
+
+```{toctree}
+:maxdepth: 1
+:caption: 起步
+
+installation-and-environment
 getting-started
-modeling-guide
-solver-guide
+troubleshooting
+```
+
+```{toctree}
+:maxdepth: 1
+:caption: BCW 逐步教程
+
 bcw2011-case-study
+bcw2011-liquidation-walkthrough
+bcw2011-hedging-walkthrough
+results-and-diagnostics
+```
+
+```{toctree}
+:maxdepth: 1
+:caption: 改成你自己的模型
+
+modeling-guide
+adapting-bcw-to-your-model
+solver-guide
+```
+
+```{toctree}
+:maxdepth: 1
+:caption: 参考
+
 api-reference
+faq
 ```

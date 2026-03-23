@@ -1,5 +1,19 @@
 # API 参考
 
+这一页是教程页的“精确接口补充”，不是最推荐的第一站。
+
+如果你还在熟悉工作流，建议先读这些教程，再回来查名字和成员：
+
+| 如果你现在想做的是…… | 先读这一页 |
+|---|---|
+| 安装并跑通第一个案例 | [安装与环境](./installation-and-environment.md) |
+| 复现 BCW 基准案例 | [快速开始](./getting-started.md) |
+| 看懂返回对象和数值诊断 | [结果与诊断](./results-and-diagnostics.md) |
+| 把 BCW 改成自己的模型 | [把 BCW 改成你自己的模型](./adapting-bcw-to-your-model.md) |
+| 决定使用哪种求解工作流 | [求解器指南](./solver-guide.md) |
+
+当你需要确认精确导出名、类成员、方法签名或 loader 行为时，再回到这里。
+
 ## 顶层导出（`finhjb`）
 
 ### 核心对象
@@ -33,35 +47,50 @@
 - `load_grids(path)`
 - `load_sensitivity_result(path)`
 
+## 按任务找 API
+
+| 任务 | 你最先会碰到的对象 |
+|---|---|
+| 定义模型 | `AbstractParameter`、`AbstractBoundary`、`AbstractPolicy`、`AbstractModel` |
+| 跑一次固定边界求解 | `Solver`、`Config` |
+| 搜索内生边界 | `BoundaryConditionTarget`、`Solver.boundary_search()` |
+| 检查一个解 | `Grid`、`Grid.df`、`Grid.aux` |
+| 保存与重载结果 | `Grid.save`、`load_grid`、`Grids.save`、`load_grids`、`load_sensitivity_result` |
+
 ## 加载函数详解
 
-三种 `load_*` 的核心区别是：你想恢复的是单个解、解集合，还是完整敏感性结果。
+三个 `load_*` 的核心区别，是你到底想恢复：
 
-| 函数 | 恢复对象类型 | 应该搭配的保存方法 | 典型用途 |
+- 单个 `Grid`，
+- 一组 `Grids`，
+- 还是完整的 `SensitivityResult`。
+
+| 函数 | 恢复对象类型 | 对应保存方法 | 典型用途 |
 |---|---|---|---|
-| `load_grid(path)` | `Grid` | `state.grid.save(path)` | 只关心某一次求解的网格与策略 |
-| `load_grids(path)` | `Grids` | `result.grids.save(path)` | 关心一组参数点对应的一批网格 |
-| `load_sensitivity_result(path)` | `SensitivityResult` | `result.save(path)` | 要同时恢复 summary 表和全部网格 |
+| `load_grid(path)` | `Grid` | `state.grid.save(path)` | 单次求解的完整网格 |
+| `load_grids(path)` | `Grids` | `result.grids.save(path)` | 一组参数点上的网格集合 |
+| `load_sensitivity_result(path)` | `SensitivityResult` | `result.save(path)` | continuation summary + 全部网格 |
 
-关键行为（来自实现）：
+保证行为：
 
-- 路径会自动补 `.pkl` 后缀（`Path(path).with_suffix(".pkl")`）。
-- 会做类型校验；如果你用错了加载函数，会抛 `TypeError`。
+- 路径会自动补 `.pkl`；
+- 加载后会做类型校验；
+- 用错 loader 会明确抛出 `TypeError`。
 
-### 1) `load_grid`: 恢复单个 `Grid`
+### `load_grid` 示例
 
 ```python
 import finhjb as fjb
 
 state, _ = solver.solve()
-state.grid.save("outputs/baseline_grid")  # 实际文件: outputs/baseline_grid.pkl
+state.grid.save("outputs/baseline_grid")
 
 grid = fjb.load_grid("outputs/baseline_grid")
-print(type(grid).__name__)  # Grid
+print(type(grid).__name__)
 print(grid.df.head())
 ```
 
-### 2) `load_grids`: 恢复 `Grids`（参数路径上的网格集合）
+### `load_grids` 示例
 
 ```python
 import finhjb as fjb
@@ -75,13 +104,11 @@ result = solver.sensitivity_analysis(
 result.grids.save("outputs/sigma_grids")
 
 grids = fjb.load_grids("outputs/sigma_grids")
-print(type(grids).__name__)  # Grids
-print(list(grids.values))     # 已保存的参数值
-g010 = grids.get(0.10)
-print(g010.df.head())
+print(type(grids).__name__)
+print(list(grids.values))
 ```
 
-### 3) `load_sensitivity_result`: 恢复完整 `SensitivityResult`
+### `load_sensitivity_result` 示例
 
 ```python
 import finhjb as fjb
@@ -89,42 +116,49 @@ import finhjb as fjb
 result.save("outputs/sigma_result")
 loaded = fjb.load_sensitivity_result("outputs/sigma_result")
 
-print(type(loaded).__name__)  # SensitivityResult
-print(loaded.df.head())       # continuation summary
-print(loaded.grids.get(0.10).df.head())  # 对应参数点的完整 Grid
+print(type(loaded).__name__)
+print(loaded.df.head())
 ```
 
-### 常见错误
+### 常见加载错误
 
-1. 用 `load_grid` 去读 `result.save(...)` 的文件：会报类型错误（期望 `Grid`，实际是 `SensitivityResult`）。
-2. 路径写成 `.pkl` 也可以，但建议统一不写后缀，避免重复命名困惑。
-3. 只需要 summary 表时，优先 `load_sensitivity_result(...).df`；只需要单点网格时，优先 `load_grid(...)`。
+1. 用 `load_grid` 去读取 continuation 或 sensitivity 的保存结果；
+2. 忘了 loader 会自动补 `.pkl`；
+3. 其实只想要单点网格，却误用了整个 `SensitivityResult`。
 
-## Solver 方法
+## `Solver` 的主要方法
 
 - `Solver.solve() -> (PolicyIterationState | EvaluationState, history)`
 - `Solver.boundary_update() -> (BoundaryUpdateState, history)`
 - `Solver.boundary_search(method, verbose=False) -> BoundarySearchState`
 - `Solver.sensitivity_analysis(method, param_name, param_values) -> SensitivityResult`
 
-## Grid 便捷属性
+什么时候该用哪个方法，请配合 [求解器指南](./solver-guide.md) 阅读。
 
-`Grid` 属性：
+## `Grid` 的便捷属性
+
+`Grid` 常用属性：
 
 - `s`, `v`, `dv`, `d2v`
 - `s_inter`, `policy_inter`, `number_inter`, `jump_inter`
 - `df`, `aux`
 
-`Grid` 方法：
+`Grid` 常用方法：
 
 - `reset()`
 - `update_grid(boundary)`
 - `update_with_v_inter(v_inter)`
 - `save(path)`
 
-`Grids` 方法：
+`Grids` 常用方法：
 
-- `get`, `select_grids`, `add`, `merge`, `save`
+- `get`
+- `select_grids`
+- `add`
+- `merge`
+- `save`
+
+如何解释这些对象，请看 [结果与诊断](./results-and-diagnostics.md)。
 
 ## API 详细文档
 

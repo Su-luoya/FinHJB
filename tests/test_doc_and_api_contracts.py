@@ -41,17 +41,53 @@ def test_public_exports_are_importable():
 
 def test_bilingual_docs_mirror_expected_pages():
     pages = {
+        "installation-and-environment.md",
         "index.md",
         "getting-started.md",
+        "troubleshooting.md",
+        "bcw2011-case-study.md",
+        "bcw2011-liquidation-walkthrough.md",
+        "bcw2011-hedging-walkthrough.md",
+        "results-and-diagnostics.md",
         "modeling-guide.md",
+        "adapting-bcw-to-your-model.md",
         "solver-guide.md",
         "api-reference.md",
+        "faq.md",
     }
     en_pages = {p.name for p in (ROOT / "docs" / "en").glob("*.md")}
     zh_pages = {p.name for p in (ROOT / "docs" / "zh").glob("*.md")}
 
     assert pages <= en_pages
     assert pages <= zh_pages
+
+
+def test_readme_points_to_existing_docs_entrypoints():
+    readme_en = (ROOT / "README.md").read_text()
+    readme_zh = (ROOT / "README.zh-CN.md").read_text()
+
+    en_targets = [
+        "./docs/en/index.md",
+        "./docs/en/installation-and-environment.md",
+        "./docs/en/getting-started.md",
+        "./docs/en/bcw2011-case-study.md",
+        "./docs/en/adapting-bcw-to-your-model.md",
+    ]
+    zh_targets = [
+        "./docs/zh/index.md",
+        "./docs/zh/installation-and-environment.md",
+        "./docs/zh/getting-started.md",
+        "./docs/zh/bcw2011-case-study.md",
+        "./docs/zh/adapting-bcw-to-your-model.md",
+    ]
+
+    for target in en_targets:
+        assert target in readme_en
+        assert (ROOT / target.removeprefix("./")).exists()
+
+    for target in zh_targets:
+        assert target in readme_zh
+        assert (ROOT / target.removeprefix("./")).exists()
 
 
 def test_public_api_names_are_documented():

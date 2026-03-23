@@ -1,52 +1,152 @@
 # Solver Guide
 
-## Solver Construction
+This page helps you choose the right workflow for your model and diagnose what each workflow returns.
 
-`Solver` can be initialized either from:
+If you are still trying to run your first example, go back to [Getting Started](./getting-started.md). If you already know your mathematical problem and need help wiring the classes, pair this page with [Modeling Guide](./modeling-guide.md).
 
-- `boundary + model`, or
-- an existing `grid`.
+## Workflow Decision Table
 
-Common options:
+| Use this workflow | When you should use it | What you get back |
+|---|---|---|
+| `solve()` | boundaries are already fixed | solved state + per-iteration error history |
+| `boundary_update()` | the model can update boundaries from the solved grid | boundary-update state + per-iteration history |
+| `boundary_search()` | one or more boundary values must satisfy a numerical contact/value condition | boundary-search state |
+| `sensitivity_analysis()` | you want a path of solutions across parameter values | summary table + saved grids |
 
-- `policy_guess`: use policy initializer directly (`True`) or run one policy update first (`False`)
-- `number`: grid size (`>= 4`)
-- `config`: convergence and differentiation settings
+## `Solver(...)`: Construction Rules
 
-## Policy Iteration
+You can initialize the solver in one of two ways:
+
+1. from `boundary + model`,
+2. from an existing solved `grid`.
+
+The most common constructor is:
+
+```python
+solver = fjb.Solver(
+    boundary=boundary,
+    model=model,
+    policy_guess=True,
+    number=500,
+    config=fjb.Config(pi_method="scan", derivative_method="central"),
+)
+```
+
+Important options:
+
+- `policy_guess`: if `True`, trust the policy initializer; if `False`, force an early improvement step.
+- `number`: grid size. Larger grids are more accurate but more expensive.
+- `config`: all iteration, tolerance, and derivative settings.
+
+## `solve()`: Fixed-Boundary Policy Iteration
+
+Use:
 
 ```python
 state, history = solver.solve()
 ```
 
-Returns final state plus per-iteration update history.
+Best when:
 
-## Boundary Update
+- the problem has no endogenous boundary search,
+- you want to debug the core HJB residual before introducing another moving part,
+- you want the simplest possible success/failure signal.
+
+Typical return:
+
+- `state`: often a `PolicyIterationState`,
+- `history`: a vector of iteration errors.
+
+Useful first checks:
+
+```python
+print(type(state).__name__)
+print(history.shape)
+print(state.df.head())
+```
+
+In a typical liquidation fixed-boundary run from this repository:
+
+- the state type is `PolicyIterationState`,
+- the history length is around a few dozen iterations,
+- the DataFrame columns include `s`, `v`, `dv`, `d2v`, and policy columns.
+
+## `boundary_update()`: Re-Solve While Updating Boundaries
+
+Use:
 
 ```python
 state, history = solver.boundary_update()
 ```
 
-Precondition: model must implement `update_boundary(grid)`.
+Precondition:
 
-## Boundary Search
+- your model implements `update_boundary(grid)`.
+
+This workflow is appropriate when:
+
+- some boundary value is implied by the solved interior grid,
+- the boundary can be updated directly from the current solution,
+- you want an outer loop over "solve -> update boundary -> solve again."
+
+Example use in the hedging script:
+
+- locate a refinancing target `m` from `p'(m) = 1 + gamma`,
+- update the left boundary value from value-matching.
+
+Useful checks:
 
 ```python
-search_state = solver.boundary_search(method="hybr", verbose=False)
+print(type(state).__name__)
+print(history.shape)
+print(state.grid.boundary)
 ```
 
-Supported methods:
+## `boundary_search()`: Search for a Boundary That Satisfies a Condition
 
-- `gauss_newton`
-- `lm`
-- `broyden`
-- `lbfgs`
-- `bisection`
-- `hybr`
-- `broyden1`
-- `krylov`
+Use:
 
-## Sensitivity Analysis
+```python
+search_state = solver.boundary_search(method="bisection", verbose=False)
+```
+
+This is the core BCW workflow. Use it when:
+
+- one boundary value is not known in advance,
+- your model provides one or more `BoundaryConditionTarget` objects,
+- you want the solver to search for a value where a contact condition holds.
+
+Common methods:
+
+- `bisection`: best first choice for one-dimensional bracketed problems,
+- `hybr`, `lm`, `broyden`, `gauss_newton`: useful when you want nonlinear root-search alternatives,
+- `lbfgs`, `krylov`, `broyden1`: more specialized numerical options.
+
+Recommended starting rule:
+
+- if you have one scalar boundary target and a reliable bracket, start with `bisection`.
+
+That is exactly what the BCW examples do.
+
+### What To Inspect After Boundary Search
+
+```python
+state = solver.boundary_search(method="bisection", verbose=False)
+grid = state.grid
+
+print(grid.boundary)
+print(grid.dv[-1], grid.d2v[-1])
+```
+
+For the BCW liquidation example, the high-value diagnostics are:
+
+- solved `s_max` rather than the initial guess,
+- `grid.dv[-1]` close to `1`,
+- `grid.d2v[-1]` close to `0`.
+
+## `sensitivity_analysis()`: Follow a Parameter Path
+
+Use:
 
 ```python
 result = solver.sensitivity_analysis(
@@ -56,8 +156,91 @@ result = solver.sensitivity_analysis(
 )
 ```
 
-## Config Highlights
+This workflow is for comparative statics and continuation-style sweeps.
 
-- `derivative_method`: `central | forward | backward`
-- `pi_method`: `scan | anderson`
-- `pe_*`, `pi_*`, `bs_*`, `aa_*`
+It returns a `SensitivityResult` with:
+
+- `result.df`: summary table across parameter values,
+- `result.grids`: a `Grids` container storing the solved grids.
+
+In a small example from this repository, `result.df.columns` include:
+
+- `sigma`,
+- `boundary_error`,
+- `converged`,
+- `s_min`,
+- `s_max`,
+- `v_left`,
+- `v_right`.
+
+That means you can analyze both:
+
+- whether the continuation succeeded numerically,
+- how the boundary itself moved as the parameter changed.
+
+## Configuration Tuning
+
+`Config` controls both numerical stability and runtime.
+
+### Good Default Starting Point
+
+For a new model, start simple:
+
+```python
+config = fjb.Config(
+    derivative_method="central",
+    pi_method="scan",
+    pi_max_iter=50,
+    pi_tol=1e-6,
+)
+```
+
+Why:
+
+- `central` is usually the safest first derivative scheme,
+- `scan` is a straightforward first policy-iteration method,
+- moderate tolerances tell you whether the formulation is sane before you spend more time tuning.
+
+### What To Tune First
+
+If the solve is unstable, adjust in this order:
+
+1. verify the model equations and boundaries,
+2. reduce model complexity or use a simpler initial guess,
+3. increase `number` only after the base formulation is stable,
+4. then tighten tolerances.
+
+If boundary search is unstable:
+
+1. verify the boundary target itself,
+2. check the bracket for `bisection`,
+3. inspect `grid.dv[-1]` and `grid.d2v[-1]`,
+4. only then try a different root-search method.
+
+## Common Failure Modes
+
+### `solve()` runs but the result looks economically strange
+
+Do not immediately blame the solver. First inspect:
+
+- whether `Policy.initialize` is reasonable,
+- whether `hjb_residual` signs are correct,
+- whether `s_min`, `s_max`, `v_left`, and `v_right` are internally consistent.
+
+### `boundary_search()` does not settle
+
+Most often, one of these is wrong:
+
+- the target function is not the one you actually want,
+- the bracket does not contain a sign change,
+- the fixed-boundary solve is already unstable before search starts.
+
+### `sensitivity_analysis()` is slow
+
+That is normal when each point requires a full nonlinear solve. Start with a short parameter grid and expand only after you trust the path.
+
+## Where To Go Next
+
+- Read [Results and Diagnostics](./results-and-diagnostics.md) to interpret returned objects.
+- Read [Troubleshooting](./troubleshooting.md) if a workflow fails numerically.
+- Read [API Reference](./api-reference.md) if you need the full signatures and object members.

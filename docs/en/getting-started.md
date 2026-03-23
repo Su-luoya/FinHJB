@@ -1,55 +1,210 @@
 # Getting Started
 
-## 1. Install
+This page is the fastest path from "I cloned the repository" to "I can run a real HJB case and tell whether the result looks reasonable."
+
+If your environment is not ready yet, start with [Installation and Environment](./installation-and-environment.md). If you want the full research context, use [BCW Case Study](./bcw2011-case-study.md) as your map.
+
+## Goal
+
+By the end of this page, you should be able to:
+
+- install the project and import `finhjb`,
+- run the BCW liquidation example,
+- run the BCW hedging example,
+- check a few stable numerical diagnostics instead of guessing whether the run worked.
+
+## Before You Start
+
+From the repository root, make sure the package and its dependencies are available:
 
 ```bash
 uv sync
+uv run python -c "import finhjb; print(finhjb.__all__[:5])"
 ```
 
-## 2. Define Four Core Components
+If you are on a headless machine or remote server, use:
 
-1. `AbstractParameter`: immutable model parameters.
-2. `AbstractBoundary`: state/value boundaries.
-3. `AbstractPolicy`: policy initialization and update logic.
-4. `AbstractModel`: HJB residual and optional boundary helpers.
+```bash
+export MPLBACKEND=Agg
+```
 
-## 3. Build Solver
+That avoids Matplotlib GUI errors while keeping all numerical outputs unchanged.
+
+## Step 1: Run the BCW Liquidation Example
+
+The liquidation case is the best first run because it contains the essential ingredients:
+
+- one state variable,
+- one main policy variable,
+- one right-boundary search problem,
+- a very clear success criterion at the payout boundary.
+
+Run:
+
+```bash
+MPLBACKEND=Agg uv run python src/example/BCW2011Liquidation.py
+```
+
+What this script does:
+
+1. builds BCW baseline parameters,
+2. constructs a `Boundary`, `Policy`, and `Model`,
+3. runs `solver.boundary_search(method="bisection")`,
+4. prints the final state and grid diagnostics.
+
+### What Success Looks Like
+
+With the current repository configuration, a healthy run has the following features:
+
+| Check | What you should expect |
+|---|---|
+| Left boundary value | `grid.v[0]` is exactly or extremely close to `0.9` |
+| Right boundary slope | `grid.dv[-1]` is extremely close to `1.0` |
+| Right boundary curvature | `grid.d2v[-1]` is near `0` |
+| State upper bound | solved `s_max` lands around `0.22` rather than staying at the initial guess |
+| Investment policy | very negative at low cash, then rises and turns positive near the right boundary |
+
+One representative run in this repository produced:
+
+```text
+{
+  's_max': 0.22177,
+  'v_left': 0.9,
+  'v_right': 1.38000,
+  'd2v_right': 6.26e-07,
+  'investment_min': -0.64691,
+  'investment_max': 0.10549
+}
+```
+
+Interpretation:
+
+- the right boundary search succeeded because `d2v_right` is essentially zero,
+- `dv[-1]` approaching `1` is consistent with the payout-side contact condition,
+- the strongly negative low-cash investment reflects tight financing conditions.
+
+## Step 2: Run the BCW Hedging Example
+
+Once the liquidation example is stable, move to the hedging extension:
+
+```bash
+MPLBACKEND=Agg uv run python src/example/BCW2011Hedging.py
+```
+
+This case adds:
+
+- a second control `psi`,
+- the margin-account share `kappa`,
+- a left-boundary update condition tied to refinancing,
+- the three-region hedge policy structure discussed in BCW.
+
+### What Success Looks Like
+
+For the current repository setup, a healthy hedging run has these characteristics:
+
+| Check | What you should expect |
+|---|---|
+| Left boundary value | `v_left` is above the liquidation value because refinancing is now active |
+| Right boundary curvature | `grid.d2v[-1]` is again very close to `0` |
+| Hedge range | `psi` stays between `-pi` and `0` |
+| Low-cash region | `psi` is pinned close to `-5.0` (`-pi`) |
+| High-cash region | `psi` moves toward `0.0` |
+| Investment policy | still negative in distressed states, positive near the right boundary |
+
+One representative run produced:
+
+```text
+{
+  's_max': 0.13850,
+  'v_left': 1.16119,
+  'v_right': 1.31352,
+  'd2v_right': -7.05e-07,
+  'investment_min': -0.24094,
+  'investment_max': 0.11668,
+  'psi_min': -5.0,
+  'psi_max': 0.0
+}
+```
+
+The key sanity check is not one exact number. The robust pattern is:
+
+- `psi` is fully binding in low-cash states,
+- the hedge relaxes as cash rises,
+- `d2v[-1]` still closes to zero.
+
+## Step 3: Read the Output Instead of Just Running It
+
+After either example finishes, the most useful object is the solved grid:
 
 ```python
-solver = fjb.Solver(
-    boundary=boundary,
-    model=model,
-    policy_guess=True,
-    number=500,  # must be >= 4
-    config=fjb.Config(pi_method="scan", derivative_method="central"),
-)
+grid = final_state.grid
+print(grid.df.head())
+print(grid.df.tail())
 ```
 
-## 4. Solve
+Focus on:
+
+- `s`: the cash-capital ratio grid,
+- `v`: value-capital ratio,
+- `dv`: marginal value of cash,
+- `d2v`: curvature and boundary contact diagnostics,
+- policy columns such as `investment` and `psi`.
+
+If you only look at one number, inspect:
 
 ```python
-state, history = solver.solve()
+print(grid.d2v[-1])
 ```
 
-`state.df` provides tabular values (`s`, `v`, `dv`, `d2v`, policies).
+That number tells you whether the right-boundary search is doing its job.
 
-## 5. Save and Reload
+## Step 4: Save a Solved Object
+
+The save/load API is useful once you have a good run and want to avoid re-solving immediately.
 
 ```python
-state.grid.save("solution_grid")
-loaded_grid = fjb.load_grid("solution_grid")
+state.grid.save("outputs/liquidation_grid")
+loaded = fjb.load_grid("outputs/liquidation_grid")
+print(loaded.df.head())
 ```
 
-Quick chooser for the three `load` functions:
+Quick chooser:
 
-- `fjb.load_grid(path)`: load one `Grid` (paired with `state.grid.save(path)`)
-- `fjb.load_grids(path)`: load a `Grids` collection (paired with `result.grids.save(path)`)
-- `fjb.load_sensitivity_result(path)`: load full continuation output (paired with `result.save(path)`)
+- `load_grid(path)`: one solved grid,
+- `load_grids(path)`: multiple grids from continuation,
+- `load_sensitivity_result(path)`: summary table plus all saved grids.
 
-For full examples, see “Loading Functions In Detail” in [API Reference](./api-reference.md).
+## Common First-Run Problems
 
-## 6. Next Step: Paper-Based Case Reproduction
+### The script fails before solving
 
-If you want a full walkthrough from model setup to result interpretation, continue with:
+Go to [Troubleshooting](./troubleshooting.md) and check:
 
-- [BCW2011 Case Study](./bcw2011-case-study.md)
+- environment install,
+- JAX import issues,
+- headless Matplotlib configuration.
+
+### The script runs, but the right boundary looks wrong
+
+Check:
+
+```python
+print(grid.dv[-1], grid.d2v[-1])
+```
+
+If `grid.d2v[-1]` is not near zero, review:
+
+- [BCW Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md)
+- [Results and Diagnostics](./results-and-diagnostics.md)
+- [Solver Guide](./solver-guide.md)
+
+### The policy values surprise you
+
+That is common the first time. In BCW, negative investment in low-cash states is not automatically a bug. Read the interpretation sections in the walkthrough pages before changing the code.
+
+## Where To Go Next
+
+- Read [BCW Case Study](./bcw2011-case-study.md) for the full learning path.
+- Read [BCW Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md) for equation-to-code details.
+- Read [BCW Hedging Walkthrough](./bcw2011-hedging-walkthrough.md) for `psi`, `kappa`, and the three hedge regions.
+- Read [Adapting BCW to Your Model](./adapting-bcw-to-your-model.md) once you can already reproduce the baseline examples.
