@@ -1,30 +1,24 @@
 # FinHJB
 
-[English README](./README.md)
+[English README](./README.md) | **[📖 文档](./docs/zh/index.md)**
 
 FinHJB 是一个基于 JAX 的一维 Hamilton-Jacobi-Bellman (HJB) 方程求解库。
 
-它提供了类型化的建模接口和高层求解器，支持：
-
-- 策略迭代求解，
-- 边界更新与边界搜索，
-- 参数延拓（敏感性分析），
-- 结果保存与加载。
-
 ## 安装
 
-- Python 版本：`>=3.10`
-- 推荐使用 [`uv`](https://docs.astral.sh/uv/)
+使用 `uv` 安装：
 
 ```bash
-uv sync
+uv add finhjb
 ```
 
-也可以用 pip 可编辑安装：
+或使用 `pip`：
 
 ```bash
-pip install -e .
+pip install finhjb
 ```
+
+**注意**: 默认安装为 CPU 版本。如需 GPU 支持，请单独安装相应 CUDA/Metal 后端的 JAX。
 
 ## 快速开始
 
@@ -90,75 +84,7 @@ state, history = solver.solve()
 print(state.converged, state.best_error)
 ```
 
-## 主要 API
-
-顶层导出包括：
-
-- `Config`
-- `Solver`
-- `Grid`, `Grids`, `ImmutableBoundary`
-- `AbstractBoundary`, `BoundaryConditionTarget`
-- `AbstractModel`, `AbstractParameter`
-- `AbstractPolicy`, `AbstractPolicyDict`
-- `AbstractValueGuess`, `LinearInitialValue`, `QuadraticInitialValue`
-- `explicit_policy`, `implicit_policy`
-- `load_grid`, `load_grids`, `load_sensitivity_result`
-
-## 求解工作流
-
-- 求解：`state, history = solver.solve()`
-- 边界更新（模型必须实现 `update_boundary(grid)`）：
-  `state, history = solver.boundary_update()`
-- 边界搜索：`state = solver.boundary_search(method="hybr")`
-- 敏感性分析：
-  `result = solver.sensitivity_analysis(method="hybr", param_name="sigma", param_values=...)`
-
-## 保存与加载
-
-```python
-state.grid.save("solution_grid")
-loaded_grid = fjb.load_grid("solution_grid")
-```
-
-同理支持：
-
-- `grids.save(path)` + `fjb.load_grids(path)`
-- `result.save(path)` + `fjb.load_sensitivity_result(path)`
-
-## 配置项重点
-
-`Config` 主要控制导数策略和收敛参数：
-
-- `derivative_method`: `central | forward | backward`
-- `pi_method`: `scan | anderson`
-- `pe_*`, `pi_*`, `bs_*` 容忍度与迭代上限
-- `aa_*` Anderson 加速参数
-
-## 测试
-
-```bash
-uv run pytest
-```
-
-覆盖率门槛（项目配置）：
-
-```bash
-uv run pytest --cov=src/finhjb --cov-fail-under=85
-```
-
-## 文档
-
-- 在线文档：<https://su-luoya.github.io/FinHJB/>
-- 中文站点：<https://su-luoya.github.io/FinHJB/zh/>
-- 英文文档：[docs/en/index.md](./docs/en/index.md)
-- 中文文档：[docs/zh/index.md](./docs/zh/index.md)
-
-推荐阅读顺序：
-
-1. 先看 [docs/zh/installation-and-environment.md](./docs/zh/installation-and-environment.md)
-2. 再按 [docs/zh/getting-started.md](./docs/zh/getting-started.md) 跑通 BCW 快速开始
-3. 用 [docs/zh/bcw2011-case-study.md](./docs/zh/bcw2011-case-study.md) 作为案例导航页
-4. 当你准备改自己的模型时，继续看 [docs/zh/adapting-bcw-to-your-model.md](./docs/zh/adapting-bcw-to-your-model.md)
+详细文档、API 参考和更多示例，见[完整文档](./docs/zh/index.md)。
 
 本地构建 Sphinx 文档站：
 

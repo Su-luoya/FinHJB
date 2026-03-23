@@ -1,30 +1,24 @@
 # FinHJB
 
-[简体中文 README](./README.zh-CN.md)
+[简体中文 README](./README.zh-CN.md) | **[📖 Documentation](./docs/en/index.md)**
 
 FinHJB is a Python library for solving one-dimensional Hamilton-Jacobi-Bellman (HJB) equations with JAX.
 
-It provides typed interfaces for model construction and a high-level solver API for:
-
-- policy iteration,
-- boundary update/search,
-- parameter continuation (sensitivity analysis),
-- result serialization and reloading.
-
 ## Installation
 
-- Python: `>=3.10`
-- Recommended: [`uv`](https://docs.astral.sh/uv/)
+Install with `uv`:
 
 ```bash
-uv sync
+uv add finhjb
 ```
 
-For editable installation with pip:
+Or with `pip`:
 
 ```bash
-pip install -e .
+pip install finhjb
 ```
+
+**Note**: Installation defaults to CPU. For GPU support, please install JAX separately with the appropriate CUDA/Metal backend.
 
 ## Quick Start
 
@@ -90,79 +84,4 @@ state, history = solver.solve()
 print(state.converged, state.best_error)
 ```
 
-## Main APIs
-
-Top-level exports include:
-
-- `Config`
-- `Solver`
-- `Grid`, `Grids`, `ImmutableBoundary`
-- `AbstractBoundary`, `BoundaryConditionTarget`
-- `AbstractModel`, `AbstractParameter`
-- `AbstractPolicy`, `AbstractPolicyDict`
-- `AbstractValueGuess`, `LinearInitialValue`, `QuadraticInitialValue`
-- `explicit_policy`, `implicit_policy`
-- `load_grid`, `load_grids`, `load_sensitivity_result`
-
-## Solver Workflows
-
-- Solve: `state, history = solver.solve()`
-- Boundary update (model must implement `update_boundary(grid)`):
-  `state, history = solver.boundary_update()`
-- Boundary search: `state = solver.boundary_search(method="hybr")`
-- Sensitivity analysis:
-  `result = solver.sensitivity_analysis(method="hybr", param_name="sigma", param_values=...)`
-
-## Save / Load
-
-```python
-state.grid.save("solution_grid")
-loaded_grid = fjb.load_grid("solution_grid")
-```
-
-Similarly:
-
-- `grids.save(path)` + `fjb.load_grids(path)`
-- `result.save(path)` + `fjb.load_sensitivity_result(path)`
-
-## Configuration Highlights
-
-`Config` controls derivative rules and convergence behavior:
-
-- `derivative_method`: `central | forward | backward`
-- `pi_method`: `scan | anderson`
-- `pe_*`, `pi_*`, `bs_*` tolerances and iteration limits
-- `aa_*` settings for Anderson acceleration
-
-## Testing
-
-```bash
-uv run pytest
-```
-
-Coverage gate (configured in project settings):
-
-```bash
-uv run pytest --cov=src/finhjb --cov-fail-under=85
-```
-
-## Documentation
-
-- Online docs: <https://su-luoya.github.io/FinHJB/>
-- Chinese site: <https://su-luoya.github.io/FinHJB/zh/>
-- English docs: [docs/en/index.md](./docs/en/index.md)
-- Chinese docs: [docs/zh/index.md](./docs/zh/index.md)
-
-Recommended reading path for new users:
-
-1. Start with [docs/en/installation-and-environment.md](./docs/en/installation-and-environment.md)
-2. Run the BCW quickstart in [docs/en/getting-started.md](./docs/en/getting-started.md)
-3. Use [docs/en/bcw2011-case-study.md](./docs/en/bcw2011-case-study.md) as the case-study map
-4. Move to [docs/en/adapting-bcw-to-your-model.md](./docs/en/adapting-bcw-to-your-model.md) when you are ready to customize your own model
-
-Build the Sphinx site locally:
-
-```bash
-uv sync --group docs
-uv run sphinx-build -b dirhtml docs build/sphinx/dirhtml -c .sphinx -W --keep-going
-```
+See the [full documentation](./docs/en/index.md) for more details, examples, and API reference.
