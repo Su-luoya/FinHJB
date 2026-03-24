@@ -2,14 +2,17 @@
 
 Read this page before your first solve.
 
-The goal is not only "the package installs," but "you can run the BCW examples in the same environment that you will later use for your own model."
+This page separates two goals that used to get mixed together:
+
+- installing the published `finhjb` package from PyPI,
+- reproducing the repository BCW examples and building docs from source.
 
 ## Goal
 
 By the end of this page, you should be able to:
 
-- create a working local environment,
-- import `finhjb` from the repository checkout,
+- install the published package when you only need the library API,
+- set up a repository environment when you want the BCW scripts or local docs,
 - avoid the most common JAX and Matplotlib environment issues,
 - run a minimal verification command before moving to the BCW tutorials.
 
@@ -22,14 +25,56 @@ FinHJB is currently easiest to use in the following setup:
 | Item | Recommendation |
 |---|---|
 | Python | `>=3.10` |
-| Environment manager | `uv` |
+| Package manager | `uv` or `pip` |
 | First backend target | CPU |
 | Plotting on remote machines | `MPLBACKEND=Agg` |
-| Docs build | `uv sync --group docs` |
+| Docs build from source | `uv sync --group docs` |
 
 For a first successful run, do not start by optimizing for GPU, notebook integration, or custom plotting backends. Start with the simplest reproducible environment.
 
-## Step 1: Clone the Repository
+## Step 1: Choose Your Path
+
+Use the path that matches what you actually want to do.
+
+### Path A: Use FinHJB as a package
+
+This is the right path if you want to import `finhjb` in your own project and do not need the repository example scripts.
+
+Install with one of these commands:
+
+```bash
+uv add finhjb
+```
+
+```bash
+pip install finhjb
+```
+
+Then run a minimal import check:
+
+```bash
+python -c "import finhjb as fjb; print('exports:', len(fjb.__all__), 'first:', fjb.__all__[:5])"
+```
+
+Important limitation:
+
+- the published wheel contains the `finhjb` package,
+- it does not contain `src/example/BCW2011Liquidation.py`,
+- it does not contain `src/example/BCW2011Hedging.py`,
+- it does not contain the repository docs tree.
+
+So if your goal is to reproduce the BCW walkthroughs line by line, continue with Path B instead.
+
+### Path B: Work from repository source
+
+Use this path if you want to:
+
+- run `src/example/BCW2011Liquidation.py`,
+- run `src/example/BCW2011Hedging.py`,
+- build the local Sphinx docs,
+- or work on the package itself.
+
+## Step 2: Clone the Repository
 
 ```bash
 git clone https://github.com/Su-luoya/FinHJB.git
@@ -38,9 +83,9 @@ cd FinHJB
 
 You should run the rest of the commands from the repository root.
 
-## Step 2: Install Dependencies
+## Step 3: Install Repository Dependencies
 
-### Recommended: `uv`
+The installation section above covered package installation. The commands below are specifically for the repository checkout.
 
 ```bash
 uv sync
@@ -52,15 +97,9 @@ If you also want to build the Sphinx docs locally:
 uv sync --group docs
 ```
 
-### Alternative: editable `pip`
-
-```bash
-pip install -e .
-```
-
 The project documentation and CI use `uv`, so if you hit an environment mismatch, prefer returning to `uv sync`.
 
-## Step 3: Verify the Python Environment
+## Step 4: Verify the Repository Python Environment
 
 Run a very small import test before attempting a full solve:
 
@@ -79,7 +118,7 @@ uv run python -c "from src.example.BCW2011Hedging import Parameter; print(Parame
 
 If these imports fail, do not proceed to the walkthrough pages yet. Fix the environment first.
 
-## Step 4: Configure Plotting For Your Machine
+## Step 5: Configure Plotting For Your Machine
 
 The BCW example scripts import Matplotlib. On laptops with a desktop session, that is usually fine. On servers, CI, and remote shells, set:
 
@@ -99,7 +138,7 @@ This changes only plotting behavior. It does not change the economics or solver 
 
 If you are not in a POSIX-like shell, the environment-variable syntax differs. The important part is that Matplotlib uses the `Agg` backend before the script imports `matplotlib.pyplot`.
 
-## Step 5: Run a Minimal Sanity Check
+## Step 6: Run a Minimal Sanity Check
 
 Before solving BCW, run one command that exercises the package in the project environment:
 
@@ -111,9 +150,9 @@ print("Config example:", fjb.Config())
 PY
 ```
 
-This is a good "environment checkpoint." If it fails, your first task is still installation, not numerical debugging.
+This is a good environment checkpoint. If it fails, your first task is still installation, not numerical debugging.
 
-## Step 6: Optional But Useful Checks
+## Step 7: Optional But Useful Checks
 
 ### Build the documentation locally
 
@@ -139,12 +178,13 @@ That test file checks bilingual page coverage and basic documentation/API expect
 
 ### macOS
 
-Usually the smoothest route is simply:
+For package usage, the smoothest route is usually:
 
 ```bash
-uv sync
-uv run python -c "import finhjb"
+python -c "import finhjb"
 ```
+
+If you are working from repository source rather than a plain package install, use `uv sync` first and then `uv run python -c "import finhjb"`.
 
 On Apple Silicon, avoid changing anything until the default CPU setup works.
 
@@ -164,28 +204,31 @@ The project itself is Python-based, but many examples in the docs use Unix-style
 
 ## What "Installed Correctly" Means
 
-A healthy environment is one where all of the following are true:
+A healthy package-only environment is one where:
+
+1. `python -c "import finhjb"` succeeds.
+
+A healthy repository environment for BCW reproduction is one where all of the following are true:
 
 1. `uv run python -c "import finhjb"` succeeds.
 2. `uv run python -c "from src.example.BCW2011Liquidation import Parameter"` succeeds.
 3. `uv run sphinx-build ...` succeeds if you installed the docs group.
 4. You can run the BCW liquidation example without import errors or plotting-backend errors.
 
-If only the package import works but the example script fails, the setup is not complete yet.
+If only the package import works but the example script fails, the setup is not complete yet for repository walkthroughs.
 
 ## Common Installation Failure Patterns
 
 | Symptom | Likely cause | First fix to try |
 |---|---|---|
-| `ModuleNotFoundError: No module named 'finhjb'` | you are using system Python instead of project environment | rerun via `uv run ...` |
-| `ModuleNotFoundError: No module named 'jax'` | dependencies were not installed in the active environment | run `uv sync` again |
+| `ModuleNotFoundError: No module named 'finhjb'` | you are using the wrong environment | rerun in the environment where you installed the package |
+| `ModuleNotFoundError: No module named 'jax'` | dependencies were not installed in the active repository environment | run `uv sync` again |
 | Matplotlib GUI or display error | remote/headless machine | set `MPLBACKEND=Agg` |
 | Sphinx command fails on missing package | docs dependencies not installed | run `uv sync --group docs` |
-| Example imports fail from repo root | wrong working directory | `cd` into repository root |
+| Example imports fail from repo root | wrong working directory or missing repository checkout | `cd` into repository root and retry |
 
 ## After Installation: The First Real Page To Read
 
 Once the environment is healthy, go directly to [Getting Started](./getting-started.md). That page is designed to answer the next practical question:
 
 "Can I run BCW and tell whether the result is correct?"
-

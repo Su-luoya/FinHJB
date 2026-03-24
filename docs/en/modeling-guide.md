@@ -109,6 +109,16 @@ def s_max_condition(grid) -> float:
 
 That tells the solver to search for a boundary where the right-tail curvature goes to zero.
 
+In practice, `boundary_condition()` returns a list of `BoundaryConditionTarget` objects. That list does more than name the condition:
+
+- only boundaries appearing in the list are optimized by `boundary_search()`,
+- the list order defines the boundary-parameter order for multi-boundary searches,
+- for `method="bisection"`, the same order becomes the nested outer-to-inner search order,
+- `low` and `high` are required if you want `bisection`,
+- `tol` and `max_iter` on the target are also specific to `bisection`.
+
+For all the other boundary-search methods, the solver instead uses `Config.bs_tol` and `Config.bs_max_iter`.
+
 ## `AbstractPolicyDict`: Declare Control Variables
 
 `AbstractPolicyDict` is the typed container for policy arrays.
@@ -212,10 +222,43 @@ Typical inputs:
 
 Optional model hooks:
 
-- `jump(...)`: for problems with jump terms,
+- `jump(...)`: for problems with non-zero jump terms,
 - `boundary_condition()`: for boundary-search targets,
 - `update_boundary(grid)`: for iterative boundary update workflows,
 - `auxiliary(grid)`: for user-defined diagnostics.
+
+### When To Override `jump(...)`
+
+Most models do not need this. The default implementation is zero.
+
+Override it only if your HJB contains an extra jump term. The solver evaluates the hook through `Grid.jump_inter`, so in practice it is called on the interior-grid slices rather than the full boundary-including arrays.
+
+### What `boundary_condition()` Should Return
+
+The return value is a list of `BoundaryConditionTarget(...)` objects.
+
+Each target provides:
+
+- `boundary_name`: which field such as `s_max` or `v_left` should be searched,
+- `condition_func(grid)`: the residual to drive toward zero,
+- `low` / `high`: the bracket for `bisection`,
+- `tol` / `max_iter`: per-target settings for `bisection`.
+
+If you use `hybr`, `lm`, `broyden`, `gauss_newton`, `krylov`, `broyden1`, or `lbfgs`, the search instead uses `Config.bs_tol` and `Config.bs_max_iter`.
+
+### What `auxiliary(grid)` Is For
+
+`auxiliary(grid)` is the hook behind `grid.aux`.
+
+Use it only when you want extra derived diagnostics that are not already in `grid.df` or `grid.boundary`. A simple and robust pattern is to return a dictionary:
+
+```python
+@staticmethod
+def auxiliary(grid: fjb.Grid):
+    return {"value_mean": jnp.mean(grid.v)}
+```
+
+If you leave it unimplemented, `grid.aux` raising `NotImplementedError` is normal.
 
 ## A Good Implementation Order
 

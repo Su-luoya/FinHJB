@@ -18,8 +18,8 @@ class AbstractModel(ABC, Generic[P, D]):
     Abstract base class for HJB models.
 
     This class defines the interface for HJB models,
-    including methods for initializing and updating policies,
-    calculating the HJB residual, and optionally handling jump terms.
+    including the required HJB residual and several optional hooks for jumps,
+    endogenous boundaries, outer-loop boundary updates, and custom diagnostics.
 
     Methods
     -------
@@ -31,10 +31,16 @@ class AbstractModel(ABC, Generic[P, D]):
         Calculate the pointwise HJB residual on the interior grid.
     jump
         Calculate the jump term for the HJB equation.
+    boundary_condition
+        Declare endogenous boundary targets for `Solver.boundary_search()`.
+    update_boundary
+        Return direct boundary updates for `Solver.boundary_update()`.
+    auxiliary
+        Return user-defined diagnostics exposed through `Grid.aux`.
 
     Notes
     -----
-    - Subclasses must implement all abstract methods.
+    - Subclasses must implement the abstract `hjb_residual` method.
     - The `jump` method is optional to override; the default implementation returns zero jumps.
     - Keep parameter orders and return shapes as specified; the solver expects these signatures.
     - These are `static` methods so remember to add the `@staticmethod` decorator.
@@ -115,10 +121,13 @@ class AbstractModel(ABC, Generic[P, D]):
 
         Calculate the jump term for the HJB equation.
 
-        The default implementation returns zero jumps.
+        The default implementation returns zero jumps. Override this only when
+        your HJB contains a non-zero jump or Poisson-arrival term.
 
         Notes
         -----
+        - The solver evaluates this hook through `Grid.jump_inter`, so in
+          practice `v`, `s`, and `policy` are the interior-grid slices.
         - You can override this method in subclasses to implement specific jump dynamics.
         - Keep the parameter order and return shape as specified; the solver expects this signature.
         - This is a `static` method and does not have access to instance attributes.
@@ -148,22 +157,50 @@ class AbstractModel(ABC, Generic[P, D]):
         """
         (This method is OPTIONAL to override)
 
-        Apply boundary conditions to the value function.
+        Return endogenous-boundary targets for `Solver.boundary_search()`.
 
-        # todo
+        Each returned `BoundaryConditionTarget` specifies:
+
+        - which boundary field should be optimized,
+        - how to evaluate the boundary residual on the solved grid,
+        - and, for `method="bisection"`, the bracket and per-target search settings.
+
+        Notes
+        -----
+        - Only boundaries listed here are optimized by `boundary_search()`.
+        - The order of targets in the returned list defines the boundary vector
+          order for nonlinear search methods.
+        - For nested `bisection`, the same order defines the outer-to-inner
+          search order.
+        - `low`, `high`, `tol`, and `max_iter` are used by `bisection`.
+          Other search methods use `Config.bs_tol` and `Config.bs_max_iter`.
         """
         return []
 
     @staticmethod
     def update_boundary(grid: Grid):
-        """Return boundary updates and update error for boundary-update algorithm."""
+        """
+        Return direct boundary updates for the boundary-update workflow.
+
+        Implement this hook when a solved grid directly implies revised boundary
+        values and an update error, so that `Solver.boundary_update()` can run
+        the outer loop `solve -> update boundary -> solve again`.
+        """
         raise NotImplementedError(
             "The `update_boundary` method is not implemented for this model."
         )
 
     @staticmethod
     def auxiliary(grid: Grid):
-        """Return user-defined auxiliary diagnostics derived from solved grid."""
+        """
+        Return user-defined diagnostics derived from a solved grid.
+
+        `Grid.aux` is a thin proxy for this hook. Leaving it unimplemented means
+        `grid.aux` will raise `NotImplementedError`, which is expected.
+
+        A common pattern is to return a small dictionary of derived summaries,
+        for example `{\"value_mean\": jnp.mean(grid.v)}`.
+        """
         raise NotImplementedError(
             "The `auxiliary` method is not implemented for this model."
         )

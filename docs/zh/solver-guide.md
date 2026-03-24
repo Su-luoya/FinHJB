@@ -117,17 +117,34 @@ state = solver.boundary_search(method="bisection", verbose=False)
 - 模型通过 `BoundaryConditionTarget` 定义了待满足的条件；
 - 你希望求解器自动寻找使接触条件成立的边界。
 
-常见方法：
+当前支持的方法：
 
-- `bisection`：一维有 bracket 的问题，优先首选；
-- `hybr`、`lm`、`broyden`、`gauss_newton`：常见的非线性根搜索方法；
-- `lbfgs`、`krylov`、`broyden1`：更偏数值实验型的方法。
+- `bisection`
+- `hybr`
+- `lm`
+- `broyden`
+- `gauss_newton`
+- `lbfgs`
+- `krylov`
+- `broyden1`
 
-一个很实用的经验法则是：
+### 这些方法的关键区别
+
+- `bisection` 是唯一会使用 `BoundaryConditionTarget.low`、`high`、`tol`、`max_iter` 的方法。
+- 如果你用 `bisection`，每个被搜索的 target 都必须提供 `low` 和 `high`。
+- 多边界 `bisection` 时，`model.boundary_condition()` 返回列表的顺序，会变成嵌套搜索的外层到内层顺序。
+- `hybr`、`lm`、`broyden`、`gauss_newton`、`krylov`、`broyden1` 会把问题当成向量 root-search，并使用 `Config.bs_tol` 和 `Config.bs_max_iter`。
+- `lbfgs` 不是严格意义上的 root solver，而是最小化残差平方和，更适合作为 least-squares fallback。
+
+### 实用的起步规则
 
 - 如果你只有一个标量边界目标，而且有可信 bracket，先用 `bisection`。
+- 如果你是低维多边界问题，而且想先用一个稳健默认值，先试 `hybr`。
+- 如果残差映射比较平滑，而且天然像 least-squares，试 `lm` 或 `gauss_newton`。
+- 如果你想要拟牛顿型替代，可以试 `broyden` 或 `broyden1`。
+- 如果你只想把问题当成近似残差最小化，最后再考虑 `lbfgs`。
 
-BCW 两个示例都遵循这个原则。
+这些建议是针对当前 FinHJB 实现和底层搜索器的实用经验法则，不代表它们对所有模型都一定最优。
 
 ### 边界搜索后应该先看什么
 

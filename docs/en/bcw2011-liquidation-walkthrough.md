@@ -167,6 +167,17 @@ These numbers are not meant to be memorized. They are useful because they show t
 - `d2v` approaching `0`,
 - investment rising from negative to slightly positive.
 
+## BCW Benchmark Magnitudes To Cross-Check
+
+These repository outputs also line up with the benchmark magnitudes discussed in BCW:
+
+- payout boundary `w_bar` is about `0.2218`,
+- marginal value of cash near zero satisfies `p'(0) ≈ 30`,
+- low-cash investment is about `-0.647`, meaning asset sales exceed 60% at an annual rate,
+- right-boundary investment is about `0.105`.
+
+So if your run lands in that neighborhood, you are matching not only this repository's example output but also the scale emphasized in the paper.
+
 ## Visual Checks
 
 ### Overall shape
@@ -195,6 +206,7 @@ Treat these as stable ranges and patterns, not brittle exact values.
 
 | Checkpoint | Healthy pattern |
 |---|---|
+| `grid.dv[0]` | roughly `30` |
 | `grid.v[0]` | exactly or almost exactly `0.9` |
 | `grid.boundary.s_max` | roughly `0.22` |
 | `grid.dv[-1]` | essentially `1.0` |
@@ -262,4 +274,3 @@ Check:
 Move to [Results and Diagnostics](./results-and-diagnostics.md) if you want to learn how to read `state`, `history`, and `grid` systematically.
 
 After that, continue to [BCW2011 Hedging Walkthrough](./bcw2011-hedging-walkthrough.md).
-

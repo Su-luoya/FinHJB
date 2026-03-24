@@ -169,6 +169,17 @@ LIQ_BOUNDARY ImmutableBoundary(s_min=0.0, s_max=0.22176666, v_left=0.9, v_right=
 - `d2v` 最终逼近 `0`；
 - 投资从显著负值逐步上升，最后变成小幅正值。
 
+## 和 BCW 原文对照时，最值得看的量级
+
+这些仓库输出也和 BCW 原文里强调的 benchmark 量级是对得上的：
+
+- payout boundary `w_bar` 大约是 `0.2218`；
+- 现金接近零时的边际价值满足 `p'(0) ≈ 30`；
+- 左端投资大约是 `-0.647`，对应年化超过 60% 的资产出售强度；
+- 右边界附近投资大约是 `0.105`。
+
+所以如果你的运行结果大致落在这个量级附近，说明你对上的不只是本仓库示例输出，也对上了论文里强调的数量级。
+
 ## 图形检查
 
 ### 整体形状
@@ -197,6 +208,7 @@ LIQ_BOUNDARY ImmutableBoundary(s_min=0.0, s_max=0.22176666, v_left=0.9, v_right=
 
 | 检查点 | 健康运行的模式 |
 |---|---|
+| `grid.dv[0]` | 大约在 `30` 左右 |
 | `grid.v[0]` | 精确等于或极接近 `0.9` |
 | `grid.boundary.s_max` | 大约在 `0.22` 左右 |
 | `grid.dv[-1]` | 基本等于 `1.0` |
@@ -262,4 +274,3 @@ print(grid.df[["s", "v", "dv", "d2v", "investment"]].tail())
 如果你想系统学习怎么读 `state`、`history` 和 `grid`，下一页请看 [结果与诊断](./results-and-diagnostics.md)。
 
 之后再继续读 [BCW Hedging 逐步讲解](./bcw2011-hedging-walkthrough.md)。
-

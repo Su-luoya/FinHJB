@@ -4,6 +4,12 @@ This page is the fastest path from "I cloned the repository" to "I can run a rea
 
 If your environment is not ready yet, start with [Installation and Environment](./installation-and-environment.md). If you want the full research context, use [BCW Case Study](./bcw2011-case-study.md) as your map.
 
+Important scope note:
+
+- if you installed `finhjb` from PyPI or via `uv add`, you can use the library API immediately,
+- but the BCW scripts in `src/example/BCW2011Liquidation.py` and `src/example/BCW2011Hedging.py` are repository files,
+- so the rest of this page assumes you are working from a repository checkout.
+
 ## Goal
 
 By the end of this page, you should be able to:
@@ -29,6 +35,12 @@ export MPLBACKEND=Agg
 ```
 
 That avoids Matplotlib GUI errors while keeping all numerical outputs unchanged.
+
+If you are using only the published package and do not have the repository checkout, skip the BCW script commands below and go directly to:
+
+- [Modeling Guide](./modeling-guide.md)
+- [Solver Guide](./solver-guide.md)
+- [API Reference](./api-reference.md)
 
 ## Step 1: Run the BCW Liquidation Example
 
@@ -95,7 +107,8 @@ This case adds:
 
 - a second control `psi`,
 - the margin-account share `kappa`,
-- a left-boundary update condition tied to refinancing,
+- a refinancing condition for `v_left` that is encoded in the boundary-search targets,
+- an additional `update_boundary(grid)` helper that demonstrates a boundary-update-compatible rule,
 - the three-region hedge policy structure discussed in BCW.
 
 ### What Success Looks Like
@@ -131,6 +144,13 @@ The key sanity check is not one exact number. The robust pattern is:
 - `psi` is fully binding in low-cash states,
 - the hedge relaxes as cash rises,
 - `d2v[-1]` still closes to zero.
+
+For this specific implementation, you can also compare against BCW-style benchmark magnitudes:
+
+- `w_-` is about `0.067`,
+- `w_+` is about `0.115`,
+- the payout boundary `w_bar` is about `0.1385`,
+- `psi` stays in `[-5, 0]`.
 
 ## Step 3: Read the Output Instead of Just Running It
 

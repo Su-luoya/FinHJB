@@ -29,3 +29,23 @@ pip install finhjb
 ```
 
 **Note**: Installation defaults to CPU. For GPU support, please install JAX separately with the appropriate CUDA/Metal backend.
+
+Installing with `uv add` or `pip install` is the right path if you want to use the published `finhjb` package in your own project.
+
+The BCW walkthrough scripts live in the repository at `src/example/BCW2011Liquidation.py` and `src/example/BCW2011Hedging.py`. They are not included in the published PyPI wheel, so reproducing those examples requires a repository checkout.
+
+## Documentation Paths
+
+If you are starting from the published package, begin with these local documentation entrypoints in the repository:
+
+- [Overview](./docs/en/index.md)
+- [Installation and Environment](./docs/en/installation-and-environment.md)
+- [Modeling Guide](./docs/en/modeling-guide.md)
+- [Solver Guide](./docs/en/solver-guide.md)
+- [API Reference](./docs/en/api-reference.md)
+
+If you are working from the repository and want to reproduce the BCW examples, start with:
+
+- [Getting Started](./docs/en/getting-started.md)
+- [BCW2011 Case Study](./docs/en/bcw2011-case-study.md)
+- [Adapting BCW to Your Model](./docs/en/adapting-bcw-to-your-model.md)

@@ -110,6 +110,16 @@ def s_max_condition(grid) -> float:
 
 含义是：搜索一个边界，使得右端曲率趋于零。
 
+在实际接口里，`boundary_condition()` 返回的是一个 `BoundaryConditionTarget` 列表。这个列表不只是“把条件写出来”这么简单，它还决定了：
+
+- 只有出现在列表里的边界，才会进入 `boundary_search()`；
+- 多边界搜索时，列表顺序就是边界参数向量顺序；
+- 对 `method="bisection"` 而言，这个顺序还会变成嵌套搜索的外层到内层顺序；
+- 如果要用 `bisection`，每个 target 都必须给 `low` 和 `high`；
+- `tol` 和 `max_iter` 这两个字段也主要是给 `bisection` 用的。
+
+如果你用的是其他 boundary-search 方法，则主要使用 `Config.bs_tol` 和 `Config.bs_max_iter`。
+
 ## `AbstractPolicyDict`：声明控制变量
 
 `AbstractPolicyDict` 是一个类型化容器，用来声明策略数组有哪些键。
@@ -213,10 +223,43 @@ hjb_residual(v, dv, d2v, s, policy, jump, boundary, p)
 
 可选钩子包括：
 
-- `jump(...)`：如果模型有跳跃项；
+- `jump(...)`：如果模型有非零跳跃项；
 - `boundary_condition()`：如果需要边界搜索；
 - `update_boundary(grid)`：如果需要外层边界更新；
 - `auxiliary(grid)`：如果想自定义额外诊断量。
+
+### 什么时候需要重写 `jump(...)`
+
+大多数模型都不需要，默认实现就是零。
+
+只有当你的 HJB 里真的存在额外的跳跃项时，才需要重写它。求解器是通过 `Grid.jump_inter` 来调用这个钩子的，所以实际上传进去的是内部网格切片，而不是包含两端边界点的整条数组。
+
+### `boundary_condition()` 应该返回什么
+
+返回值是一个 `BoundaryConditionTarget(...)` 列表。
+
+每个 target 至少给出：
+
+- `boundary_name`：要搜索哪个边界字段，比如 `s_max` 或 `v_left`；
+- `condition_func(grid)`：你想逼近零的残差；
+- `low` / `high`：给 `bisection` 用的 bracket；
+- `tol` / `max_iter`：给 `bisection` 用的单目标设置。
+
+如果你使用的是 `hybr`、`lm`、`broyden`、`gauss_newton`、`krylov`、`broyden1` 或 `lbfgs`，则主要使用 `Config.bs_tol` 和 `Config.bs_max_iter`。
+
+### `auxiliary(grid)` 是干什么的
+
+`auxiliary(grid)` 就是 `grid.aux` 背后的钩子。
+
+只有当你想返回 `grid.df` 和 `grid.boundary` 之外的额外派生诊断量时，才建议实现它。一个很稳妥的模式是返回字典：
+
+```python
+@staticmethod
+def auxiliary(grid: fjb.Grid):
+    return {"value_mean": jnp.mean(grid.v)}
+```
+
+如果你没有实现它，那么 `grid.aux` 抛出 `NotImplementedError` 是正常行为。
 
 ## 一个很稳妥的实现顺序
 

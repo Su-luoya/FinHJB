@@ -192,6 +192,14 @@ So the safe default diagnostics are:
 
 Only use `grid.aux` after your model explicitly defines custom auxiliary outputs.
 
+A robust pattern is to let `auxiliary(grid)` return a small dictionary of derived summaries, for example:
+
+```python
+@staticmethod
+def auxiliary(grid: fjb.Grid):
+    return {"value_mean": jnp.mean(grid.v)}
+```
+
 ## Sensitivity Analysis Results
 
 `sensitivity_analysis()` returns a `SensitivityResult`:
@@ -290,4 +298,3 @@ That is usually a modeling issue, not a numerical fine-tuning issue.
 - Read [Solver Guide](./solver-guide.md) if you want to choose the right workflow for your own model.
 - Read [Adapting BCW to Your Model](./adapting-bcw-to-your-model.md) if you are ready to migrate away from the baseline examples.
 - Read [API Reference](./api-reference.md) if you want exact class members and signatures.
-

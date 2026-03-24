@@ -40,6 +40,21 @@ The hedging case keeps the same one-dimensional state variable but introduces ad
 
 So the educational jump from liquidation to hedging is not "new package features only." It is also "new economic objects require different numerical workflows."
 
+## What The Main Script Actually Runs
+
+The current example script's main workflow is still:
+
+```python
+state = solver.boundary_search(method="bisection", verbose=False)
+```
+
+For this hedging implementation, `boundary_condition()` returns two active targets:
+
+- `s_max`,
+- `v_left`.
+
+That means the example is solving a two-boundary search problem directly through `boundary_search()`. The `update_boundary(grid)` method is still useful, but here it is best read as an extra reusable pattern for future models rather than the default workflow of the example script.
+
 ## Extra Parameters To Understand
 
 | Parameter | Meaning |
@@ -62,7 +77,8 @@ These are the parameters that most visibly change the policy logic compared with
 | maximum hedge region | `psi_clipped = max(psi_interior, -pi)` | low-cash binding region |
 | zero-hedge region | `jnp.where(should_hedge, psi_clipped, 0.0)` | high-cash no-hedge region |
 | margin share `kappa` | `kappa = min(|psi| / pi, 1)` | fraction of cash effectively tied up in margin account |
-| refinancing update | `update_boundary(grid)` | left-boundary adjustment from the issuance condition |
+| refinancing search target | `boundary_condition()` | solve `v_left` from the issuance condition during boundary search |
+| optional update helper | `update_boundary(grid)` | reusable boundary-update-compatible version of the same refinancing logic |
 
 ## The Three Hedge Regions
 
@@ -141,6 +157,17 @@ What this output tells you:
 - the right tail again satisfies the contact condition through `d2v[-1]`,
 - investment remains negative in distressed states and recovers near the right boundary.
 
+## BCW Benchmark Magnitudes To Cross-Check
+
+For this implementation, the most useful BCW-style benchmark magnitudes are:
+
+- maximum-hedging boundary `w_- ≈ 0.067`,
+- zero-hedging boundary `w_+ ≈ 0.115`,
+- payout boundary `w_bar ≈ 0.1385`,
+- hedge ratio range `psi ∈ [-5, 0]`.
+
+Those values match both the current repository output and the qualitative benchmark pattern discussed in BCW.
+
 ## Visual Checks
 
 ### Overall policy and value shape
@@ -184,14 +211,16 @@ def update_boundary(grid):
     ...
 ```
 
-This is important because the hedging case is not only a boundary-search example. It also demonstrates the logic needed for `boundary_update()`:
+This does not mean the example script itself defaults to `boundary_update()`. The current script still uses `boundary_search(method="bisection")` as the main workflow.
+
+What `update_boundary(grid)` gives you is a second, reusable expression of the same refinancing logic:
 
 - solve on the current boundary,
-- read a boundary-implied quantity from the solved grid,
+- read a refinancing-implied quantity from the solved grid,
 - update the left value boundary,
 - solve again.
 
-That is why the hedging case is the natural bridge from "I can reproduce BCW" to "I can design my own workflow."
+That is why the hedging case is a good bridge from "I can reproduce BCW" to "I can design my own workflow." It shows both the current script's direct boundary-search path and an alternative boundary-update-compatible hook.
 
 ## Common Failure Symptoms
 
@@ -240,4 +269,3 @@ print(grid.df[["s", "investment", "psi"]].tail())
 Go to [Results and Diagnostics](./results-and-diagnostics.md) if you want a structured guide to reading states, histories, grids, and continuation results.
 
 If your goal is to change the economics rather than just understand BCW, continue to [Adapting BCW to Your Model](./adapting-bcw-to-your-model.md).
-

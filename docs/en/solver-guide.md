@@ -116,17 +116,34 @@ This is the core BCW workflow. Use it when:
 - your model provides one or more `BoundaryConditionTarget` objects,
 - you want the solver to search for a value where a contact condition holds.
 
-Common methods:
+Supported methods:
 
-- `bisection`: best first choice for one-dimensional bracketed problems,
-- `hybr`, `lm`, `broyden`, `gauss_newton`: useful when you want nonlinear root-search alternatives,
-- `lbfgs`, `krylov`, `broyden1`: more specialized numerical options.
+- `bisection`
+- `hybr`
+- `lm`
+- `broyden`
+- `gauss_newton`
+- `lbfgs`
+- `krylov`
+- `broyden1`
 
-Recommended starting rule:
+### How The Methods Differ
+
+- `bisection` is the only method that uses `BoundaryConditionTarget.low`, `high`, `tol`, and `max_iter`.
+- With `bisection`, every searched target must provide `low` and `high`.
+- With multi-boundary `bisection`, the order returned by `model.boundary_condition()` becomes the nested outer-to-inner search order.
+- `hybr`, `lm`, `broyden`, `gauss_newton`, `krylov`, and `broyden1` treat the problem as a vector root-search problem and use `Config.bs_tol` and `Config.bs_max_iter`.
+- `lbfgs` does not solve the root problem directly. It minimizes the sum of squared residuals and is best treated as a least-squares fallback.
+
+### Practical Starting Rules
 
 - if you have one scalar boundary target and a reliable bracket, start with `bisection`.
+- if you have a low-dimensional multi-boundary problem and want a robust default, start with `hybr`.
+- if the residual map is smooth and naturally least-squares-like, try `lm` or `gauss_newton`.
+- if you want a quasi-Newton alternative, try `broyden` or `broyden1`.
+- if you only want an approximate residual minimizer, try `lbfgs` last.
 
-That is exactly what the BCW examples do.
+These are implementation-level rules of thumb for the current FinHJB search backends. They are good defaults, not universal mathematical guarantees.
 
 ### What To Inspect After Boundary Search
 

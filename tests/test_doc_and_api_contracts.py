@@ -90,6 +90,15 @@ def test_readme_points_to_existing_docs_entrypoints():
         assert (ROOT / target.removeprefix("./")).exists()
 
 
+def test_readmes_keep_minimal_install_commands():
+    readme_en = (ROOT / "README.md").read_text()
+    readme_zh = (ROOT / "README.zh-CN.md").read_text()
+
+    for readme in (readme_en, readme_zh):
+        assert "uv add finhjb" in readme
+        assert "pip install finhjb" in readme
+
+
 def test_public_api_names_are_documented():
     readme_en = (ROOT / "README.md").read_text()
     readme_zh = (ROOT / "README.zh-CN.md").read_text()

@@ -16,22 +16,38 @@ from finhjb.types import BOUNDARY_NAMES, BoundaryName
 @dataclass(frozen=True)
 class BoundaryConditionTarget:
     """
-    This class is used to specify the boundary condition target.
+    Specification for one endogenous-boundary target used by boundary search.
+
+    A target says:
+
+    - which boundary field should be varied,
+    - how to evaluate the resulting residual on a solved `Grid`,
+    - and, optionally, which bracket/tolerance settings should be used for
+      bisection-style search.
+
+    Notes
+    -----
+    - Only boundaries that appear in `Model.boundary_condition()` are searched
+      by `Solver.boundary_search()`.
+    - The order of targets in that list defines the parameter order passed to
+      nonlinear search methods.
+    - For nested `bisection`, the same order also defines the outer-to-inner
+      search order.
 
     Attributes
     ----------
     boundary_name : BoundaryName
-        The name of the boundary.
+        Boundary field to optimize, such as `s_max` or `v_left`.
     condition_func : Callable[["Grid"], float]
-        The condition function.
+        Residual evaluated on the solved grid. Search aims to drive this value to zero.
     low : Optional[float]
-        The lower bound of the condition function.
+        Lower bracket used by `method="bisection"`. Ignored by the other search methods.
     high : Optional[float]
-        The upper bound of the condition function.
+        Upper bracket used by `method="bisection"`. Ignored by the other search methods.
     tol : float
-        The tolerance of the condition function.
+        Per-target tolerance used by `method="bisection"`.
     max_iter : int
-        The maximum number of iterations of the condition function.
+        Per-target iteration cap used by `method="bisection"`.
     """
 
     boundary_name: BoundaryName

@@ -131,6 +131,38 @@ print(loaded.df.head())
 
 See [Solver Guide](./solver-guide.md) for when to use each one.
 
+## Boundary Search Method Notes
+
+Supported `Solver.boundary_search(method=...)` values:
+
+- `bisection`
+- `hybr`
+- `lm`
+- `broyden`
+- `gauss_newton`
+- `lbfgs`
+- `krylov`
+- `broyden1`
+
+Important behavior:
+
+- `boundary_condition()` returns the exact list of boundaries that will be searched.
+- The order of that list defines the boundary-parameter order for nonlinear methods.
+- For `bisection`, the same order also defines the nested outer-to-inner search order.
+- `BoundaryConditionTarget.low` and `high` matter only for `bisection`.
+- `BoundaryConditionTarget.tol` and `max_iter` also matter only for `bisection`.
+- All the other methods use `Config.bs_tol` and `Config.bs_max_iter`.
+- `lbfgs` minimizes squared residual loss rather than solving the root problem directly.
+
+## Model Hook Quick Reference
+
+The most important optional `AbstractModel` hooks are:
+
+- `jump(...)`: optional, default zero, evaluated by the solver through `Grid.jump_inter`.
+- `boundary_condition()`: returns the `BoundaryConditionTarget` list for `boundary_search()`.
+- `update_boundary(grid)`: used only by `boundary_update()`.
+- `auxiliary(grid)`: exposed through `Grid.aux`; leaving it unimplemented means `grid.aux` raises `NotImplementedError`.
+
 ## Grid Convenience
 
 `Grid` properties:
@@ -138,6 +170,12 @@ See [Solver Guide](./solver-guide.md) for when to use each one.
 - `s`, `v`, `dv`, `d2v`
 - `s_inter`, `policy_inter`, `number_inter`, `jump_inter`
 - `df`, `aux`
+
+Notes:
+
+- `jump_inter` is the interior-grid evaluation of `Model.jump(...)`.
+- `aux` is just a proxy for `Model.auxiliary(grid)`.
+- A common `auxiliary(grid)` pattern is to return a small dictionary of derived diagnostics.
 
 `Grid` methods:
 

@@ -44,6 +44,21 @@ hedging 案例保留了一维状态变量，但加入了新的经济结构：
 - 状态动态和残差结构变了，
 - 边界工作流也更复杂了。
 
+## 当前主脚本实际运行的工作流
+
+当前示例主脚本真正调用的仍然是：
+
+```python
+state = solver.boundary_search(method="bisection", verbose=False)
+```
+
+在这个 hedging 实现里，`boundary_condition()` 当前返回两个活跃 target：
+
+- `s_max`，
+- `v_left`。
+
+这意味着当前示例主流程是在 `boundary_search()` 里直接同时搜索两个边界。`update_boundary(grid)` 依然很有用，但在这里更适合被理解为“额外提供的、可复用的 boundary-update 模式”，而不是这个脚本默认走的工作流。
+
 ## 需要先理解的新参数
 
 | 参数 | 经济含义 |
@@ -64,7 +79,8 @@ hedging 案例保留了一维状态变量，但加入了新的经济结构：
 | 最大对冲区 | `psi_clipped = max(psi_interior, -pi)` | 低现金状态下的绑定区 |
 | 零对冲区 | `jnp.where(should_hedge, psi_clipped, 0.0)` | 高现金状态下的无对冲区 |
 | 保证金占比 `kappa` | `kappa = min(|psi| / pi, 1)` | 有多少现金被占用于保证金账户 |
-| 再融资边界更新 | `update_boundary(grid)` | 根据解出的网格更新左边界 |
+| 再融资搜索目标 | `boundary_condition()` | 在边界搜索里直接解出 `v_left` |
+| 可选更新辅助 | `update_boundary(grid)` | 同一套再融资逻辑的 boundary-update-compatible 写法 |
 
 ## 三分区对冲结构
 
@@ -143,6 +159,17 @@ DataFrame 头部大致是：
 - 右端仍通过 `d2v[-1]` 满足接触条件；
 - 投资在困境状态下仍为负，在右端逐渐恢复。
 
+## 和 BCW 原文对照时，最值得看的量级
+
+对这个实现来说，最有用的 BCW benchmark 量级是：
+
+- 最大对冲边界 `w_- ≈ 0.067`；
+- 零对冲边界 `w_+ ≈ 0.115`；
+- payout boundary `w_bar ≈ 0.1385`；
+- 对冲比率范围 `psi ∈ [-5, 0]`。
+
+这些量级同时和当前仓库输出以及 BCW 原文里的定性 benchmark 图形是对得上的。
+
 ## 图形检查
 
 ### 整体价值与策略形状
@@ -186,14 +213,16 @@ def update_boundary(grid):
     ...
 ```
 
-这很重要，因为 hedging 案例并不只是一个 boundary search 示例，它也展示了 `boundary_update()` 所需的典型逻辑：
+但这并不表示当前示例脚本默认走的是 `boundary_update()`。当前主脚本仍然是用 `boundary_search(method="bisection")` 作为主流程。
+
+`update_boundary(grid)` 提供的是同一套再融资逻辑的另一种可复用表达：
 
 1. 在当前边界下求解；
 2. 从已解出的网格里读出新的边界信息；
 3. 更新左边界值；
-4. 继续求解。
+4. 再继续求解。
 
-这也是为什么 hedging 是从“会复现 BCW”走向“能搭自己的工作流”的桥梁案例。
+这也是为什么 hedging 是从“会复现 BCW”走向“能搭自己的工作流”的桥梁案例。它同时展示了当前脚本的直接边界搜索路径，以及一种可复用的 boundary-update-compatible 钩子。
 
 ## 常见失败症状
 
@@ -242,4 +271,3 @@ print(grid.df[["s", "investment", "psi"]].tail())
 如果你想系统学习怎么读 `state`、`history`、`grid` 与 continuation 结果，请看 [结果与诊断](./results-and-diagnostics.md)。
 
 如果你的目标已经从“理解 BCW”转向“改成自己的模型”，下一页请看 [把 BCW 改成你自己的模型](./adapting-bcw-to-your-model.md)。
-

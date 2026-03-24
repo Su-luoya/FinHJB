@@ -4,6 +4,12 @@
 
 如果你的环境还没准备好，请先看 [安装与环境](./installation-and-environment.md)。如果你想先了解整个 BCW 学习地图，请把 [BCW2011 案例总览](./bcw2011-case-study.md) 当作导航页。
 
+先说明这一页的适用范围：
+
+- 如果你只是通过 PyPI 或 `uv add` 安装了 `finhjb`，你已经可以直接使用库 API；
+- 但 `src/example/BCW2011Liquidation.py` 和 `src/example/BCW2011Hedging.py` 是仓库文件；
+- 所以下面的 BCW 运行步骤默认你正在使用仓库源码。
+
 ## 目标
 
 读完这一页后，你应该能做到：
@@ -29,6 +35,12 @@ export MPLBACKEND=Agg
 ```
 
 这样可以避免 Matplotlib 的图形后端报错，但不会改变数值结果。
+
+如果你手里只有已发布的包、没有仓库源码，那么下面的 BCW 脚本命令可以先跳过，直接去看：
+
+- [建模指南](./modeling-guide.md)
+- [求解器指南](./solver-guide.md)
+- [API 参考](./api-reference.md)
 
 ## 第一步：运行 BCW Liquidation 示例
 
@@ -95,7 +107,8 @@ MPLBACKEND=Agg uv run python src/example/BCW2011Hedging.py
 
 - 第二个控制变量 `psi`，
 - 保证金账户占比 `kappa`，
-- 与再融资相关的左边界更新逻辑，
+- 通过 `boundary_condition()` 搜索出来的再融资相关左边界条件，
+- 一个额外提供的 `update_boundary(grid)` 辅助实现，用来展示 boundary-update-compatible 逻辑，
 - BCW 里讨论的三分区对冲策略结构。
 
 ### 什么样算成功
@@ -131,6 +144,13 @@ MPLBACKEND=Agg uv run python src/example/BCW2011Hedging.py
 - `psi` 在低现金区域完全绑定，
 - 随着现金增加，对冲需求逐步减弱，
 - `d2v[-1]` 仍然收敛到零。
+
+如果你想进一步对照 BCW 原文里的典型量级，也可以检查：
+
+- `w_-` 大约是 `0.067`，
+- `w_+` 大约是 `0.115`，
+- payout boundary `w_bar` 大约是 `0.1385`，
+- `psi` 全程落在 `[-5, 0]`。
 
 ## 第三步：不要只“跑出来”，要会读输出
 

@@ -135,6 +135,38 @@ print(loaded.df.head())
 
 什么时候该用哪个方法，请配合 [求解器指南](./solver-guide.md) 阅读。
 
+## `boundary_search` 方法备注
+
+`Solver.boundary_search(method=...)` 当前支持：
+
+- `bisection`
+- `hybr`
+- `lm`
+- `broyden`
+- `gauss_newton`
+- `lbfgs`
+- `krylov`
+- `broyden1`
+
+关键行为：
+
+- `boundary_condition()` 返回的就是实际会被搜索的边界列表。
+- 这个列表的顺序，就是非线性方法使用的边界参数顺序。
+- 对 `bisection` 来说，同样的顺序还会变成嵌套搜索的外层到内层顺序。
+- `BoundaryConditionTarget.low` 和 `high` 只对 `bisection` 有意义。
+- `BoundaryConditionTarget.tol` 和 `max_iter` 也主要只对 `bisection` 有意义。
+- 其他方法主要使用 `Config.bs_tol` 和 `Config.bs_max_iter`。
+- `lbfgs` 做的是残差平方和最小化，而不是直接解 root problem。
+
+## `AbstractModel` 可选钩子速查
+
+最重要的几个可选钩子是：
+
+- `jump(...)`：可选，默认是零，由求解器通过 `Grid.jump_inter` 调用。
+- `boundary_condition()`：为 `boundary_search()` 返回 `BoundaryConditionTarget` 列表。
+- `update_boundary(grid)`：只在 `boundary_update()` 工作流里使用。
+- `auxiliary(grid)`：通过 `Grid.aux` 暴露；如果没实现，`grid.aux` 抛 `NotImplementedError` 是正常的。
+
 ## `Grid` 的便捷属性
 
 `Grid` 常用属性：
@@ -142,6 +174,12 @@ print(loaded.df.head())
 - `s`, `v`, `dv`, `d2v`
 - `s_inter`, `policy_inter`, `number_inter`, `jump_inter`
 - `df`, `aux`
+
+补充说明：
+
+- `jump_inter` 是 `Model.jump(...)` 在内部网格上的求值结果。
+- `aux` 只是 `Model.auxiliary(grid)` 的代理入口。
+- `auxiliary(grid)` 一个很常见的写法，是返回一个小字典来保存派生诊断量。
 
 `Grid` 常用方法：
 

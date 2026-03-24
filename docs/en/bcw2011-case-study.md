@@ -38,7 +38,7 @@ If you are new to the project, use this sequence:
 | Case | Script | Main numerical idea | Main economic idea |
 |---|---|---|---|
 | Liquidation | `BCW2011Liquidation.py` | right-boundary search with super-contact condition | low cash sharply depresses investment |
-| Hedging | `BCW2011Hedging.py` | policy with two controls and refinancing-aware boundaries | hedge demand binds in distressed states and fades with internal liquidity |
+| Hedging | `BCW2011Hedging.py` | two-control problem with direct search over `s_max` and `v_left`, plus an optional boundary-update-compatible helper | hedge demand binds in distressed states and fades with internal liquidity |
 
 ## Stable Result Patterns To Expect
 
@@ -50,6 +50,7 @@ Healthy runs in this repository show:
 
 - `v_left` at `0.9`,
 - solved `s_max` around `0.22`,
+- `p'(0)` around `30`,
 - `d2v[-1]` near zero,
 - investment negative in distressed states and positive near the right boundary.
 
@@ -59,6 +60,8 @@ Healthy runs in this repository show:
 
 - left boundary value above the pure liquidation value,
 - solved `s_max` around `0.14`,
+- `w_-` around `0.067`,
+- `w_+` around `0.115`,
 - `psi` between `-5` and `0`,
 - a three-region hedge pattern: fully binding, then interior, then zero hedge.
 

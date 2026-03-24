@@ -195,6 +195,14 @@ BCW 中比较典型的模式是：
 
 只有在你自己实现了 `auxiliary(grid)` 以后，才建议依赖 `grid.aux`。
 
+一个很稳妥的模式，是让 `auxiliary(grid)` 返回一个小字典，比如：
+
+```python
+@staticmethod
+def auxiliary(grid: fjb.Grid):
+    return {"value_mean": jnp.mean(grid.v)}
+```
+
 ## 敏感性分析结果怎么看
 
 `sensitivity_analysis()` 返回的是 `SensitivityResult`：
@@ -293,4 +301,3 @@ print("right curvature:", grid.d2v[-1])
 - 如果你还在决定用哪种工作流：看 [求解器指南](./solver-guide.md)
 - 如果你准备迁移到自己的模型：看 [把 BCW 改成你自己的模型](./adapting-bcw-to-your-model.md)
 - 如果你想查精确成员和签名：看 [API 参考](./api-reference.md)
-

@@ -164,7 +164,7 @@ class Grid(struct.PyTreeNode, Generic[P, PolicyDictType]):
 
     @property
     def jump_inter(self):
-        """Evaluate model jump term on interior points."""
+        """Evaluate `Model.jump(...)` on the interior grid slices."""
         return self.model.jump(
             v=self.v_inter,
             s=self.s_inter,
@@ -228,7 +228,7 @@ class Grid(struct.PyTreeNode, Generic[P, PolicyDictType]):
 
     @property
     def aux(self):
-        """Auxiliary data for the grid."""
+        """Return `Model.auxiliary(grid=self)` for user-defined diagnostics."""
         return self.model.auxiliary(grid=self)
 
     def save(self, file_path: str | Path) -> None:
