@@ -37,6 +37,13 @@ solver-guide
 
 ```{toctree}
 :maxdepth: 1
+:caption: Codex Skill
+
+finhjb-model-coder
+```
+
+```{toctree}
+:maxdepth: 1
 :caption: Reference
 
 api-reference

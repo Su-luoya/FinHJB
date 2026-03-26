@@ -1,0 +1,4 @@
+interface:
+  display_name: "FinHJB Model Coder"
+  short_description: "Convert finance models into FinHJB code"
+  default_prompt: "Use $finhjb-model-coder to turn this continuous-time finance model into executable FinHJB code."

@@ -45,6 +45,7 @@ def test_bilingual_docs_mirror_expected_pages():
         "index.md",
         "getting-started.md",
         "troubleshooting.md",
+        "finhjb-model-coder.md",
         "bcw2011-case-study.md",
         "bcw2011-liquidation-walkthrough.md",
         "bcw2011-hedging-walkthrough.md",
@@ -70,6 +71,7 @@ def test_readme_points_to_existing_docs_entrypoints():
         "./docs/en/index.md",
         "./docs/en/installation-and-environment.md",
         "./docs/en/getting-started.md",
+        "./docs/en/finhjb-model-coder.md",
         "./docs/en/bcw2011-case-study.md",
         "./docs/en/adapting-bcw-to-your-model.md",
     ]
@@ -77,6 +79,7 @@ def test_readme_points_to_existing_docs_entrypoints():
         "./docs/zh/index.md",
         "./docs/zh/installation-and-environment.md",
         "./docs/zh/getting-started.md",
+        "./docs/zh/finhjb-model-coder.md",
         "./docs/zh/bcw2011-case-study.md",
         "./docs/zh/adapting-bcw-to-your-model.md",
     ]
@@ -97,6 +100,15 @@ def test_readmes_keep_minimal_install_commands():
     for readme in (readme_en, readme_zh):
         assert "uv add finhjb" in readme
         assert "pip install finhjb" in readme
+
+
+def test_readmes_document_skill_installation():
+    readme_en = (ROOT / "README.md").read_text()
+    readme_zh = (ROOT / "README.zh-CN.md").read_text()
+
+    for readme in (readme_en, readme_zh):
+        assert "finhjb-model-coder" in readme
+        assert "python scripts/install_skill.py" in readme
 
 
 def test_public_api_names_are_documented():

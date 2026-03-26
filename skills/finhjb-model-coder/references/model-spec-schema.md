@@ -1,0 +1,108 @@
+# Model Spec Schema
+
+Use this schema before writing any code.
+
+The goal is to turn free-form mathematical input into a compact working specification that can drive template selection and code generation.
+
+## Mandatory Fields
+
+- `research_goal`
+  What economic question the model answers and what object is being valued or optimized.
+- `state_variable`
+  The single continuous state variable, its symbol in the paper, its economic meaning, and its admissible interval.
+- `controls`
+  Every control variable, its symbol, interpretation, admissible range, and whether it is expected to be explicit or implicit.
+- `value_object`
+  The value function being solved for and any normalization used in the paper.
+- `hjb_equation`
+  The exact HJB residual target, restated in solver-friendly notation.
+- `drift_diffusion_jump`
+  The law of motion terms entering the HJB and whether a non-zero `jump(...)` hook is needed.
+- `boundary_conditions`
+  Left and right state boundaries, value matching rules, smooth-pasting or super-contact conditions, and whether the boundaries are fixed or endogenous.
+- `policy_logic`
+  Closed-form rules, FOCs, complementarity conditions, clipping rules, or regime-switching logic needed to update controls.
+- `parameters`
+  Parameter names, meanings, baseline calibrations, and any derived quantities.
+- `solver_workflow`
+  Choose among `solve`, `boundary_search`, `boundary_update`, and `sensitivity_analysis`.
+- `diagnostics`
+  Quantities that should be checked after the solve to judge whether the implementation is healthy.
+
+## Blocking Gaps
+
+Treat these as code-generation blockers unless the user explicitly authorizes a simplifying assumption:
+
+- state dimension is unclear
+- the HJB is incomplete or inconsistent with the stated dynamics
+- a boundary condition is missing but the workflow depends on it
+- a control variable exists in theory but has no update rule or FOC
+- the model clearly needs an outer-loop boundary method but the target condition is unspecified
+
+## Defaultable Items
+
+These may be filled with explicit, labeled defaults if the user does not care:
+
+- baseline numerical values for `Config`
+- initial policy guess shape
+- grid size for a first pass
+- whether to print `grid.boundary`, `grid.df.head()`, and `grid.df.tail()`
+- whether to use `MPLBACKEND=Agg` in examples
+
+## Working Spec Template
+
+```markdown
+# Model Spec
+
+## Research Goal
+- ...
+
+## State Variable
+- Paper symbol:
+- FinHJB symbol:
+- Meaning:
+- Domain:
+
+## Controls
+- `control_name`:
+  - paper symbol:
+  - meaning:
+  - admissible range:
+  - update type: explicit / implicit
+
+## Value Object
+- ...
+
+## HJB Equation
+- ...
+
+## Drift, Diffusion, Jump
+- drift:
+- diffusion:
+- jump:
+
+## Boundary Conditions
+- left boundary:
+- right boundary:
+- endogenous targets:
+
+## Policy Logic
+- ...
+
+## Parameters
+- `name = value`: meaning
+
+## Solver Workflow
+- primary workflow:
+- reason:
+
+## Diagnostics
+- ...
+
+## Remaining Questions
+- ...
+```
+
+## Output Rule
+
+Before generating code, restate the specification in clear prose using the same economic vocabulary the user used, then map the paper symbols to FinHJB names.
