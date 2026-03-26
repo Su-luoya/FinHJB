@@ -29,6 +29,12 @@ MPLBACKEND=Agg uv run python skills/finhjb-model-coder/tests/BCWrefinancing.py
 
 This writes runtime artifacts into `skills/finhjb-model-coder/tests/artifacts/`.
 
+The runtime bundle now includes:
+
+- `figure_3_refinancing.png`
+- `summary.json`
+- `test_report.json`
+
 ## Acceptance Focus
 
 This is not only a smoke test.
@@ -36,6 +42,9 @@ This is not only a smoke test.
 The fixture is intended to verify that the skill:
 
 - identifies the BCW refinancing case correctly
+- recognizes that the repository already provides the intended repo-backed FinHJB environment
+- confirms the derivative scheme and boundary-search method instead of treating them as silent defaults
 - asks only the genuinely blocking confirmation questions
 - generates a refinancing-only one-control model rather than the hedging extension
+- runs a post-generation solve loop and archives the repair note if the default search choice must change
 - reproduces the qualitative Figure 3 comparison for `phi = 1%` and `phi = 0`

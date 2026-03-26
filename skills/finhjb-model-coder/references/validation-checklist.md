@@ -4,11 +4,13 @@ Use this checklist to keep generated code numerically honest.
 
 ## Universal Checks
 
+- the execution environment is identified and `finhjb` imports successfully
 - the file imports without syntax errors
 - `Solver(...)` constructs successfully
 - every control declared in `PolicyDict` is initialized in `Policy.initialize`
 - each control array matches the grid length
 - the chosen workflow matches the boundary logic in the model
+- the selected derivative scheme is consistent with the diffusion behavior near the boundaries
 
 ## Fixed-Boundary Checks
 
@@ -19,10 +21,12 @@ Use this checklist to keep generated code numerically honest.
 
 ## Boundary-Search Checks
 
+- the chosen search backend is justified by the number of targets and the bracket quality
 - the chosen `BoundaryConditionTarget` is economically justified
 - the bracket for `bisection` is credible if that method is used
 - the post-solve boundary residual is close to zero
 - `grid.boundary` differs meaningfully from the initial guess when it should
+- if a one- or two-target default was promoted from `bisection` to `hybr`, the repair note explains why
 
 ## Boundary-Update Checks
 
@@ -45,3 +49,10 @@ Always include at least one model-specific economic sanity check such as:
 - expected limiting behavior near payout, liquidation, or issuance thresholds
 
 If a quantity is especially important to the paper, call it out explicitly instead of giving only generic solver checks.
+
+## Delivery Notes
+
+Separate these two things in the final answer:
+
+- what the skill already executed and repaired before delivery
+- what the scholar should still validate after delivery

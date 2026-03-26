@@ -6,6 +6,8 @@ The goal is to turn free-form mathematical input into a compact working specific
 
 ## Mandatory Fields
 
+- `environment`
+  Whether the target Python environment is ready, how `finhjb` is provided, and what smoke test was used.
 - `research_goal`
   What economic question the model answers and what object is being valued or optimized.
 - `state_variable`
@@ -26,6 +28,10 @@ The goal is to turn free-form mathematical input into a compact working specific
   Parameter names, meanings, baseline calibrations, and any derived quantities.
 - `solver_workflow`
   Choose among `solve`, `boundary_search`, `boundary_update`, and `sensitivity_analysis`.
+- `numerical_method`
+  The selected finite-difference scheme, boundary-search method if any, the number of boundary targets, and the reason these choices fit the model. This block should include explicit subfields such as `derivative_method`, `derivative_method_reason`, `boundary_search_method`, and `boundary_target_count`.
+- `post_generation_tests`
+  Which checks were run after code generation, whether they passed, and what repairs were required. This block should include explicit subfields such as `post_generation_tests`, `tests_passed`, and `repairs_applied` when you restate the spec for the user.
 - `diagnostics`
   Quantities that should be checked after the solve to judge whether the implementation is healthy.
 
@@ -34,10 +40,12 @@ The goal is to turn free-form mathematical input into a compact working specific
 Treat these as code-generation blockers unless the user explicitly authorizes a simplifying assumption:
 
 - state dimension is unclear
+- environment readiness is unclear and the user expects runnable code
 - the HJB is incomplete or inconsistent with the stated dynamics
 - a boundary condition is missing but the workflow depends on it
 - a control variable exists in theory but has no update rule or FOC
 - the model clearly needs an outer-loop boundary method but the target condition is unspecified
+- the diffusion degeneracy pattern is unclear but the derivative scheme choice would change the code
 
 ## Defaultable Items
 
@@ -56,6 +64,12 @@ These may be filled with explicit, labeled defaults if the user does not care:
 
 ## Research Goal
 - ...
+
+## Environment
+- environment ready:
+- environment type: repo-backed / installed package / unknown
+- smoke test:
+- blocking issue:
 
 ## State Variable
 - Paper symbol:
@@ -96,6 +110,22 @@ These may be filled with explicit, labeled defaults if the user does not care:
 - primary workflow:
 - reason:
 
+## Numerical Method
+- derivative method:
+- derivative reason:
+- diffusion near left boundary:
+- diffusion near right boundary:
+- boundary search method:
+- boundary target count:
+- bisection brackets:
+- boundary-search reason:
+
+## Post-Generation Tests
+- checks run:
+- tests passed:
+- repairs applied:
+- residual risks:
+
 ## Diagnostics
 - ...
 
@@ -105,4 +135,4 @@ These may be filled with explicit, labeled defaults if the user does not care:
 
 ## Output Rule
 
-Before generating code, restate the specification in clear prose using the same economic vocabulary the user used, then map the paper symbols to FinHJB names.
+Before generating code, restate the specification in clear prose using the same economic vocabulary the user used, then map the paper symbols to FinHJB names. Before final delivery, append the executed test-and-repair summary from the post-generation loop.

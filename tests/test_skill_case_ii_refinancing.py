@@ -39,18 +39,24 @@ def test_interaction_docs_capture_model_confirmation():
 
     assert "one-dimensional" in live
     assert "not the hedging extension" in live
+    assert "repo-backed FinHJB task" in live
+    assert 'uv run python -c "import finhjb"' in live
     assert "phi = 1%" in protocol
     assert "phi = 0" in protocol
+    assert "post-generation solve loop" in protocol
     assert "Eq. (19)" in spec
     assert "Eq. (20)" in spec
+    assert "derivative method: `central`" in spec
+    assert "final search method in the archived fixture: `hybr`" in spec
 
 
 def test_refinancing_fixture_runs_and_matches_bcq_targets(tmp_path, monkeypatch):
     monkeypatch.setenv("MPLBACKEND", "Agg")
     module = load_fixture_module()
 
-    fixed = module.solve_case(phi=0.01, number=1000)
-    no_fixed = module.solve_case(phi=0.0, number=1000)
+    bundle = module.run_fixture(output_dir=tmp_path, number=1000)
+    fixed = bundle["fixed-cost"]
+    no_fixed = bundle["no-fixed-cost"]
 
     fixed_summary = fixed["summary"]
     no_fixed_summary = no_fixed["summary"]
@@ -64,21 +70,25 @@ def test_refinancing_fixture_runs_and_matches_bcq_targets(tmp_path, monkeypatch)
     assert abs(no_fixed_summary["payout_boundary"] - 0.14) <= 0.03
     assert abs(no_fixed_summary["return_cash_ratio"] - 0.0) <= 0.02
 
+    assert fixed_summary["derivative_method"] == "central"
+    assert fixed_summary["boundary_search_method"] == "hybr"
     assert fixed_summary["is_value_increasing"]
     assert fixed_summary["is_dv_decreasing"]
     assert fixed_summary["is_investment_increasing"]
 
-    figure_path = module.plot_figure_3_style(
-        {"fixed-cost": fixed, "no-fixed-cost": no_fixed},
-        output_dir=tmp_path,
-    )
-    summary_path = module.write_summary(
-        {"fixed-cost": fixed, "no-fixed-cost": no_fixed},
-        output_dir=tmp_path,
-    )
-
+    figure_path = bundle["artifact_paths"]["figure"]
+    summary_path = bundle["artifact_paths"]["summary"]
+    test_report_path = bundle["artifact_paths"]["test_report"]
     assert figure_path.exists()
     assert summary_path.exists()
+    assert test_report_path.exists()
+
+    report = test_report_path.read_text()
+    assert "repo-backed" in report
+    assert "target_default" in report
+    assert "bisection" in report
+    assert "final_boundary_search_method" in report
+    assert "hybr" in report
 
 
 def test_refinancing_fixture_stays_single_control():
@@ -87,3 +97,5 @@ def test_refinancing_fixture_stays_single_control():
     assert "sigma_m" not in text
     assert "epsilon" not in text
     assert "rho" not in text
+    assert 'DEFAULT_DERIVATIVE_METHOD = "central"' in text
+    assert 'DEFAULT_SEARCH_METHOD = "hybr"' in text

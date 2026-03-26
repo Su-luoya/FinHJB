@@ -51,8 +51,10 @@ pip install finhjb
 
 - 读取连续时间金融模型的文字说明、LaTeX 或论文摘录
 - 判断模型是否能够映射到当前一维 FinHJB 接口
+- 先确认目标 Python 环境是否真的能运行 `finhjb`
+- 在生成前确认有限差分格式和边界搜索方法
 - 主动追问会影响代码生成的关键细节，例如边界、控制变量和校准参数
-- 生成可运行的 FinHJB 模型文件、结构化规格摘要和验证清单
+- 生成可运行的 FinHJB 模型文件，并在交付前先测试、修复，再返回结构化规格摘要和验证建议
 
 最推荐你提供的材料包括：
 
@@ -61,6 +63,14 @@ pip install finhjb
 - 控制变量及其 FOC 或显式策略规则
 - 边界条件、value matching 或 smooth pasting 条件
 - 参数定义与基准校准值
+
+在它把代码当成“可运行交付物”之前，这个 Skill 现在还会默认确认：
+
+- 你已经有一个可运行的 FinHJB 环境，来源可以是当前仓库源码环境，也可以是已安装好的 `finhjb` 包
+- 如果边界附近扩散项会退化，差分格式已经明确
+- 如果模型有内生边界，边界搜索方法已经明确
+
+如果环境缺失，Skill 应该先停下来辅助安装，并要求一个最小 smoke test，例如 `python -c "import finhjb"` 或 `uv run python -c "import finhjb"`。
 
 从仓库源码安装这个 Skill：
 
@@ -82,6 +92,12 @@ python scripts/install_skill.py --mode link --force
 ```
 
 如果你更喜欢手动安装，把 `skills/finhjb-model-coder` 复制到 `${CODEX_HOME:-$HOME/.codex}/skills/` 即可。
+
+这个 Skill 自己也依赖一个已经准备好的运行环境：
+
+- 对仓库示例、BCW 复现和 skill 测试，优先使用仓库自己的 `uv` 环境
+- 对下游项目，使用 `uv add finhjb` 或 `pip install finhjb`
+- 代码生成后，Skill 默认还会跑一次 solve-loop 检查，再把产物当成正式交付
 
 ## 文档入口
 

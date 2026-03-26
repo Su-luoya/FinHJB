@@ -51,3 +51,5 @@ Use when:
 - Prefer the simpler template when two are plausible.
 - Use the closest economic structure, not the closest paper topic.
 - Keep the first generated version small and runnable; add extra diagnostics only after the solve logic is coherent.
+- Template selection does not decide the derivative scheme. Confirm the diffusion behavior separately.
+- Template selection does not lock the boundary-search backend forever. For one or two targets, start from `bisection` when the bracket is credible, then promote to `hybr` or another supported method if the post-generation test loop says the default is not good enough.

@@ -15,6 +15,14 @@ Check whether `finhjb-model-coder` behaves like an interactive model-coding assi
 
 ## Expected Skill Behavior
 
+### Preflight Before Asking
+
+Skill should first confirm the execution context without asking unnecessary questions:
+
+- the target is inside the FinHJB repository
+- the intended environment is repo-backed rather than PyPI-only
+- runnable delivery still requires a smoke test such as `uv run python -c "import finhjb"`
+
 ### Question 1
 
 Skill should confirm the model identity:
@@ -50,16 +58,32 @@ Expected user answer:
 The skill should then say, in substance:
 
 - the model is one-dimensional
+- the repository provides the intended FinHJB environment path for this evaluation
 - the paper already supplies the key equations and benchmark calibration
+- `central` is the derivative-method default because the diffusion term stays away from zero at the boundaries in this fixture
+- the target-count heuristic would start from `bisection`, but the final method may be promoted to `hybr` if the post-generation solve loop rejects the smaller-target default
 - no further blocking questions are needed
 - code generation can begin
+
+### After Code Generation
+
+The skill should execute a solve loop before archiving the artifact:
+
+- import the generated file in the repo-backed environment
+- construct the solver
+- solve both Figure 3 cases
+- write the figure and summary artifacts
+- if the initial boundary-search choice fails materially, repair the implementation and rerun
 
 ## Failure Modes
 
 Treat the interaction as failed if the skill:
 
 - confuses refinancing with the hedging extension
+- ignores environment readiness for runnable delivery
 - asks for equations that are already present in the paper
 - introduces a second state variable
+- silently defaults the derivative scheme or boundary-search method without explaining them
 - ignores the `phi = 0` comparison
 - begins coding before confirming the intended deliverable shape
+- skips the post-generation test loop

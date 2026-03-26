@@ -7,6 +7,12 @@ Reproduce BCW `Case II: Refinancing` as a one-dimensional FinHJB model and compa
 - fixed issuance cost `phi = 1%`
 - no fixed issuance cost `phi = 0`
 
+## Environment
+
+- target environment: repo-backed FinHJB checkout
+- smoke test for runnable delivery: `uv run python -c "import finhjb"`
+- reason: the evaluation depends on repository-local examples, fixtures, and the skill-local test bundle rather than only the published wheel
+
 ## State Variable
 
 - paper symbol: `w = W/K`
@@ -56,6 +62,15 @@ Use BCW Eq. (14):
 - value matching after issuance: Eq. (19), `p(0) = p(m) - phi - (1 + gamma) m`
 - smooth pasting at the return cash-capital ratio: Eq. (20), `p'(m) = 1 + gamma`
 
+## Numerical Method Choices
+
+- derivative method: `central`
+- derivative reason: the diffusion term in Eq. (13) is `0.5 sigma^2 p''(w)` with `sigma > 0`, so the fixture does not face left-edge or right-edge diffusion degeneracy
+- boundary target count: `2`
+- target-count default: `bisection`
+- final search method in the archived fixture: `hybr`
+- search-method repair note: the post-generation test loop kept the fixed-cost case stable under the default heuristic, but promoted the final implementation to `hybr` because the `phi = 0` comparison under-shot the paper's payout boundary under the two-target default
+
 ## Parameters
 
 Baseline calibration from Table I:
@@ -94,3 +109,4 @@ For `phi = 0.0`:
 - `BCWrefinancing.py`
 - a Figure 3-style four-panel comparison plot
 - runtime summary data written into `artifacts/`
+- a post-generation test report written into `artifacts/test_report.json`

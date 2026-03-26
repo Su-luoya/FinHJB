@@ -7,6 +7,8 @@ FinHJB is easiest to learn if you treat the documentation as a guided research w
 3. learn how to read the solver outputs, and
 4. then adapt the BCW structure to your own model.
 
+If you want to use `finhjb-model-coder`, keep the same order: first confirm a runnable FinHJB environment, then let the skill lock the derivative scheme and boundary-search method, and only then trust the tested code it generates.
+
 ```{toctree}
 :maxdepth: 1
 :caption: Start Here

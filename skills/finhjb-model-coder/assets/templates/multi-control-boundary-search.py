@@ -109,8 +109,11 @@ if __name__ == "__main__":
         model=model,
         number=500,
         policy_guess=True,
+        # Keep `central` only when the diffusion term is not edge-degenerate.
         config=fjb.Config(derivative_method="central", pi_method="scan"),
     )
+    # Three or more endogenous targets usually justify `hybr` or another
+    # multidimensional root solver from the start.
     state = solver.boundary_search(method="hybr", verbose=False)
     print(state.grid.boundary)
     print(state.grid.dv[-1], state.grid.d2v[-1])

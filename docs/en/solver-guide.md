@@ -138,12 +138,15 @@ Supported methods:
 ### Practical Starting Rules
 
 - if you have one scalar boundary target and a reliable bracket, start with `bisection`.
-- if you have a low-dimensional multi-boundary problem and want a robust default, start with `hybr`.
+- if you have two boundary targets and reliable brackets, `bisection` is still a sensible first default.
+- if you have three or more boundary targets and want a robust default, start with `hybr`.
 - if the residual map is smooth and naturally least-squares-like, try `lm` or `gauss_newton`.
 - if you want a quasi-Newton alternative, try `broyden` or `broyden1`.
 - if you only want an approximate residual minimizer, try `lbfgs` last.
 
 These are implementation-level rules of thumb for the current FinHJB search backends. They are good defaults, not universal mathematical guarantees.
+
+For `finhjb-model-coder`, keep one more rule in mind: if the one- or two-target `bisection` default fails the post-generation solve loop, the final generated code should explicitly promote the search method to `hybr` or another supported fallback and record that repair.
 
 ### What To Inspect After Boundary Search
 
@@ -217,6 +220,16 @@ Why:
 - `central` is usually the safest first derivative scheme,
 - `scan` is a straightforward first policy-iteration method,
 - moderate tolerances tell you whether the formulation is sane before you spend more time tuning.
+
+### When Not To Use `central`
+
+For theory-to-code work with `finhjb-model-coder`, do not treat `central` as a universal default.
+
+- if the diffusion term becomes very small near the left boundary, prefer `forward`
+- if the diffusion term becomes very small near the right boundary, prefer `backward`
+- if diffusion stays materially positive at both edges, `central` remains the natural first choice
+
+The point is not stylistic purity. The derivative scheme should reflect where the HJB becomes numerically delicate near the boundaries.
 
 ### What To Tune First
 

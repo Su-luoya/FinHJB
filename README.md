@@ -51,8 +51,10 @@ Use the skill when you want Codex to:
 
 - read a continuous-time finance model from prose, LaTeX, or paper excerpts
 - decide whether the model fits the current one-dimensional FinHJB interface
+- confirm that the target Python environment can actually run `finhjb`
+- confirm the finite-difference scheme and boundary-search method before code generation
 - ask for the missing boundary, control, or calibration details that materially affect the code
-- generate a runnable FinHJB model file, a structured spec summary, and a validation checklist
+- generate a runnable FinHJB model file, test it, repair failures, and return a structured spec summary plus validation guidance
 
 The best input bundle includes:
 
@@ -61,6 +63,14 @@ The best input bundle includes:
 - controls and their FOCs or explicit policy rules
 - boundary conditions, value matching, or smooth-pasting conditions
 - parameter definitions and baseline calibration values
+
+Before it hands back "runnable code," the skill now expects:
+
+- a runnable FinHJB environment, either from this repository checkout or from an installed `finhjb` package
+- an explicit derivative-scheme choice when boundary diffusion degeneracy matters
+- an explicit boundary-search choice when endogenous boundaries are present
+
+If the environment is missing, the skill should pause code delivery and help the user get to a simple smoke test such as `python -c "import finhjb"` or `uv run python -c "import finhjb"`.
 
 Install the skill from a repository checkout:
 
@@ -82,6 +92,12 @@ python scripts/install_skill.py --mode link --force
 ```
 
 If you prefer manual installation, copy `skills/finhjb-model-coder` into `${CODEX_HOME:-$HOME/.codex}/skills/`.
+
+The skill also assumes the execution environment is ready:
+
+- for repository examples, prefer the repository's own `uv` environment
+- for downstream projects, install the published package with `uv add finhjb` or `pip install finhjb`
+- after code generation, expect the skill to run a solve-loop check before it treats the artifact as delivered
 
 ## Documentation Paths
 

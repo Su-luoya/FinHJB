@@ -17,6 +17,8 @@ Skill:
 Skill:
 
 > After reading the paper, I identify the target as BCW `Case II: Refinancing` from Section III.B. The model is one-dimensional and implementable in current FinHJB. The repository's `BCW2011Hedging.py` is not the target artifact because this test is about refinancing, not the hedging extension.
+>
+> For runnable delivery, I also need to treat this as a repo-backed FinHJB task rather than a PyPI-only task. The right environment check here is the repository workflow and an import smoke test such as `uv run python -c "import finhjb"`.
 
 ## Step 3
 
@@ -52,6 +54,14 @@ Skill:
 > - payout conditions Eq. (16) and Eq. (17)
 > - refinancing conditions Eq. (19) and Eq. (20)
 > - benchmark calibration values from Table I
+>
+> The diffusion term stays at `0.5 sigma^2 p''(w)` with `sigma > 0`, so `central` is the right derivative-method default in this fixture. There are two endogenous boundary targets, so the small-target heuristic would begin from `bisection`, but I will still test the generated code and promote the final search method to `hybr` if the two-case Figure 3 comparison fails under the default choice.
+
+## Step 6
+
+Skill:
+
+> After generating the first runnable version, I ran the repo-backed solve loop: import, solver construction, both `phi` cases, figure output, and summary output. The fixed-cost branch was fine under the two-target default, but the `phi = 0` branch under-shot the paper's payout boundary under `bisection`, so I repaired the fixture by promoting the final search backend to `hybr` and reran the test loop before archiving the artifact.
 
 ## Evaluation Note
 

@@ -9,8 +9,10 @@ INSTALL_SCRIPT = ROOT / "scripts" / "install_skill.py"
 
 EXPECTED_REFERENCES = {
     "clarification-checklist.md",
+    "environment-readiness.md",
     "math-to-finhjb-mapping.md",
     "model-spec-schema.md",
+    "numerical-method-selection.md",
     "output-contract.md",
     "template-selection.md",
     "unsupported-models.md",
@@ -57,12 +59,56 @@ def test_skill_resources_exist():
     assert EXPECTED_TEMPLATES <= templates
 
 
+def test_skill_workflow_mentions_environment_and_test_loop():
+    skill_text = (SKILL_DIR / "SKILL.md").read_text()
+    schema_text = (SKILL_DIR / "references" / "model-spec-schema.md").read_text()
+    env_text = (SKILL_DIR / "references" / "environment-readiness.md").read_text()
+    numeric_text = (SKILL_DIR / "references" / "numerical-method-selection.md").read_text()
+    output_text = (SKILL_DIR / "references" / "output-contract.md").read_text()
+
+    assert "Environment readiness is a hard gate" in skill_text
+    assert "Run the post-generation test loop" in skill_text
+    assert "`derivative_method`" in schema_text
+    assert "`post_generation_tests`" in schema_text
+    assert "Final executable code delivery is allowed only after a smoke test" in env_text
+    assert "Choose the finite-difference scheme" in numeric_text
+    assert "produce four deliverables" in output_text
+
+
 def test_docs_indexes_link_skill_page():
     docs_index_en = (ROOT / "docs" / "en" / "index.md").read_text()
     docs_index_zh = (ROOT / "docs" / "zh" / "index.md").read_text()
 
     assert "finhjb-model-coder" in docs_index_en
     assert "finhjb-model-coder" in docs_index_zh
+    assert "runnable FinHJB environment" in docs_index_en
+    assert "可运行环境" in docs_index_zh
+
+
+def test_docs_and_readme_describe_environment_numerics_and_test_loop():
+    readme_en = (ROOT / "README.md").read_text()
+    readme_zh = (ROOT / "README.zh-CN.md").read_text()
+    skill_en = (ROOT / "docs" / "en" / "finhjb-model-coder.md").read_text()
+    skill_zh = (ROOT / "docs" / "zh" / "finhjb-model-coder.md").read_text()
+    install_en = (ROOT / "docs" / "en" / "installation-and-environment.md").read_text()
+    install_zh = (ROOT / "docs" / "zh" / "installation-and-environment.md").read_text()
+    solver_en = (ROOT / "docs" / "en" / "solver-guide.md").read_text()
+    solver_zh = (ROOT / "docs" / "zh" / "solver-guide.md").read_text()
+
+    assert "confirm that the target Python environment can actually run `finhjb`" in readme_en
+    assert "先确认目标 Python 环境是否真的能运行 `finhjb`" in readme_zh
+    assert "Environment And Preconditions" in skill_en
+    assert "运行环境与前置条件" in skill_zh
+    assert "Choosing The Derivative Scheme" in skill_en
+    assert "差分格式如何选" in skill_zh
+    assert "Choosing The Boundary Search Method" in skill_en
+    assert "边界搜索方法如何选" in skill_zh
+    assert "post-generation test loop" in skill_en
+    assert "生成后的测试修复闭环" in skill_zh
+    assert "If You Plan To Use `finhjb-model-coder`" in install_en
+    assert "如果你打算使用 `finhjb-model-coder`" in install_zh
+    assert "When Not To Use `central`" in solver_en
+    assert "什么时候不该继续用 `central`" in solver_zh
 
 
 def test_install_script_dry_run_does_not_write(tmp_path):

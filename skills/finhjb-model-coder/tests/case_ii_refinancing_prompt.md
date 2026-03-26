@@ -22,3 +22,6 @@ Source theory file:
 - use the paper as the sole theory source
 - target BCW `Case II: Refinancing`
 - cover the full Figure 3 comparison with `phi = 1%` and `phi = 0`
+- confirm repo-backed environment readiness before code generation
+- confirm the derivative scheme and boundary-search method explicitly
+- require a post-generation test-and-repair loop before the artifact is accepted
