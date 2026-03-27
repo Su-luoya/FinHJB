@@ -13,6 +13,7 @@ The skill is designed to:
 - confirm that the target Python environment can import `finhjb`
 - ask follow-up questions when boundary conditions, controls, or calibration details are missing
 - stop and confirm parameter values when the document defines symbols but omits the numeric calibration needed for runnable code
+- ask what to plot when the user requests figures but the target plot is not specified
 - confirm the derivative scheme and boundary-search method when those choices affect the implementation
 - generate a runnable FinHJB model file
 - run a post-generation test loop and repair failures before delivery
@@ -57,6 +58,8 @@ Recommended inputs:
 - parameter meanings and baseline calibration values
 
 If your notes list parameter symbols but not their numeric values, expect the skill to stop and ask for a baseline calibration before it generates runnable code.
+
+If you want plots, say which quantities you want to visualize. If you only say "plot the results," expect the skill to stop and confirm the figure contents before it writes plotting code.
 
 You can provide this as:
 
@@ -204,6 +207,10 @@ The skill should stop and ask for the missing left or right boundary logic befor
 ### The paper defines parameters but does not give the calibration
 
 The skill should stop and ask which numeric values belong in the first runnable implementation. It should not invent a baseline by borrowing numbers from a different example.
+
+### The user asked for figures but did not specify what to plot
+
+The skill should stop and ask which solved quantities, comparisons, or paper-style figures belong in the deliverable. It should not silently invent a plotting layout just because the paper contains some standard charts.
 
 ### The paper defines a control but not the update rule
 

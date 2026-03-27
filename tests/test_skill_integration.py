@@ -69,10 +69,13 @@ def test_skill_workflow_mentions_environment_and_test_loop():
 
     assert "Environment readiness is a hard gate" in skill_text
     assert "missing economic parameter values as a hard blocker" in skill_text
+    assert "unspecified plotting requirements as a blocker" in skill_text
     assert "Run the post-generation test loop" in skill_text
     assert "`derivative_method`" in schema_text
     assert "no confirmed numeric calibration" in schema_text
+    assert "`plot_requirements`" in schema_text
     assert "ask before code generation instead of inventing a baseline" in checklist_text
+    assert "ask before writing plotting code instead of guessing the figure layout" in checklist_text
     assert "`post_generation_tests`" in schema_text
     assert "Final executable code delivery is allowed only after a smoke test" in env_text
     assert "Choose the finite-difference scheme" in numeric_text
@@ -111,6 +114,8 @@ def test_docs_and_readme_describe_environment_numerics_and_test_loop():
     assert "生成后的测试修复闭环" in skill_zh
     assert "defines parameters but does not give the calibration" in skill_en
     assert "定义了参数，但没有给出数值校准" in skill_zh
+    assert "what to plot when the user requests figures" in skill_en
+    assert "要求画图但没有说明具体画什么" in skill_zh
     assert "If You Plan To Use `finhjb-model-coder`" in install_en
     assert "如果你打算使用 `finhjb-model-coder`" in install_zh
     assert "When Not To Use `central`" in solver_en

@@ -15,6 +15,7 @@ Ask questions only when the answer will materially change the generated FinHJB i
 - Does the HJB contain a non-zero jump term that needs `Model.jump(...)`?
 - Which parameters and calibration values should be hard-coded into the first executable version?
 - If the document names parameters but does not give usable numeric values, which baseline calibration should the runnable version use?
+- If the user wants plots or figures, which quantities should be plotted and how should the outputs be organized?
 - What counts as a successful solve in economic or numerical terms?
 
 ## Ask When The Input Is A Paper Excerpt
@@ -22,6 +23,7 @@ Ask questions only when the answer will materially change the generated FinHJB i
 - Confirm every equation that is only referenced by number rather than written out.
 - Ask for pasted text when the excerpt omits the boundary conditions.
 - Ask for the calibration table or pasted parameter values when the excerpt defines symbols but omits their numeric values.
+- Ask what the deliverable figure should contain when the paper excerpt does not make the target plot explicit.
 - Ask for pasted text when the FOC, Kuhn-Tucker condition, or regime split is only shown in an image.
 - Ask the user whether they want the first runnable implementation to stay close to the paper notation or to adopt more descriptive variable names.
 
@@ -40,6 +42,7 @@ If the model is otherwise fully specified, you may propose and label these defau
 
 - a second state variable can be collapsed into a parameter
 - an economic parameter can be assigned a paper-like number just because a nearby example used it
+- the plot should copy a standard paper figure when the user only said "please plot" but did not specify the target figure
 - an endogenous boundary target is `d2v[-1] = 0` just because BCW uses it
 - a multi-control problem can be reduced to one control without economic consequences
 - an implicit FOC can be safely rewritten as an explicit update without algebra
@@ -53,4 +56,5 @@ If the model is otherwise fully specified, you may propose and label these defau
 - Prefer short, concrete questions tied to code consequences.
 - If you can recommend a default, state it explicitly so the user can confirm or override it.
 - If parameter names are present but the numeric calibration is missing, ask before code generation instead of inventing a baseline.
+- If the user asked for plots but did not specify what to plot, ask before writing plotting code instead of guessing the figure layout.
 - After code generation, do not stop at "here is the code." Run the test loop, and only ask follow-up questions if the failure is caused by missing model information rather than a fixable implementation issue.
