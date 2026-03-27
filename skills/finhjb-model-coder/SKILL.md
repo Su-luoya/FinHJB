@@ -5,69 +5,101 @@ description: Translate continuous-time finance models into executable one-dimens
 
 # FinHJB Model Coder
 
-## Overview
+## Mission
 
-Translate a scholar's model materials into runnable and tested FinHJB code.
+Translate a scholar's model materials into runnable, tested, one-dimensional FinHJB code.
 
-Work in a spec-first loop: extract the model, identify blocking gaps, confirm only the high-impact details, generate code, test it, repair failures, then hand back a checked deliverable.
+Operate in a spec-first loop: identify what is already implementable, surface the true blockers, confirm the missing derivations and calibrations, then generate code, test it, repair it, and only then deliver it.
 
-## Decision Rule
+## Reference Map
 
-- Read `references/environment-readiness.md` as soon as the model looks implementable. Environment readiness is a hard gate before final code delivery.
-- Read `references/model-spec-schema.md` first to build the working model specification.
-- Read `references/clarification-checklist.md` before asking questions or making assumptions.
-- Read `references/numerical-method-selection.md` before locking `derivative_method`, `boundary_search(method=...)`, or any boundary-search fallback.
-- Read `references/math-to-finhjb-mapping.md` when mapping mathematics into FinHJB interfaces.
-- Read `references/template-selection.md` before choosing a template in `assets/templates/`.
-- Read `references/output-contract.md` before drafting the final deliverables.
-- Read `references/validation-checklist.md` before emitting validation advice.
-- Read `references/unsupported-models.md` as soon as the model looks multi-state, path-dependent, impulse-driven, equilibrium-closed, or otherwise outside current FinHJB scope.
+Read only the references needed for the current stage.
+
+### Intake And Blockers
+
+- `references/model-spec-schema.md`
+  Build the working model specification and record every unresolved item.
+- `references/clarification-checklist.md`
+  Use when deciding which questions are genuinely blocking.
+- `references/environment-readiness.md`
+  Use as soon as runnable delivery is expected.
+
+### Mapping And Method Lock
+
+- `references/math-to-finhjb-mapping.md`
+  Use when translating economics and notation into FinHJB interfaces.
+- `references/numerical-method-selection.md`
+  Use before locking derivative schemes, boundary-search methods, or post-test method repairs.
+- `references/unsupported-models.md`
+  Use when the model looks out of scope or only partially mappable.
+
+### Generation And Layout
+
+- `references/template-selection.md`
+  Choose the core model template.
+- `references/output-contract.md`
+  Lock the deliverable shape and code layout.
+
+### Verification And Delivery
+
+- `references/validation-checklist.md`
+  Build the executed checks and the scholar-facing follow-up checklist.
 
 ## Workflow
 
-1. Normalize the input into a structured model specification. Accept prose, LaTeX, paper excerpts, or mixed notes.
-2. Detect whether the model is implementable in current FinHJB. FinHJB here is one-dimensional; do not fake multidimensional support.
-3. Confirm environment readiness before promising runnable code. If `finhjb` is not available in the target Python environment, switch to install-assistance mode and stop before final code delivery.
-4. Ask concise blocking questions when the state variable, control set, HJB terms, boundary conditions, parameter values, plotting requirements, FOC logic, numerical method, or solver workflow are missing or ambiguous enough to change code generation.
-5. Lock the structured spec, including `derivative_method`, `boundary_search_method`, and the reason for each choice.
-6. Decide the project layout. Use a single file for baseline solves unless the task explicitly asks for a larger layout or the deliverable combines sensitivity analysis with plotting.
-7. Choose the closest template from `assets/templates/`.
-8. Generate code and keep it faithful to the theorized model. Name intermediate terms by economic meaning and add brief comments mapping key equations to code.
-   - For sensitivity-analysis-plus-plotting tasks, do not collapse everything into one script. Split the deliverable into at least:
-     - a model-solving file
-     - a data-export or data-save file
-     - a plotting file
-9. Run the post-generation test loop:
-   - syntax and import checks
-   - `Solver(...)` construction
-   - at least one baseline solve
-   - required plots or summary artifacts when the task asks for them
-10. If the generated code fails, repair it and rerun the test loop before handing it back. If the failure is blocked by missing equations, missing environment, or unsupported model structure, stop and explain the blocker explicitly.
-11. If the model is out of scope, stop code generation and explain the smallest workable simplification or the package extension required.
+1. Normalize the input into a structured spec. Accept prose, LaTeX, paper excerpts, or mixed notes.
+2. Check scope. Current FinHJB here is one-dimensional; do not fake multidimensional support.
+3. Confirm environment readiness before promising runnable code.
+4. Identify blockers and ask only the questions that materially change the implementation.
+5. Lock the model mapping, derivation status, numerical methods, plotting requirements, and file layout.
+6. Choose the closest core template and generate the code.
+7. Run the post-generation test loop, repair failures, and only then deliver the artifact.
+
+## Hard Blockers
+
+Treat these as blockers for runnable delivery unless the user explicitly confirms an approximation, a placeholder-only scaffold, or some other reduced goal:
+
+- environment is not ready for `finhjb`
+- parameter symbols are given but usable numeric values are not
+- the task asks for figures but the actual plot contents are unspecified
+- the mathematics does not yet map directly into implementation-ready formulas and still needs derivation
+- sensitivity analysis plus plotting is requested but the file layout is still ambiguous
+- the model is outside current FinHJB scope
+
+When a blocker exists, say so explicitly. Do not silently repair the missing math, calibration, or plotting spec inside the code.
 
 ## Generation Rules
 
-- Generate a single runnable Python file only for baseline solve tasks where one file keeps the deliverable clear.
-- If the task combines sensitivity analysis with plotting, do not keep everything in one file. Generate a small project layout with separate solve, data, and plotting files.
-- Use the fixed FinHJB backbone: `Parameter`, `Boundary`, `PolicyDict`, `Policy`, `Model`, and a solver entry block.
-- Prefer `@explicit_policy` when a stable closed-form update exists; use `@implicit_policy` when the control is naturally defined through a residual or FOC.
-- Choose `solve()` for fixed boundaries, `boundary_search()` for residual-based boundary targets, and `boundary_update()` when a solved grid directly implies new boundaries.
-- Treat environment readiness as a hard requirement for runnable delivery. Prefer a repo-backed environment for repository examples and `uv add finhjb` or `pip install finhjb` for package-only workflows.
-- Treat missing economic parameter values as a hard blocker for runnable delivery unless the user explicitly confirms a baseline calibration, a sensitivity grid, or a placeholder-only scaffold.
-- Treat unspecified plotting requirements as a blocker whenever the task asks for figures, plots, or visual outputs. If the user did not say what to plot, ask before generating the plotting code.
-- Do not silently default the derivative scheme. Use `central` only when the diffusion term stays materially away from zero at both edges; consider `forward` for left-edge degeneracy and `backward` for right-edge degeneracy.
-- If `boundary_search()` has one or two endogenous targets, start from `bisection` when you have credible brackets. For three or more targets, or when the two-target default fails the post-generation test loop, promote the search to `hybr` or another supported multidimensional method and say why.
-- If the input comes from a paper fragment and formulas are incomplete or image-only, ask the scholar to paste the missing text before committing to code.
-- Do not leave silent placeholders in the final code. If a quantity is intentionally unresolved, call it out explicitly in the specification summary and validation list.
-- In generated code, add short comments near `Config(...)` and the solve entrypoint explaining why the derivative scheme and solver workflow were chosen.
+- Generate a single runnable Python file only for compact baseline solve tasks where one file keeps the deliverable clear.
+- If the task combines sensitivity analysis with plotting, generate a small project layout with separate solve, data, and plotting files.
+- Use the fixed FinHJB backbone for the solve layer: `Parameter`, `Boundary`, `PolicyDict`, `Policy`, `Model`, and a solver entry block.
+- Prefer `@explicit_policy` when the control has a stable closed-form update. Prefer `@implicit_policy` when the control is naturally expressed as an FOC residual.
+- Choose `solve()` for fixed boundaries, `boundary_search()` for residual-based endogenous boundaries, `boundary_update()` for outer loops implied by the solved grid, and `sensitivity_analysis()` only after the baseline model is stable.
+- Treat missing economic parameter values as a hard blocker unless the user explicitly confirms the baseline calibration.
+- Treat unspecified plotting requirements as a blocker whenever figures are requested.
+- Treat unmapped mathematics as a blocker. If derivation is still needed, list the missing derivation steps and confirm them with the user before generating code.
+- Use `central` only when the diffusion term stays materially away from zero at both edges. Consider `forward` for left-edge degeneracy and `backward` for right-edge degeneracy.
+- If `boundary_search()` has one or two endogenous targets, start from `bisection` when the brackets are credible. For three or more targets, or when the smaller-target default fails the post-generation test loop, promote the final method to `hybr` or another supported multidimensional backend and say why.
+- Keep comments short and useful. Explain equation-to-code mappings, method choices, and any post-test repairs.
 
-## Output
+## Test-Repair Loop
 
-Emit the final answer in four blocks:
+Before final delivery, run as many of these as the task requires:
 
-1. Structured specification summary
-2. Executable FinHJB code
-3. Executed test-and-repair summary
-4. Validation checklist
+- syntax and import checks
+- `Solver(...)` construction
+- at least one baseline solve
+- figure and summary artifact checks when those artifacts are part of the deliverable
 
-Name the suggested output files as `finhjb_<model-slug>.py` and `finhjb_<model-slug>_spec.md`.
+If the generated code fails for fixable reasons, repair it and rerun the loop. If the failure is blocked by missing equations, missing derivations, missing calibration values, missing plotting requirements, missing environment, or unsupported model structure, stop and surface that blocker.
+
+## Delivery
+
+Emit the final answer in four parts:
+
+1. structured specification summary
+2. executable FinHJB code
+3. executed test-and-repair summary
+4. validation checklist
+
+Use suggested names such as `finhjb_<model-slug>.py` and `finhjb_<model-slug>_spec.md` when the user has not provided a naming convention.

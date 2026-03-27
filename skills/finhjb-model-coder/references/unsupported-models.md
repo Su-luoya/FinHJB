@@ -25,3 +25,4 @@ When the model is out of scope:
 - If the paper has states `(w, z)`, do not collapse `z` into a parameter unless the user explicitly wants that approximation.
 - If the model has regime switching with separate value functions `V_G` and `V_B`, explain that current FinHJB does not yet provide a coupled-system interface.
 - If the only missing piece is a textual formula from the paper, treat that as an information gap, not an unsupported model.
+- If the model is in scope but still requires algebraic derivation before it maps into code, treat that as a derivation gap. Do not silently finish the derivation and jump straight to code; surface the missing steps and confirm them with the user first.

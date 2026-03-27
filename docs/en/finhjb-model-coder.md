@@ -11,19 +11,17 @@ The skill is designed to:
 - read prose, LaTeX, HJB equations, FOCs, and paper excerpts
 - decide whether the model fits the current one-dimensional FinHJB interface
 - confirm that the target Python environment can import `finhjb`
-- ask follow-up questions when boundary conditions, controls, or calibration details are missing
-- stop and confirm parameter values when the document defines symbols but omits the numeric calibration needed for runnable code
-- ask what to plot when the user requests figures but the target plot is not specified
-- split sensitivity-analysis-plus-plotting work into separate solve, data, and plotting files instead of one oversized script
+- stop and confirm missing derivations, calibrations, plotting requirements, or layout decisions before code generation
 - confirm the derivative scheme and boundary-search method when those choices affect the implementation
-- generate a runnable FinHJB model file
+- generate runnable FinHJB code
 - run a post-generation test loop and repair failures before delivery
-- summarize the model specification in implementation-ready language
-- propose a validation checklist so you can judge whether the first solve is credible
+- return a structured specification summary, the code, an executed test summary, and a validation checklist
 
 The core output is not a BCW reproduction. The core output is theory-to-code translation.
 
-## Supported Model Shape
+## Stage 1: Before Code Generation
+
+### Supported Model Shape
 
 The current package and the skill are both built around a one-dimensional state grid.
 
@@ -43,7 +41,7 @@ The skill will refuse to generate misleading code for models that clearly requir
 
 When that happens, the skill should explain why the model is out of scope and propose the closest implementable simplification.
 
-## Best Input Format
+### Best Input Bundle
 
 The more of the mathematical structure you provide up front, the better the first generated implementation will be.
 
@@ -58,10 +56,6 @@ Recommended inputs:
 - any smooth-pasting, super-contact, or issuance conditions
 - parameter meanings and baseline calibration values
 
-If your notes list parameter symbols but not their numeric values, expect the skill to stop and ask for a baseline calibration before it generates runnable code.
-
-If you want plots, say which quantities you want to visualize. If you only say "plot the results," expect the skill to stop and confirm the figure contents before it writes plotting code.
-
 You can provide this as:
 
 - plain text notes
@@ -71,9 +65,23 @@ You can provide this as:
 
 If a paper screenshot or PDF image omits key formulas, the skill should ask you to paste the missing text before generating code.
 
-## Environment And Preconditions
+### Hard Blockers The Skill Must Surface
 
-This skill now treats environment readiness as a hard prerequisite for runnable delivery.
+The skill should stop and ask before code generation when:
+
+- the environment cannot yet import `finhjb`
+- the document defines parameter symbols but omits usable numeric values
+- the mathematics still needs derivation before it maps into implementation-ready formulas
+- the user requests figures but has not specified what to plot
+- the task combines sensitivity analysis with plotting but the output layout is still unclear
+
+This is the main safety rule of the skill: do not silently fill in missing mathematics or deliverable requirements.
+
+## Stage 2: Mapping, Methods, And Layout
+
+### Environment And Preconditions
+
+This skill treats environment readiness as a hard prerequisite for runnable delivery.
 
 What that means in practice:
 
@@ -81,7 +89,7 @@ What that means in practice:
 - if you are working in a downstream project, the skill should prefer an installed package workflow such as `uv add finhjb` or `pip install finhjb`
 - if the environment cannot yet import `finhjb`, the skill should switch into install-assistance mode instead of pretending the final code is runnable
 
-The minimum smoke test is simple:
+The minimum smoke test is:
 
 ```bash
 python -c "import finhjb"
@@ -93,31 +101,20 @@ Inside this repository, a more faithful smoke test is:
 uv run python -c "import finhjb"
 ```
 
-This distinction matters because repository-only files such as `src/example/...` are not part of the published wheel.
+### Derivation Before Code
 
-## Interaction Flow
+If the mathematics still needs derivation before it maps into code, the skill should stop and say exactly which derivation steps are still missing.
 
-The intended workflow is:
+Typical examples:
 
-1. You provide the model materials.
-2. The skill checks whether the model is in scope for one-dimensional FinHJB.
-3. The skill confirms that the target Python environment can run `finhjb`.
-4. The skill extracts a structured model specification.
-5. The skill asks only the blocking questions that change code generation.
-6. The skill confirms the derivative scheme and boundary-search method.
-7. The skill decides whether the deliverable should stay single-file or split into solve, data, and plotting files.
-8. The skill chooses the closest FinHJB template.
-9. The skill generates code.
-10. The skill runs a test loop and repairs failures before delivery.
-11. The skill returns:
-   - a structured model spec
-   - executable FinHJB code
-   - an executed test-and-repair summary
-   - a validation checklist
+- the state normalization is still implicit in the paper
+- the HJB has not yet been rewritten into an implementation-ready residual
+- the control law still needs to be turned into a closed-form update or an FOC residual
+- the paper boundary conditions still need to be rewritten as `Boundary` values or `BoundaryConditionTarget`s
 
-This spec-first step is important. In continuous-time models, the biggest implementation mistakes usually come from silent assumptions about boundaries, controls, or normalization.
+The skill should confirm those derivations with the user before it generates code.
 
-## Choosing The Derivative Scheme
+### Choosing The Derivative Scheme
 
 The skill should not silently default `derivative_method="central"` in every model.
 
@@ -130,7 +127,7 @@ Use this rule of thumb:
 
 The skill should explain this choice in both the specification summary and the generated `Config(...)` block.
 
-## Choosing The Boundary Search Method
+### Choosing The Boundary Search Method
 
 For endogenous boundaries, the skill should choose the search backend explicitly instead of treating it as an implementation detail.
 
@@ -143,22 +140,7 @@ Important exception:
 
 - if the 1-2 target default fails the post-generation test loop, the skill should promote the final implementation to `hybr` or another supported method and explain why
 
-This keeps the method choice tied to the economics and to the actual runtime behavior, not only to the template.
-
-## Post-Generation Test Loop
-
-The skill is not finished when it prints a code block.
-
-Before delivery, it should run:
-
-- a syntax and import check
-- a `Solver(...)` construction check
-- at least one baseline solve
-- required figure or summary output checks if the task asked for them
-
-If these checks fail for fixable reasons, the skill should repair the implementation and rerun the checks. Only unresolved external blockers such as missing equations or a missing environment should stop the loop.
-
-## File Layout For Sensitivity Analysis And Plotting
+### File Layout For Sensitivity Analysis And Plotting
 
 Do not treat every task as a single-script deliverable.
 
@@ -170,13 +152,39 @@ Recommended rule:
   - a data-save or data-export file
   - a plotting file
 
-This keeps the responsibilities clear:
+This separation makes reruns, plotting changes, and diagnostics much easier to maintain.
 
-- the solve file defines the model and runs the continuation or solve logic
-- the data file serializes or stores the outputs needed for later plotting
-- the plotting file reads those saved outputs and generates the figures
+## Stage 3: Generation, Testing, And Delivery
 
-This separation is not cosmetic. It makes reruns, plotting changes, and diagnostics much easier to maintain.
+### Interaction Flow
+
+The intended workflow is:
+
+1. You provide the model materials.
+2. The skill checks whether the model is in scope for one-dimensional FinHJB.
+3. The skill confirms that the target Python environment can run `finhjb`.
+4. The skill extracts a structured model specification.
+5. The skill asks only the blocking questions that change code generation.
+6. The skill confirms the derivative scheme, boundary-search method, and file layout.
+7. The skill chooses the closest FinHJB template.
+8. The skill generates code.
+9. The skill runs a test loop and repairs failures before delivery.
+10. The skill returns:
+   - a structured model spec
+   - executable FinHJB code
+   - an executed test-and-repair summary
+   - a validation checklist
+
+### Post-Generation Test Loop
+
+Before delivery, the skill should run:
+
+- a syntax and import check
+- a `Solver(...)` construction check
+- at least one baseline solve
+- required figure or summary output checks if the task asked for them
+
+If these checks fail for fixable reasons, the skill should repair the implementation and rerun the checks. Only unresolved external blockers such as missing equations, missing derivations, or a missing environment should stop the loop.
 
 ## Example Prompts
 
@@ -193,7 +201,7 @@ Use $finhjb-model-coder to map this HJB and FOC system into Parameter, Boundary,
 ```
 
 ```text
-Use $finhjb-model-coder to read this model, confirm whether my current environment can run FinHJB, choose the derivative scheme and boundary-search method explicitly, then generate and test the code before handing it back.
+Use $finhjb-model-coder to read this model, confirm whether my current environment can run FinHJB, list any derivations that still need confirmation, choose the derivative scheme and boundary-search method explicitly, then generate and test the code before handing it back.
 ```
 
 ## Installation And Updates
@@ -220,7 +228,7 @@ Installing the skill does not install the `finhjb` runtime into every downstream
 
 ### The model really has two states
 
-In that case, the right next step is not code generation. The right next step is to decide whether a one-state reduction is acceptable.
+The right next step is not code generation. The right next step is to decide whether a one-state reduction is acceptable.
 
 ### The HJB is present but the boundary conditions are not
 
@@ -230,13 +238,17 @@ The skill should stop and ask for the missing left or right boundary logic befor
 
 The skill should stop and ask which numeric values belong in the first runnable implementation. It should not invent a baseline by borrowing numbers from a different example.
 
+### The mathematics still needs derivation before it maps into code
+
+The skill should stop and list the missing derivation steps. It should confirm those steps with the user before generating code.
+
 ### The user asked for figures but did not specify what to plot
 
-The skill should stop and ask which solved quantities, comparisons, or paper-style figures belong in the deliverable. It should not silently invent a plotting layout just because the paper contains some standard charts.
+The skill should stop and ask which solved quantities, comparisons, or paper-style figures belong in the deliverable. It should not silently invent a plotting layout.
 
 ### The task asks for sensitivity analysis and plots, but the code is still organized as one file
 
-The skill should reorganize the deliverable into separate solve, data, and plotting files. A single oversized script is the wrong default for this kind of workflow.
+The skill should reorganize the deliverable into separate solve, data, and plotting files.
 
 ### The paper defines a control but not the update rule
 
@@ -244,11 +256,7 @@ The skill should ask whether the control is intended to be explicit, implicit th
 
 ### The first generated solve is numerically unstable
 
-That usually means the model needs better initialization, a different derivative scheme, better boundary logic, or a cleaner baseline before sensitivity analysis. The skill should first try to repair the generated code and rerun the solve loop. Use the validation checklist and then return to:
-
-- [Modeling Guide](./modeling-guide.md)
-- [Solver Guide](./solver-guide.md)
-- [Adapting BCW To Your Model](./adapting-bcw-to-your-model.md)
+That usually means the model needs better initialization, a different derivative scheme, better boundary logic, or a cleaner baseline before sensitivity analysis. The skill should first try to repair the generated code and rerun the solve loop.
 
 ## Recommended Reading Order
 

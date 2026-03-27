@@ -67,20 +67,35 @@ def test_skill_workflow_mentions_environment_and_test_loop():
     numeric_text = (SKILL_DIR / "references" / "numerical-method-selection.md").read_text()
     output_text = (SKILL_DIR / "references" / "output-contract.md").read_text()
 
-    assert "Environment readiness is a hard gate" in skill_text
-    assert "missing economic parameter values as a hard blocker" in skill_text
-    assert "unspecified plotting requirements as a blocker" in skill_text
+    assert "## Mission" in skill_text
+    assert "## Workflow" in skill_text
+    assert "## Hard Blockers" in skill_text
+    assert "## Generation Rules" in skill_text
+    assert "## Test-Repair Loop" in skill_text
+    assert "## Delivery" in skill_text
+    assert "environment is not ready for `finhjb`" in skill_text
+    assert "parameter symbols are given but usable numeric values are not" in skill_text
+    assert "task asks for figures but the actual plot contents are unspecified" in skill_text
     assert "sensitivity analysis with plotting" in skill_text
+    assert "Treat unmapped mathematics as a blocker" in skill_text
     assert "Run the post-generation test loop" in skill_text
     assert "`derivative_method`" in schema_text
     assert "no confirmed numeric calibration" in schema_text
     assert "`plot_requirements`" in schema_text
     assert "`project_layout`" in schema_text
+    assert "`derivation_requirements`" in schema_text
+    assert "## Stage 1: Delivery Context" in schema_text
+    assert "## Stage 4: Solve Plan" in schema_text
     assert "ask before code generation instead of inventing a baseline" in checklist_text
     assert "ask before writing plotting code instead of guessing the figure layout" in checklist_text
     assert "default to a split file layout" in checklist_text
+    assert "list the missing derivation steps explicitly" in checklist_text
+    assert "## Stage 1: Direct Blockers Before Coding" in checklist_text
     assert "`post_generation_tests`" in schema_text
+    assert "## Hard Gate" in env_text
     assert "Final executable code delivery is allowed only after a smoke test" in env_text
+    assert "## Derivative Scheme" in numeric_text
+    assert "## Boundary Search Method" in numeric_text
     assert "Choose the finite-difference scheme" in numeric_text
     assert "produce four deliverables" in output_text
 
@@ -107,22 +122,32 @@ def test_docs_and_readme_describe_environment_numerics_and_test_loop():
 
     assert "confirm that the target Python environment can actually run `finhjb`" in readme_en
     assert "先确认目标 Python 环境是否真的能运行 `finhjb`" in readme_zh
+    assert "## Stage 1: Before Code Generation" in skill_en
+    assert "## 第一阶段：生成代码前" in skill_zh
     assert "Environment And Preconditions" in skill_en
     assert "运行环境与前置条件" in skill_zh
+    assert "## Stage 2: Mapping, Methods, And Layout" in skill_en
+    assert "## 第二阶段：映射、数值方法与文件结构" in skill_zh
     assert "Choosing The Derivative Scheme" in skill_en
     assert "差分格式如何选" in skill_zh
     assert "Choosing The Boundary Search Method" in skill_en
     assert "边界搜索方法如何选" in skill_zh
+    assert "## Stage 3: Generation, Testing, And Delivery" in skill_en
+    assert "## 第三阶段：生成、测试与交付" in skill_zh
     assert "post-generation test loop" in skill_en
     assert "生成后的测试修复闭环" in skill_zh
     assert "defines parameters but does not give the calibration" in skill_en
     assert "定义了参数，但没有给出数值校准" in skill_zh
-    assert "what to plot when the user requests figures" in skill_en
+    assert "the user requests figures but has not specified what to plot" in skill_en
     assert "要求画图但没有说明具体画什么" in skill_zh
     assert "File Layout For Sensitivity Analysis And Plotting" in skill_en
     assert "敏感性分析加作图时的文件结构" in skill_zh
+    assert "mathematics still needs derivation before it maps into code" in skill_en
+    assert "数学表达还不能直接对应到代码，需要先做推导" in skill_zh
     assert "split the deliverable into solve, data, and plotting files" in readme_en
     assert "默认拆成求解文件、数据保存文件、绘图文件" in readme_zh
+    assert "stop and confirm the missing derivation steps" in readme_en
+    assert "需要先做推导" in readme_zh
     assert "If You Plan To Use `finhjb-model-coder`" in install_en
     assert "如果你打算使用 `finhjb-model-coder`" in install_zh
     assert "When Not To Use `central`" in solver_en

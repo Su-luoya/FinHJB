@@ -2,12 +2,23 @@
 
 Use this schema before writing any code.
 
-The goal is to turn free-form mathematical input into a compact working specification that can drive template selection and code generation.
+The goal is to turn free-form mathematical input into a compact working specification that drives questions, method choices, layout decisions, and final code generation.
 
-## Mandatory Fields
+## Stage 1: Delivery Context
+
+These fields decide whether runnable delivery is even possible yet.
 
 - `environment`
   Whether the target Python environment is ready, how `finhjb` is provided, and what smoke test was used.
+- `plot_requirements`
+  Whether plots are requested, which quantities should be visualized, output file expectations, and any remaining figure questions that still require user confirmation.
+- `project_layout`
+  Whether the deliverable should stay single-file or be split into separate solve, data, and plotting files. Sensitivity-analysis-plus-plotting tasks should default to the split layout.
+
+## Stage 2: Economic Model
+
+These fields define what is being solved.
+
 - `research_goal`
   What economic question the model answers and what object is being valued or optimized.
 - `state_variable`
@@ -16,26 +27,34 @@ The goal is to turn free-form mathematical input into a compact working specific
   Every control variable, its symbol, interpretation, admissible range, and whether it is expected to be explicit or implicit.
 - `value_object`
   The value function being solved for and any normalization used in the paper.
+- `parameters`
+  Parameter names, meanings, baseline calibrations, any missing numeric values that still require user confirmation, and any derived quantities.
+
+## Stage 3: Math-To-Code Mapping
+
+These fields define whether the mathematics is already implementation-ready.
+
 - `hjb_equation`
   The exact HJB residual target, restated in solver-friendly notation.
+- `derivation_requirements`
+  Any mathematical steps that still need to be derived or confirmed before the model can be mapped into executable FinHJB code.
 - `drift_diffusion_jump`
   The law of motion terms entering the HJB and whether a non-zero `jump(...)` hook is needed.
 - `boundary_conditions`
   Left and right state boundaries, value matching rules, smooth-pasting or super-contact conditions, and whether the boundaries are fixed or endogenous.
 - `policy_logic`
   Closed-form rules, FOCs, complementarity conditions, clipping rules, or regime-switching logic needed to update controls.
-- `parameters`
-  Parameter names, meanings, baseline calibrations, any missing numeric values that still require user confirmation, and any derived quantities.
-- `plot_requirements`
-  Whether plots are requested, which quantities should be visualized, output file expectations, and any remaining figure questions that still require user confirmation.
-- `project_layout`
-  Whether the deliverable should stay single-file or be split into separate solve, data, and plotting files. Sensitivity-analysis-plus-plotting tasks should default to the split layout.
+
+## Stage 4: Solve Plan
+
+These fields define how the implementation will run.
+
 - `solver_workflow`
   Choose among `solve`, `boundary_search`, `boundary_update`, and `sensitivity_analysis`.
 - `numerical_method`
   The selected finite-difference scheme, boundary-search method if any, the number of boundary targets, and the reason these choices fit the model. This block should include explicit subfields such as `derivative_method`, `derivative_method_reason`, `boundary_search_method`, and `boundary_target_count`.
 - `post_generation_tests`
-  Which checks were run after code generation, whether they passed, and what repairs were required. This block should include explicit subfields such as `post_generation_tests`, `tests_passed`, and `repairs_applied` when you restate the spec for the user.
+  Which checks were run after code generation, whether they passed, and what repairs were required. This block should include explicit subfields such as `post_generation_tests`, `tests_passed`, and `repairs_applied`.
 - `diagnostics`
   Quantities that should be checked after the solve to judge whether the implementation is healthy.
 
@@ -46,6 +65,7 @@ Treat these as code-generation blockers unless the user explicitly authorizes a 
 - state dimension is unclear
 - environment readiness is unclear and the user expects runnable code
 - the HJB is incomplete or inconsistent with the stated dynamics
+- the model still requires unconfirmed derivation steps before it can be mapped into code
 - a boundary condition is missing but the workflow depends on it
 - a control variable exists in theory but has no update rule or FOC
 - parameter symbols are defined but the runnable version has no confirmed numeric calibration
@@ -79,10 +99,10 @@ These may be filled with explicit, labeled defaults if the user does not care:
 - blocking issue:
 
 ## State Variable
-- Paper symbol:
+- paper symbol:
 - FinHJB symbol:
-- Meaning:
-- Domain:
+- meaning:
+- domain:
 
 ## Controls
 - `control_name`:
@@ -96,6 +116,11 @@ These may be filled with explicit, labeled defaults if the user does not care:
 
 ## HJB Equation
 - ...
+
+## Derivation Requirements
+- direct mapping status:
+- derivations still needed:
+- user confirmations received:
 
 ## Drift, Diffusion, Jump
 - drift:

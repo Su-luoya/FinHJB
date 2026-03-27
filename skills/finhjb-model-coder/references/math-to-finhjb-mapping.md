@@ -2,7 +2,9 @@
 
 Use this file to translate the scholar's notation into the FinHJB interfaces.
 
-## Core Mapping
+If the mathematics cannot yet be translated directly, stop and turn the remaining work into explicit derivation questions instead of silently doing the derivation in code.
+
+## Core Mapping Table
 
 | Mathematical object | FinHJB location | Notes |
 |---|---|---|
@@ -22,6 +24,23 @@ Use this file to translate the scholar's notation into the FinHJB interfaces.
 - Map the paper's state variable into FinHJB's `s`.
 - Map the paper's value function into `v`.
 - Use descriptive control names in `PolicyDict` instead of generic names such as `control1`.
+
+## Derivation Gate
+
+Do not move from math to code until each of these is either directly given or explicitly confirmed with the user:
+
+- the state normalization used by the implementation
+- the exact residual form of the HJB
+- the control update formula or FOC residual written in implementation-ready form
+- the mapping from paper boundary conditions into `Boundary` values or `BoundaryConditionTarget`s
+- any derived quantities that must be computed before the solver can run
+
+If one of these still requires derivation:
+
+1. say that the current material does not yet map directly into code
+2. list the missing derivation steps explicitly
+3. ask the user to confirm those derivations or provide the missing intermediate formulas
+4. only then generate code
 
 ## Policy Update Choice
 
@@ -44,7 +63,7 @@ Use `@implicit_policy` when:
 - Use `boundary_update()` when the solved grid directly implies revised boundary values.
 - Use `sensitivity_analysis()` only after the baseline model solves cleanly.
 
-## One-Dimensional Constraint
+## Stop Conditions
 
 Current FinHJB is organized around a single state grid.
 
