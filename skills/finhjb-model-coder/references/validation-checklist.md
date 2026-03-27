@@ -10,6 +10,7 @@ Use this checklist to keep generated code numerically honest.
 - every control declared in `PolicyDict` is initialized in `Policy.initialize`
 - each control array matches the grid length
 - the chosen workflow matches the boundary logic in the model
+- the economic parameter values in the runnable script match the confirmed calibration
 - the selected derivative scheme is consistent with the diffusion behavior near the boundaries
 
 ## Fixed-Boundary Checks

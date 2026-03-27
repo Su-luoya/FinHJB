@@ -62,13 +62,17 @@ def test_skill_resources_exist():
 def test_skill_workflow_mentions_environment_and_test_loop():
     skill_text = (SKILL_DIR / "SKILL.md").read_text()
     schema_text = (SKILL_DIR / "references" / "model-spec-schema.md").read_text()
+    checklist_text = (SKILL_DIR / "references" / "clarification-checklist.md").read_text()
     env_text = (SKILL_DIR / "references" / "environment-readiness.md").read_text()
     numeric_text = (SKILL_DIR / "references" / "numerical-method-selection.md").read_text()
     output_text = (SKILL_DIR / "references" / "output-contract.md").read_text()
 
     assert "Environment readiness is a hard gate" in skill_text
+    assert "missing economic parameter values as a hard blocker" in skill_text
     assert "Run the post-generation test loop" in skill_text
     assert "`derivative_method`" in schema_text
+    assert "no confirmed numeric calibration" in schema_text
+    assert "ask before code generation instead of inventing a baseline" in checklist_text
     assert "`post_generation_tests`" in schema_text
     assert "Final executable code delivery is allowed only after a smoke test" in env_text
     assert "Choose the finite-difference scheme" in numeric_text
@@ -105,6 +109,8 @@ def test_docs_and_readme_describe_environment_numerics_and_test_loop():
     assert "边界搜索方法如何选" in skill_zh
     assert "post-generation test loop" in skill_en
     assert "生成后的测试修复闭环" in skill_zh
+    assert "defines parameters but does not give the calibration" in skill_en
+    assert "定义了参数，但没有给出数值校准" in skill_zh
     assert "If You Plan To Use `finhjb-model-coder`" in install_en
     assert "如果你打算使用 `finhjb-model-coder`" in install_zh
     assert "When Not To Use `central`" in solver_en

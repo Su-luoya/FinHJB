@@ -12,6 +12,7 @@ The skill is designed to:
 - decide whether the model fits the current one-dimensional FinHJB interface
 - confirm that the target Python environment can import `finhjb`
 - ask follow-up questions when boundary conditions, controls, or calibration details are missing
+- stop and confirm parameter values when the document defines symbols but omits the numeric calibration needed for runnable code
 - confirm the derivative scheme and boundary-search method when those choices affect the implementation
 - generate a runnable FinHJB model file
 - run a post-generation test loop and repair failures before delivery
@@ -54,6 +55,8 @@ Recommended inputs:
 - left and right boundary conditions
 - any smooth-pasting, super-contact, or issuance conditions
 - parameter meanings and baseline calibration values
+
+If your notes list parameter symbols but not their numeric values, expect the skill to stop and ask for a baseline calibration before it generates runnable code.
 
 You can provide this as:
 
@@ -197,6 +200,10 @@ In that case, the right next step is not code generation. The right next step is
 ### The HJB is present but the boundary conditions are not
 
 The skill should stop and ask for the missing left or right boundary logic before choosing `solve()`, `boundary_search()`, or `boundary_update()`.
+
+### The paper defines parameters but does not give the calibration
+
+The skill should stop and ask which numeric values belong in the first runnable implementation. It should not invent a baseline by borrowing numbers from a different example.
 
 ### The paper defines a control but not the update rule
 

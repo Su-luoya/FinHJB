@@ -25,7 +25,7 @@ The goal is to turn free-form mathematical input into a compact working specific
 - `policy_logic`
   Closed-form rules, FOCs, complementarity conditions, clipping rules, or regime-switching logic needed to update controls.
 - `parameters`
-  Parameter names, meanings, baseline calibrations, and any derived quantities.
+  Parameter names, meanings, baseline calibrations, any missing numeric values that still require user confirmation, and any derived quantities.
 - `solver_workflow`
   Choose among `solve`, `boundary_search`, `boundary_update`, and `sensitivity_analysis`.
 - `numerical_method`
@@ -44,6 +44,7 @@ Treat these as code-generation blockers unless the user explicitly authorizes a 
 - the HJB is incomplete or inconsistent with the stated dynamics
 - a boundary condition is missing but the workflow depends on it
 - a control variable exists in theory but has no update rule or FOC
+- parameter symbols are defined but the runnable version has no confirmed numeric calibration
 - the model clearly needs an outer-loop boundary method but the target condition is unspecified
 - the diffusion degeneracy pattern is unclear but the derivative scheme choice would change the code
 
@@ -105,6 +106,7 @@ These may be filled with explicit, labeled defaults if the user does not care:
 
 ## Parameters
 - `name = value`: meaning
+- missing values requiring confirmation:
 
 ## Solver Workflow
 - primary workflow:

@@ -12,6 +12,7 @@
 - 判断模型是否适合当前一维 FinHJB 接口
 - 先确认目标 Python 环境是否可以导入 `finhjb`
 - 当边界条件、控制变量或校准细节缺失时主动追问
+- 如果文档定义了参数符号却没有给出数值校准，先停下来确认 baseline calibration
 - 在实现会受影响时，先确认差分格式和边界搜索方法
 - 生成可运行的 FinHJB 模型文件
 - 在交付前先跑测试闭环并修复失败
@@ -54,6 +55,8 @@
 - 左右边界条件
 - smooth pasting、super-contact 或发行条件
 - 参数含义与基准校准值
+
+如果你的材料里只有参数符号、没有可运行实现所需的具体数值，Skill 应先停下来向你确认 baseline calibration，再继续生成代码。
 
 这些材料可以来自：
 
@@ -197,6 +200,10 @@ python scripts/install_skill.py --mode link --force
 ### HJB 有了，但边界条件没有
 
 Skill 应该先停下来追问缺失的左右边界逻辑，再决定使用 `solve()`、`boundary_search()` 还是 `boundary_update()`。
+
+### 论文里定义了参数，但没有给出数值校准
+
+Skill 应该先停下来问清楚第一版可运行实现到底要用哪些数值，而不是从别的案例里猜一个 baseline。
 
 ### 论文定义了控制变量，但没有给出更新规则
 

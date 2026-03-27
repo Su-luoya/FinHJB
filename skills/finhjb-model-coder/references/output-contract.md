@@ -16,6 +16,7 @@ Include:
 - derivative-method choice and reason
 - boundary-search method, target count, and brackets if relevant
 - parameter list with baseline values
+- explicit note when a parameter value had to be confirmed with the user before code generation
 - explicit assumptions or unresolved items
 
 ## Deliverable 2: Executable FinHJB Code
