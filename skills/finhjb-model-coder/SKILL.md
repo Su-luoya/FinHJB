@@ -30,19 +30,25 @@ Work in a spec-first loop: extract the model, identify blocking gaps, confirm on
 3. Confirm environment readiness before promising runnable code. If `finhjb` is not available in the target Python environment, switch to install-assistance mode and stop before final code delivery.
 4. Ask concise blocking questions when the state variable, control set, HJB terms, boundary conditions, parameter values, plotting requirements, FOC logic, numerical method, or solver workflow are missing or ambiguous enough to change code generation.
 5. Lock the structured spec, including `derivative_method`, `boundary_search_method`, and the reason for each choice.
-6. Choose the closest template from `assets/templates/`.
-7. Generate code and keep it faithful to the theorized model. Name intermediate terms by economic meaning and add brief comments mapping key equations to code.
-8. Run the post-generation test loop:
+6. Decide the project layout. Use a single file for baseline solves unless the task explicitly asks for a larger layout or the deliverable combines sensitivity analysis with plotting.
+7. Choose the closest template from `assets/templates/`.
+8. Generate code and keep it faithful to the theorized model. Name intermediate terms by economic meaning and add brief comments mapping key equations to code.
+   - For sensitivity-analysis-plus-plotting tasks, do not collapse everything into one script. Split the deliverable into at least:
+     - a model-solving file
+     - a data-export or data-save file
+     - a plotting file
+9. Run the post-generation test loop:
    - syntax and import checks
    - `Solver(...)` construction
    - at least one baseline solve
    - required plots or summary artifacts when the task asks for them
-9. If the generated code fails, repair it and rerun the test loop before handing it back. If the failure is blocked by missing equations, missing environment, or unsupported model structure, stop and explain the blocker explicitly.
-10. If the model is out of scope, stop code generation and explain the smallest workable simplification or the package extension required.
+10. If the generated code fails, repair it and rerun the test loop before handing it back. If the failure is blocked by missing equations, missing environment, or unsupported model structure, stop and explain the blocker explicitly.
+11. If the model is out of scope, stop code generation and explain the smallest workable simplification or the package extension required.
 
 ## Generation Rules
 
-- Generate a single runnable Python file unless the user explicitly asks for a larger project layout.
+- Generate a single runnable Python file only for baseline solve tasks where one file keeps the deliverable clear.
+- If the task combines sensitivity analysis with plotting, do not keep everything in one file. Generate a small project layout with separate solve, data, and plotting files.
 - Use the fixed FinHJB backbone: `Parameter`, `Boundary`, `PolicyDict`, `Policy`, `Model`, and a solver entry block.
 - Prefer `@explicit_policy` when a stable closed-form update exists; use `@implicit_policy` when the control is naturally defined through a residual or FOC.
 - Choose `solve()` for fixed boundaries, `boundary_search()` for residual-based boundary targets, and `boundary_update()` when a solved grid directly implies new boundaries.

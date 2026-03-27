@@ -56,6 +56,7 @@ Use the skill when you want Codex to:
 - ask for the missing boundary, control, or calibration details that materially affect the code
 - stop and confirm baseline parameter values when the source document defines symbols but not usable numbers
 - ask which quantities to plot when the user wants figures but has not specified the target plot
+- split the deliverable into solve, data, and plotting files when the task combines sensitivity analysis with plotting
 - generate a runnable FinHJB model file, test it, repair failures, and return a structured spec summary plus validation guidance
 
 The best input bundle includes:

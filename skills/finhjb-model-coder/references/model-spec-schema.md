@@ -28,6 +28,8 @@ The goal is to turn free-form mathematical input into a compact working specific
   Parameter names, meanings, baseline calibrations, any missing numeric values that still require user confirmation, and any derived quantities.
 - `plot_requirements`
   Whether plots are requested, which quantities should be visualized, output file expectations, and any remaining figure questions that still require user confirmation.
+- `project_layout`
+  Whether the deliverable should stay single-file or be split into separate solve, data, and plotting files. Sensitivity-analysis-plus-plotting tasks should default to the split layout.
 - `solver_workflow`
   Choose among `solve`, `boundary_search`, `boundary_update`, and `sensitivity_analysis`.
 - `numerical_method`
@@ -48,6 +50,7 @@ Treat these as code-generation blockers unless the user explicitly authorizes a 
 - a control variable exists in theory but has no update rule or FOC
 - parameter symbols are defined but the runnable version has no confirmed numeric calibration
 - the user asked for plots but the actual figure contents or output expectations are unspecified
+- the task requests sensitivity analysis plus plotting but the file layout is still ambiguous
 - the model clearly needs an outer-loop boundary method but the target condition is unspecified
 - the diffusion degeneracy pattern is unclear but the derivative scheme choice would change the code
 
@@ -117,6 +120,13 @@ These may be filled with explicit, labeled defaults if the user does not care:
 - expected layout or figure style:
 - output files:
 - remaining plot questions:
+
+## Project Layout
+- layout type: single-file / split multi-file
+- solve file:
+- data file:
+- plot file:
+- layout reason:
 
 ## Solver Workflow
 - primary workflow:

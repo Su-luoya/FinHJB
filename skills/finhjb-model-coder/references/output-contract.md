@@ -18,19 +18,18 @@ Include:
 - parameter list with baseline values
 - explicit note when a parameter value had to be confirmed with the user before code generation
 - explicit note when plotting requirements had to be confirmed with the user before code generation
+- explicit note when the task required a split multi-file layout for sensitivity analysis plus plotting
 - explicit assumptions or unresolved items
 
 ## Deliverable 2: Executable FinHJB Code
 
-The code must contain:
+The code deliverable must contain:
 
-- imports
-- `Parameter`
-- `Boundary`
-- `PolicyDict`
-- `Policy`
-- `Model`
-- a runnable solver block
+- for baseline solve tasks: one runnable Python file containing imports, `Parameter`, `Boundary`, `PolicyDict`, `Policy`, `Model`, and a solver block
+- for sensitivity-analysis-plus-plotting tasks: a split layout with at least
+  - a solve/model file
+  - a data-save or data-export file
+  - a plotting file
 
 The code should also:
 
@@ -40,6 +39,7 @@ The code should also:
 - state why `solve`, `boundary_search`, or `boundary_update` was chosen
 - state why the chosen derivative method fits the boundary behavior
 - state why the chosen boundary-search method is the final method after testing, especially if it overrides the small-target default
+- keep file responsibilities clear when the project is split for sensitivity analysis and plotting
 
 ## Deliverable 3: Executed Test-And-Repair Summary
 

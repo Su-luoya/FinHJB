@@ -14,6 +14,7 @@ The skill is designed to:
 - ask follow-up questions when boundary conditions, controls, or calibration details are missing
 - stop and confirm parameter values when the document defines symbols but omits the numeric calibration needed for runnable code
 - ask what to plot when the user requests figures but the target plot is not specified
+- split sensitivity-analysis-plus-plotting work into separate solve, data, and plotting files instead of one oversized script
 - confirm the derivative scheme and boundary-search method when those choices affect the implementation
 - generate a runnable FinHJB model file
 - run a post-generation test loop and repair failures before delivery
@@ -104,10 +105,11 @@ The intended workflow is:
 4. The skill extracts a structured model specification.
 5. The skill asks only the blocking questions that change code generation.
 6. The skill confirms the derivative scheme and boundary-search method.
-7. The skill chooses the closest FinHJB template.
-8. The skill generates code.
-9. The skill runs a test loop and repairs failures before delivery.
-10. The skill returns:
+7. The skill decides whether the deliverable should stay single-file or split into solve, data, and plotting files.
+8. The skill chooses the closest FinHJB template.
+9. The skill generates code.
+10. The skill runs a test loop and repairs failures before delivery.
+11. The skill returns:
    - a structured model spec
    - executable FinHJB code
    - an executed test-and-repair summary
@@ -155,6 +157,26 @@ Before delivery, it should run:
 - required figure or summary output checks if the task asked for them
 
 If these checks fail for fixable reasons, the skill should repair the implementation and rerun the checks. Only unresolved external blockers such as missing equations or a missing environment should stop the loop.
+
+## File Layout For Sensitivity Analysis And Plotting
+
+Do not treat every task as a single-script deliverable.
+
+Recommended rule:
+
+- if the task is only a baseline solve or a compact benchmark reproduction, one file is usually enough
+- if the task combines sensitivity analysis with saved outputs and figures, split the project into at least three files:
+  - a solve/model file
+  - a data-save or data-export file
+  - a plotting file
+
+This keeps the responsibilities clear:
+
+- the solve file defines the model and runs the continuation or solve logic
+- the data file serializes or stores the outputs needed for later plotting
+- the plotting file reads those saved outputs and generates the figures
+
+This separation is not cosmetic. It makes reruns, plotting changes, and diagnostics much easier to maintain.
 
 ## Example Prompts
 
@@ -211,6 +233,10 @@ The skill should stop and ask which numeric values belong in the first runnable 
 ### The user asked for figures but did not specify what to plot
 
 The skill should stop and ask which solved quantities, comparisons, or paper-style figures belong in the deliverable. It should not silently invent a plotting layout just because the paper contains some standard charts.
+
+### The task asks for sensitivity analysis and plots, but the code is still organized as one file
+
+The skill should reorganize the deliverable into separate solve, data, and plotting files. A single oversized script is the wrong default for this kind of workflow.
 
 ### The paper defines a control but not the update rule
 

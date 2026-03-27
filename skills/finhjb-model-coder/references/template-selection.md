@@ -51,5 +51,6 @@ Use when:
 - Prefer the simpler template when two are plausible.
 - Use the closest economic structure, not the closest paper topic.
 - Keep the first generated version small and runnable; add extra diagnostics only after the solve logic is coherent.
+- The templates in `assets/templates/` are templates for the core model implementation. If the task also needs sensitivity analysis plus plotting, treat these templates as the solve-layer only and add separate data-export and plotting files around them.
 - Template selection does not decide the derivative scheme. Confirm the diffusion behavior separately.
 - Template selection does not lock the boundary-search backend forever. For one or two targets, start from `bisection` when the bracket is credible, then promote to `hybr` or another supported method if the post-generation test loop says the default is not good enough.
