@@ -1,8 +1,10 @@
 # Modeling Guide
 
-Read this page when you are ready to move from "I can run BCW" to "I can define my own model with the FinHJB abstractions."
+This page belongs to the package path and the custom-model stage of the BCW path.
 
-If you have not yet reproduced the baseline examples, go back to [Getting Started](./getting-started.md). If you want a concrete migration recipe, pair this page with [Adapting BCW to Your Model](./adapting-bcw-to-your-model.md).
+Read it after [Library Quickstart](./quickstart-library.md) if you are using FinHJB directly, or after [BCW2011 Case Study](./bcw2011-case-study.md) if you are coming from the repository examples.
+
+Read [API Reference](./api-reference.md) instead if you only need exact exported names and signatures rather than interface design guidance.
 
 ## The Four Core Components
 
@@ -311,8 +313,8 @@ class Model(fjb.AbstractModel[Parameter, PolicyDict]):
         return -p.r * v + (s - inv) * dv + 0.5 * p.sigma**2 * d2v
 ```
 
-## When To Leave This Page
+## Next Step
 
-- Go to [Solver Guide](./solver-guide.md) if you now want to choose a workflow.
-- Go to [Adapting BCW to Your Model](./adapting-bcw-to-your-model.md) if you want a migration checklist.
-- Go to [API Reference](./api-reference.md) if you want every method and property in one place.
+- Read [Solver Guide](./solver-guide.md) to choose the right workflow.
+- Read [Adapting BCW to Your Model](./adapting-bcw-to-your-model.md) if you want a migration checklist from the BCW track.
+- Read [API Reference](./api-reference.md) if you only need exact names and signatures.

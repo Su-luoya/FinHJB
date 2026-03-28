@@ -1,10 +1,16 @@
 # BCW2011 Liquidation 逐步讲解
 
+这一页是 BCW 路径里的第一篇深入讲解页。
+
+请在 [快速开始](./getting-started.md) 和 [BCW2011 案例总览](./bcw2011-case-study.md) 之后阅读。
+
+如果你的目标只是最短路径学包 API，而不是沿着 BCW 教程走，请改看 [库快速上手](./quickstart-library.md)。
+
 这一页详细拆解第一个 BCW 示例：
 
 - `src/example/BCW2011Liquidation.py`
 
-它应该在 [快速开始](./getting-started.md) 之后阅读。目标不只是告诉你“命令怎么敲”，而是帮助你把代码、论文方程和结果诊断真正连起来。
+目标不只是告诉你“命令怎么敲”，而是帮助你把代码、论文方程和结果诊断真正连起来。
 
 ## 目标
 
@@ -271,6 +277,6 @@ print(grid.df[["s", "v", "dv", "d2v", "investment"]].tail())
 
 ## 下一步
 
-如果你想系统学习怎么读 `state`、`history` 和 `grid`，下一页请看 [结果与诊断](./results-and-diagnostics.md)。
-
-之后再继续读 [BCW Hedging 逐步讲解](./bcw2011-hedging-walkthrough.md)。
+- 如果你想系统学习怎么读 `state`、`history` 和 `grid`：看 [结果与诊断](./results-and-diagnostics.md)。
+- 然后继续读 [BCW Hedging 逐步讲解](./bcw2011-hedging-walkthrough.md)。
+- 如果你已经想从 liquidation 模板开始改：看 [把 BCW 改成你自己的模型](./adapting-bcw-to-your-model.md)。

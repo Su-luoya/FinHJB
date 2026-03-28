@@ -1,8 +1,10 @@
 # Solver Guide
 
-This page helps you choose the right workflow for your model and diagnose what each workflow returns.
+This page is the shared workflow reference for the package path, the BCW path, and the Model Coder path.
 
-If you are still trying to run your first example, go back to [Getting Started](./getting-started.md). If you already know your mathematical problem and need help wiring the classes, pair this page with [Modeling Guide](./modeling-guide.md).
+Read it after [Modeling Guide](./modeling-guide.md) if you are building a model directly, or after [Getting Started](./getting-started.md) if you are still grounding yourself in the repository examples.
+
+Read [Troubleshooting](./troubleshooting.md) instead if the workflow already fails and you need recovery steps more than workflow selection.
 
 ## Workflow Decision Table
 
@@ -269,7 +271,7 @@ Most often, one of these is wrong:
 
 That is normal when each point requires a full nonlinear solve. Start with a short parameter grid and expand only after you trust the path.
 
-## Where To Go Next
+## Next Step
 
 - Read [Results and Diagnostics](./results-and-diagnostics.md) to interpret returned objects.
 - Read [Troubleshooting](./troubleshooting.md) if a workflow fails numerically.

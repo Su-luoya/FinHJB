@@ -1,6 +1,10 @@
 # Results and Diagnostics
 
-This page explains how to inspect solver outputs without guessing.
+This page is the shared diagnostics reference for the package path and the BCW path.
+
+Read it after [Library Quickstart](./quickstart-library.md) or [Getting Started](./getting-started.md), once you already have a solve and want to inspect it cleanly.
+
+Read [API Reference](./api-reference.md) instead if you only need exact object members.
 
 The main purpose is to help you answer:
 
@@ -11,9 +15,10 @@ The main purpose is to help you answer:
 
 ## Read This After
 
-- [Getting Started](./getting-started.md) for first successful BCW runs,
-- [BCW2011 Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md),
-- [BCW2011 Hedging Walkthrough](./bcw2011-hedging-walkthrough.md).
+- [Library Quickstart](./quickstart-library.md)
+- [Getting Started](./getting-started.md)
+- [BCW2011 Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md)
+- [BCW2011 Hedging Walkthrough](./bcw2011-hedging-walkthrough.md)
 
 ## Solver Return Types
 
@@ -296,5 +301,5 @@ That is usually a modeling issue, not a numerical fine-tuning issue.
 ## Next Step
 
 - Read [Solver Guide](./solver-guide.md) if you want to choose the right workflow for your own model.
-- Read [Adapting BCW to Your Model](./adapting-bcw-to-your-model.md) if you are ready to migrate away from the baseline examples.
-- Read [API Reference](./api-reference.md) if you want exact class members and signatures.
+- Read [Adapting BCW to Your Model](./adapting-bcw-to-your-model.md) if you are ready to migrate away from the BCW baselines.
+- Read [Troubleshooting](./troubleshooting.md) if the diagnostics already tell you the solve is unhealthy.

@@ -1,6 +1,10 @@
 # BCW2011 Case Study
 
-This page is the hub for learning FinHJB through the BCW examples.
+This page is the hub for the BCW path.
+
+Read it after [Getting Started](./getting-started.md) when you want the full map of what the two repository examples teach.
+
+Read [Library Quickstart](./quickstart-library.md) instead if you want to skip BCW and go straight to the package path.
 
 The repository includes two worked examples based on Bolton, Chen, and Wang (2011):
 
@@ -97,7 +101,8 @@ Stay on the BCW track until you can answer these questions from your own run:
 3. Why does `psi` saturate at `-pi` in the hedging case?
 4. What changes between fixed-boundary solving, boundary search, and boundary update?
 
-Once you can answer them, move to:
+## Next Step
 
-- [Modeling Guide](./modeling-guide.md)
-- [Adapting BCW to Your Model](./adapting-bcw-to-your-model.md)
+- Read [BCW2011 Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md) for the first deep dive.
+- Read [Results and Diagnostics](./results-and-diagnostics.md) once you have a run to inspect.
+- Read [Adapting BCW to Your Model](./adapting-bcw-to-your-model.md) when you are ready to leave the baseline examples.

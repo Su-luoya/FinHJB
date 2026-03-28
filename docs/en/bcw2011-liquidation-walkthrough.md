@@ -1,10 +1,16 @@
 # BCW2011 Liquidation Walkthrough
 
+This page is the first deep-dive page in the BCW path.
+
+Read it after [Getting Started](./getting-started.md) and [BCW2011 Case Study](./bcw2011-case-study.md).
+
+Read [Library Quickstart](./quickstart-library.md) instead if you want the shortest direct package workflow.
+
 This page is the detailed walkthrough for the first BCW example:
 
 - `src/example/BCW2011Liquidation.py`
 
-Use this page after [Getting Started](./getting-started.md). It explains not only how to run the example, but how to read the code and decide whether the result is healthy.
+It explains not only how to run the example, but how to read the code and decide whether the result is healthy.
 
 ## Goal
 
@@ -271,6 +277,6 @@ Check:
 
 ## Next Step
 
-Move to [Results and Diagnostics](./results-and-diagnostics.md) if you want to learn how to read `state`, `history`, and `grid` systematically.
-
-After that, continue to [BCW2011 Hedging Walkthrough](./bcw2011-hedging-walkthrough.md).
+- Read [Results and Diagnostics](./results-and-diagnostics.md) to inspect `state`, `history`, and `grid` systematically.
+- Continue to [BCW2011 Hedging Walkthrough](./bcw2011-hedging-walkthrough.md) for the second BCW case.
+- Read [Adapting BCW to Your Model](./adapting-bcw-to-your-model.md) if you already want to start customizing from the liquidation template.

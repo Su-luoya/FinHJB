@@ -1,10 +1,16 @@
 # BCW2011 Hedging Walkthrough
 
+This page is the second deep-dive page in the BCW path.
+
+Read it after [BCW2011 Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md).
+
+Read [Library Quickstart](./quickstart-library.md) instead if your goal is to learn the package API without the BCW tutorial track.
+
 This page is the second BCW tutorial page:
 
 - `src/example/BCW2011Hedging.py`
 
-It should be read after the liquidation walkthrough, because the hedging example reuses the same basic HJB structure and then adds a second control plus refinancing-aware boundary logic.
+The hedging example reuses the same basic HJB structure and then adds a second control plus refinancing-aware boundary logic.
 
 ## Goal
 
@@ -266,6 +272,6 @@ print(grid.df[["s", "investment", "psi"]].tail())
 
 ## Next Step
 
-Go to [Results and Diagnostics](./results-and-diagnostics.md) if you want a structured guide to reading states, histories, grids, and continuation results.
-
-If your goal is to change the economics rather than just understand BCW, continue to [Adapting BCW to Your Model](./adapting-bcw-to-your-model.md).
+- Read [Results and Diagnostics](./results-and-diagnostics.md) for a structured guide to states, histories, grids, and continuation outputs.
+- Continue to [Adapting BCW to Your Model](./adapting-bcw-to-your-model.md) if your goal is to change the economics rather than just understand BCW.
+- Read [Modeling Guide](./modeling-guide.md) if you are ready to map these patterns onto your own abstractions.

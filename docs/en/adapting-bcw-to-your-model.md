@@ -1,5 +1,11 @@
 # Adapting BCW To Your Model
 
+This page is the bridge from the BCW path into your first custom model.
+
+Read it after [BCW2011 Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md), [BCW2011 Hedging Walkthrough](./bcw2011-hedging-walkthrough.md), and [Modeling Guide](./modeling-guide.md).
+
+Read [Library Quickstart](./quickstart-library.md) instead if you are not using BCW as your template.
+
 This page answers the practical question:
 
 "I can reproduce BCW. How do I turn it into my own model without breaking everything at once?"
@@ -255,5 +261,4 @@ That "boring" path is the fastest way to get to a credible research workflow.
 
 - Return to [Modeling Guide](./modeling-guide.md) for interface details.
 - Return to [Solver Guide](./solver-guide.md) for workflow decisions.
-- Use [Results and Diagnostics](./results-and-diagnostics.md) to create your own success checklist after each change.
-
+- Use [Results and Diagnostics](./results-and-diagnostics.md) to build a success checklist after each change.

@@ -1,10 +1,16 @@
 # BCW2011 Hedging 逐步讲解
 
+这一页是 BCW 路径里的第二篇深入讲解页。
+
+请在 [BCW2011 Liquidation 逐步讲解](./bcw2011-liquidation-walkthrough.md) 之后阅读。
+
+如果你的目标只是最短路径学包 API，而不是沿着 BCW 教程走，请改看 [库快速上手](./quickstart-library.md)。
+
 这一页对应第二个 BCW 教程案例：
 
 - `src/example/BCW2011Hedging.py`
 
-建议在 liquidation walkthrough 之后阅读，因为 hedging 案例是在同一条 HJB 主线上，进一步加入第二个控制变量和再融资边界逻辑。
+hedging 案例是在同一条 HJB 主线上，进一步加入第二个控制变量和再融资边界逻辑。
 
 ## 目标
 
@@ -268,6 +274,6 @@ print(grid.df[["s", "investment", "psi"]].tail())
 
 ## 下一步
 
-如果你想系统学习怎么读 `state`、`history`、`grid` 与 continuation 结果，请看 [结果与诊断](./results-and-diagnostics.md)。
-
-如果你的目标已经从“理解 BCW”转向“改成自己的模型”，下一页请看 [把 BCW 改成你自己的模型](./adapting-bcw-to-your-model.md)。
+- 如果你想系统学习怎么读 `state`、`history`、`grid` 与 continuation 结果：看 [结果与诊断](./results-and-diagnostics.md)。
+- 如果你的目标已经从“理解 BCW”转向“改成自己的模型”：看 [把 BCW 改成你自己的模型](./adapting-bcw-to-your-model.md)。
+- 如果你已经开始抽象自己的类分工：看 [建模指南](./modeling-guide.md)。

@@ -1,6 +1,10 @@
 # API Reference
 
-This page is the reference companion to the tutorial pages.
+This page is the exact-name companion to the tutorial and workflow pages.
+
+Read it after [Library Quickstart](./quickstart-library.md), [Getting Started](./getting-started.md), or [Solver Guide](./solver-guide.md) once you already know what you are trying to do.
+
+Read [Modeling Guide](./modeling-guide.md) or [Results and Diagnostics](./results-and-diagnostics.md) instead if you still need conceptual guidance.
 
 Use the tutorials first if you are still learning the workflow:
 
@@ -286,3 +290,9 @@ For interpretation, go to [Results and Diagnostics](./results-and-diagnostics.md
 .. autofunction:: finhjb.load_sensitivity_result
    :no-index:
 ```
+
+## Next Step
+
+- Read [Modeling Guide](./modeling-guide.md) if you need interface roles rather than signatures.
+- Read [Results and Diagnostics](./results-and-diagnostics.md) if you are interpreting solved objects.
+- Return to the [Docs Portal](./index.md) if you want to switch paths.

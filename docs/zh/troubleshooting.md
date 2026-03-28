@@ -1,6 +1,10 @@
 # 排障
 
+这一页是所有文档路径共用的失败恢复页。
+
 当 FinHJB 报错，或者脚本“能跑完但你不信它是对的”时，请用这一页做排查。
+
+如果你还处在第一次搭环境阶段，而不是在排查失败，请先回到 [安装与环境](./installation-and-environment.md)。
 
 一个很重要的习惯是：把问题分成三层看。
 
@@ -250,5 +254,4 @@ print(df[["s", "v", "dv", "d2v"]].tail())
 
 - 想重新跑稳 BCW：回到 [快速开始](./getting-started.md)
 - 想系统读对象输出：看 [结果与诊断](./results-and-diagnostics.md)
-- 想搭自己的模型：看 [建模指南](./modeling-guide.md)
-
+- 想回到自定义模型设计：看 [建模指南](./modeling-guide.md)

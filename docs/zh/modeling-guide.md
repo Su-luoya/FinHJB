@@ -1,8 +1,10 @@
 # 建模指南
 
-当你已经从“我能跑 BCW”进入“我想定义自己的模型”时，就该读这一页了。
+这一页同时属于 package 路径，以及 BCW 路径里“开始写自己的模型”这一段。
 
-如果你还没有稳定复现 BCW 基准案例，请先回到 [快速开始](./getting-started.md)。如果你已经想把 BCW 改造成自己的研究问题，请配合 [把 BCW 改成你自己的模型](./adapting-bcw-to-your-model.md) 一起读。
+如果你是直接使用 FinHJB 包，请在 [库快速上手](./quickstart-library.md) 后阅读；如果你是从仓库示例走过来，请在 [BCW2011 案例总览](./bcw2011-case-study.md) 后阅读。
+
+如果你现在只想查精确导出名和签名，而不是理解接口分工，请改看 [API 参考](./api-reference.md)。
 
 ## 四个核心组件
 
@@ -312,17 +314,8 @@ class Model(fjb.AbstractModel[Parameter, PolicyDict]):
         return -p.r * v + (s - inv) * dv + 0.5 * p.sigma**2 * d2v
 ```
 
-## 什么时候可以离开这一页
+## 下一步
 
-当你已经明确知道：
-
-- 每个接口分别负责什么，
-- 哪些方法必须实现，
-- 什么时候该用显式策略、什么时候该用隐式策略，
-- 为什么应该先做固定边界求解再做边界搜索，
-
-就可以继续去：
-
-- [求解器指南](./solver-guide.md)：决定工作流；
-- [把 BCW 改成你自己的模型](./adapting-bcw-to-your-model.md)：按步骤迁移；
-- [API 参考](./api-reference.md)：查精确成员和签名。
+- 看 [求解器指南](./solver-guide.md)：决定工作流。
+- 看 [把 BCW 改成你自己的模型](./adapting-bcw-to-your-model.md)：沿 BCW 主线做迁移。
+- 看 [API 参考](./api-reference.md)：只查精确成员和签名。

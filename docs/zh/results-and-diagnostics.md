@@ -1,5 +1,11 @@
 # 结果与诊断
 
+这一页是 package 路径和 BCW 路径共用的诊断参考页。
+
+当你已经有一次求解结果，并且想系统判断“它到底解出了什么”，请在 [库快速上手](./quickstart-library.md) 或 [快速开始](./getting-started.md) 之后阅读。
+
+如果你现在只想查对象成员而不是学诊断思路，请改看 [API 参考](./api-reference.md)。
+
 这一页的目标，是让你在看到求解输出时不必靠猜。
 
 你应该能用它回答：
@@ -11,6 +17,7 @@
 
 ## 建议在什么之后阅读
 
+- [库快速上手](./quickstart-library.md)
 - [快速开始](./getting-started.md)
 - [BCW Liquidation 逐步讲解](./bcw2011-liquidation-walkthrough.md)
 - [BCW Hedging 逐步讲解](./bcw2011-hedging-walkthrough.md)
@@ -300,4 +307,4 @@ print("right curvature:", grid.d2v[-1])
 
 - 如果你还在决定用哪种工作流：看 [求解器指南](./solver-guide.md)
 - 如果你准备迁移到自己的模型：看 [把 BCW 改成你自己的模型](./adapting-bcw-to-your-model.md)
-- 如果你想查精确成员和签名：看 [API 参考](./api-reference.md)
+- 如果诊断已经告诉你求解不健康：看 [排障](./troubleshooting.md)

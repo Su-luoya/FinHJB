@@ -1,6 +1,10 @@
 # FAQ
 
-This page collects short answers to questions that come up repeatedly when people first use FinHJB through the BCW examples.
+This page is the short-answer companion to the BCW and package paths.
+
+Read it after [Getting Started](./getting-started.md) or [Library Quickstart](./quickstart-library.md) when you have repeated practical questions but do not need a full tutorial again.
+
+Read [API Reference](./api-reference.md) instead if your question is only about exact names or signatures.
 
 ## Should I start from the API reference?
 
@@ -140,10 +144,9 @@ For BCW, good questions are:
 - is `d2v[-1]` near zero?
 - do the policies have the expected left-tail and right-tail behavior?
 
-## Where should I go after the FAQ?
+## Next Step
 
 - [Results and Diagnostics](./results-and-diagnostics.md) for interpretation
 - [Modeling Guide](./modeling-guide.md) for interfaces
 - [Solver Guide](./solver-guide.md) for workflow choice
 - [Adapting BCW to Your Model](./adapting-bcw-to-your-model.md) for migration steps
-

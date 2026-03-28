@@ -1,5 +1,11 @@
 # 把 BCW 改成你自己的模型
 
+这一页是 BCW 路径通向“第一个自定义模型”的桥接页。
+
+建议在 [BCW Liquidation 逐步讲解](./bcw2011-liquidation-walkthrough.md)、[BCW Hedging 逐步讲解](./bcw2011-hedging-walkthrough.md) 和 [建模指南](./modeling-guide.md) 之后阅读。
+
+如果你根本不打算把 BCW 当模板，而是直接从自己的问题开始建模，请改看 [库快速上手](./quickstart-library.md)。
+
 这一页回答的是一个非常实际的问题：
 
 “我已经能复现 BCW 了。接下来怎样把它改造成我自己的模型，而且不要一次改崩全部东西？”
@@ -253,7 +259,6 @@ continuation 很有价值，但它只是把基础求解放大很多次。如果 
 
 ## 下一步
 
-- 回 [建模指南](./modeling-guide.md) 查看接口职责细节；
-- 回 [求解器指南](./solver-guide.md) 决定工作流；
+- 回 [建模指南](./modeling-guide.md) 查看接口职责细节。
+- 回 [求解器指南](./solver-guide.md) 决定工作流。
 - 用 [结果与诊断](./results-and-diagnostics.md) 给你的模型建立自己的成功检查表。
-
