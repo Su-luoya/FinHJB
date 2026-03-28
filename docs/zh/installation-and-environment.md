@@ -1,8 +1,12 @@
 # 安装与环境
 
-第一次运行 FinHJB 之前，请先读这一页。
+这一页服务三条文档路径的共同前置问题：你的目标工作流到底需要安装什么。
 
-这一页故意保持极简。如果你只是想使用已经发布的包，那么安装命令只需要二选一：
+## 先选安装模式
+
+### 发布版 Python 包
+
+如果你在自己的项目里使用 FinHJB，而且不依赖仓库里的示例脚本，这就是正确路径。
 
 ```bash
 uv add finhjb
@@ -12,33 +16,54 @@ uv add finhjb
 pip install finhjb
 ```
 
-默认安装是 CPU 版本。如果你需要 GPU 支持，请另外安装对应的 JAX 后端。
+默认安装为 CPU 版本。如需 GPU 支持，请另外安装对应的 JAX 后端。
 
-## 这些命令会安装什么
+### 仓库源码 checkout
 
-上面的命令安装的是发布到 PyPI 的 `finhjb` 包，适合你在自己的项目里直接使用。
+如果你要做下面这些事，就应该使用仓库源码：
 
-它们不会安装仓库源码树，所以像下面这些文件：
+- 运行 `src/example/BCW2011Liquidation.py`
+- 运行 `src/example/BCW2011Hedging.py`
+- 阅读或修改源码
+- 从当前仓库安装并开发 `finhjb-model-coder` skill
+
+在仓库根目录执行：
+
+```bash
+uv sync
+uv run python -c "import finhjb as fjb; print(fjb.__all__[:5])"
+```
+
+如果你在服务器或没有图形界面的环境里运行，再加上：
+
+```bash
+export MPLBACKEND=Agg
+```
+
+## 发布版包不会带上什么
+
+发布到 PyPI 的 wheel 不包含这些仓库内文件：
 
 - `src/example/BCW2011Liquidation.py`
 - `src/example/BCW2011Hedging.py`
+- `skills/finhjb-model-coder/`
 
-并不包含在 PyPI wheel 里。
+如果你的任务依赖这些文件，就不要只装发布版包。
 
 ## 如果你打算使用 `finhjb-model-coder`
 
-这个 Skill 的安装与 Python 包安装是两件事，而且 Skill 默认假设对话背后有一个真的可以运行 FinHJB 的环境。
+Skill 和 Python 包是两件不同的东西。
 
-建议按这个清单确认：
+在要求 Codex 交付“可运行代码”之前，先按下面的清单确认：
 
-- 如果任务依赖仓库内的示例或测试夹具，请使用仓库源码 checkout，并优先用仓库自己的 `uv` 环境
-- 如果任务是你自己项目里的模型，请把发布版 `finhjb` 安装到那个项目里，可以用 `uv add finhjb` 或 `pip install finhjb`
-- 在要求 Skill 生成“可运行代码”之前，先确认一个 smoke test，例如 `python -c "import finhjb"` 或 `uv run python -c "import finhjb"`
+- 如果任务依赖仓库示例或测试夹具，优先使用仓库源码和仓库自己的 `uv` 环境
+- 如果任务属于你自己的下游项目，请在那个项目里安装 `finhjb`，用 `uv add finhjb` 或 `pip install finhjb`
+- 在正式交付前，先跑一个 smoke test，例如 `python -c "import finhjb"` 或 `uv run python -c "import finhjb"`
 
-如果这个 smoke test 失败，Skill 应该先帮助安装，而不是假装最终代码已经经过测试。
+如果 smoke test 失败，正确的下一步是先解决环境，而不是继续生成代码。
 
 ## 下一步看什么
 
-- 如果你想直接使用包 API，接下来读 [建模指南](./modeling-guide.md)、[求解器指南](./solver-guide.md) 和 [API 参考](./api-reference.md)。
-- 如果你想用“理论到代码”的工作流，请在环境确认好之后继续读 [FinHJB Model Coder Skill](./finhjb-model-coder.md)。
-- 如果你想学习仓库里的 BCW 示例，请在源码 checkout 环境下阅读 walkthrough 页面，并从 [快速开始](./getting-started.md) 开始。
+- Package 路径：[库快速上手](./quickstart-library.md)
+- BCW 路径：[快速开始](./getting-started.md)
+- Model Coder 路径：[FinHJB Model Coder](./finhjb-model-coder.md) 或 [输入材料与环境就绪](./finhjb-model-coder-inputs-and-readiness.md)

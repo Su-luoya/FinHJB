@@ -2,6 +2,16 @@
 
 `finhjb-model-coder` 是这个仓库提供的 Codex Skill，用来把连续时间金融模型转成可执行的一维 FinHJB 代码。
 
+这一页现在是 Model Coder 路径的整合入口页。
+
+如果你是第一次走这条路径，建议按下面顺序阅读：
+
+- [Model Coder 总览](./finhjb-model-coder-overview.md)
+- [输入材料与环境就绪](./finhjb-model-coder-inputs-and-readiness.md)
+- [输出与验证](./finhjb-model-coder-output-and-validation.md)
+
+如果你需要一页里看完范围、环境、数值方法、测试闭环和常见失败模式，就继续把这一整页读完。
+
 这一页面向的是希望从方程、论文笔记或 LaTeX 出发，而不是先从已有 Python 文件出发的研究者。
 
 ## 这个 Skill 做什么

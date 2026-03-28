@@ -1,8 +1,14 @@
 # Installation and Environment
 
-Read this page before your first solve.
+This page is for all three documentation paths.
 
-This page keeps installation intentionally minimal. If you only want to use the published package, install FinHJB with one of these commands:
+Read it when you need to answer one practical question first: what exactly should be installed for the workflow you want?
+
+## Choose The Right Install Mode
+
+### Published Package
+
+Use the published package when you are working in your own downstream project and do not need the repository-only examples.
 
 ```bash
 uv add finhjb
@@ -14,31 +20,52 @@ pip install finhjb
 
 Installation defaults to CPU. If you want GPU support, install the appropriate JAX backend separately.
 
-## What This Installs
+### Repository Checkout
 
-These commands install the published `finhjb` package for use in your own project.
+Use a repository checkout when you want to:
 
-They do not install the repository source tree, so files such as:
+- run `src/example/BCW2011Liquidation.py`
+- run `src/example/BCW2011Hedging.py`
+- inspect or modify the source tree
+- install and develop the `finhjb-model-coder` skill from this repository
+
+From the repository root:
+
+```bash
+uv sync
+uv run python -c "import finhjb as fjb; print(fjb.__all__[:5])"
+```
+
+If you are on a headless machine or remote server, set:
+
+```bash
+export MPLBACKEND=Agg
+```
+
+## What The Package Install Does Not Include
+
+The published wheel does not include repository-only files such as:
 
 - `src/example/BCW2011Liquidation.py`
 - `src/example/BCW2011Hedging.py`
+- `skills/finhjb-model-coder/`
 
-are not part of the PyPI wheel.
+If your task depends on those files, use a repository checkout.
 
 ## If You Plan To Use `finhjb-model-coder`
 
-The skill itself is installed separately from the Python package, and it assumes there is a runnable FinHJB environment behind the conversation.
+The skill and the Python package are separate pieces.
 
-Use this checklist:
+Use this checklist before asking Codex for runnable code:
 
-- if the task depends on repository-only examples or fixtures, work from a repository checkout and prefer the repository's own `uv` environment
-- if the task is for your own downstream project, install the published package into that project with `uv add finhjb` or `pip install finhjb`
-- before asking the skill for runnable code, confirm a smoke test such as `python -c "import finhjb"` or `uv run python -c "import finhjb"`
+- if the task depends on repository examples or fixtures, prefer a repository checkout and the repository's own `uv` environment
+- if the task belongs to a downstream project, install `finhjb` inside that project with `uv add finhjb` or `pip install finhjb`
+- before accepting runnable delivery, confirm a smoke test such as `python -c "import finhjb"` or `uv run python -c "import finhjb"`
 
-If that smoke test fails, the skill should help with installation first instead of pretending the final code has already been tested.
+If that smoke test fails, the right next step is environment setup, not code generation.
 
 ## What To Read Next
 
-- If you want to use the package API directly, continue with [Modeling Guide](./modeling-guide.md), [Solver Guide](./solver-guide.md), and [API Reference](./api-reference.md).
-- If you want to use the theory-to-code workflow, read [FinHJB Model Coder Skill](./finhjb-model-coder.md) after the environment is ready.
-- If you want to study the repository BCW examples, use the walkthrough pages from a repository checkout and start with [Getting Started](./getting-started.md).
+- Package path: [Library Quickstart](./quickstart-library.md)
+- BCW path: [Getting Started](./getting-started.md)
+- Model Coder path: [FinHJB Model Coder](./finhjb-model-coder.md) or [Inputs and Readiness](./finhjb-model-coder-inputs-and-readiness.md)
