@@ -1,10 +1,22 @@
 import ast
+import importlib.util
 from pathlib import Path
 
 import finhjb as fjb
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = ROOT / "src" / "finhjb"
+
+
+def _load_sphinx_conf_module():
+    spec = importlib.util.spec_from_file_location(
+        "finhjb_sphinx_conf",
+        ROOT / ".sphinx" / "conf.py",
+    )
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
 
 
 def test_all_source_classes_and_functions_have_docstrings():
@@ -139,3 +151,35 @@ def test_docs_root_contains_only_language_directories():
 
     assert files_in_root == []
     assert dirs_in_root == {"en", "zh"}
+
+
+def test_sphinx_conf_enables_markdown_math_rendering():
+    conf = _load_sphinx_conf_module()
+
+    assert "sphinx.ext.mathjax" in conf.extensions
+    assert {"amsmath", "dollarmath"} <= set(conf.myst_enable_extensions)
+
+
+def test_sphinx_math_normalizer_preserves_code_and_rewrites_latex_delimiters():
+    conf = _load_sphinx_conf_module()
+
+    source = """
+Inline math: \\(x + y\\)
+
+\\[
+P(K, W) = K p(w), \\qquad w = W/K.
+\\]
+
+`\\(keep literal\\)`
+
+```python
+expr = "\\\\(keep literal\\\\)"
+```
+""".strip()
+
+    normalized = conf._normalize_markdown_math_delimiters(source)
+
+    assert "Inline math: $x + y$" in normalized
+    assert "$$\nP(K, W) = K p(w), \\qquad w = W/K.\n$$" in normalized
+    assert "`\\(keep literal\\)`" in normalized
+    assert 'expr = "\\\\(keep literal\\\\)"' in normalized

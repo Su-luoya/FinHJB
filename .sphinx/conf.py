@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -30,6 +31,7 @@ release = version = _read_project_version()
 
 extensions = [
     "myst_parser",
+    "sphinx.ext.mathjax",
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
@@ -48,6 +50,10 @@ templates_path = ["_templates"]
 html_static_path = ["_static"]
 
 myst_heading_anchors = 3
+myst_enable_extensions = [
+    "amsmath",
+    "dollarmath",
+]
 
 autodoc_member_order = "bysource"
 autodoc_class_signature = "mixed"
@@ -73,6 +79,68 @@ html_theme_options = {
     ],
     "show_prev_next": False,
 }
+
+_FENCE_START_RE = re.compile(r"^[ \t]*([`~]{3,})")
+_INLINE_CODE_RE = re.compile(r"(`+)(.+?)\1", re.DOTALL)
+_DISPLAY_DELIMITER_RE = re.compile(r"\\\[(.+?)\\\]", re.DOTALL)
+_INLINE_DELIMITER_RE = re.compile(r"\\\((.+?)\\\)", re.DOTALL)
+
+
+def _rewrite_latex_math_delimiters(text: str) -> str:
+    text = _DISPLAY_DELIMITER_RE.sub(
+        lambda match: f"$$\n{match.group(1).strip(chr(10))}\n$$",
+        text,
+    )
+    return _INLINE_DELIMITER_RE.sub(lambda match: f"${match.group(1)}$", text)
+
+
+def _normalize_markdown_math_delimiters(text: str) -> str:
+    chunks: list[str] = []
+    buffer: list[str] = []
+    in_fence = False
+    fence_char = ""
+    fence_length = 0
+
+    def flush_buffer() -> None:
+        if not buffer:
+            return
+        block = "".join(buffer)
+        last_index = 0
+        rewritten: list[str] = []
+        for match in _INLINE_CODE_RE.finditer(block):
+            rewritten.append(_rewrite_latex_math_delimiters(block[last_index : match.start()]))
+            rewritten.append(match.group(0))
+            last_index = match.end()
+        rewritten.append(_rewrite_latex_math_delimiters(block[last_index:]))
+        chunks.append("".join(rewritten))
+        buffer.clear()
+
+    for line in text.splitlines(keepends=True):
+        fence_match = _FENCE_START_RE.match(line)
+        if not in_fence and fence_match:
+            flush_buffer()
+            marker = fence_match.group(1)
+            in_fence = True
+            fence_char = marker[0]
+            fence_length = len(marker)
+            chunks.append(line)
+            continue
+
+        if in_fence:
+            chunks.append(line)
+            closing_match = _FENCE_START_RE.match(line)
+            if closing_match:
+                marker = closing_match.group(1)
+                if marker[0] == fence_char and len(marker) >= fence_length:
+                    in_fence = False
+                    fence_char = ""
+                    fence_length = 0
+            continue
+
+        buffer.append(line)
+
+    flush_buffer()
+    return "".join(chunks)
 
 
 def _resolve_language_target(docname: str, target_language: str, found_docs: set[str]) -> str:
@@ -120,7 +188,15 @@ def collect_redirect_pages(app):
     )
 
 
+def normalize_markdown_math_source(app, docname, source) -> None:
+    docpath = app.env.doc2path(docname, base=False)
+    if not docpath.endswith(".md"):
+        return
+    source[0] = _normalize_markdown_math_delimiters(source[0])
+
+
 def setup(app):
     app.add_css_file("language-switcher.css")
     app.connect("html-page-context", add_language_switcher_context)
     app.connect("html-collect-pages", collect_redirect_pages)
+    app.connect("source-read", normalize_markdown_math_source)
