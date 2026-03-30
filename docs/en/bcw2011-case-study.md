@@ -1,108 +1,124 @@
 # BCW2011 Case Study
 
-This page is the hub for the BCW path.
+This page is the hub for the repository BCW path.
 
-Read it after [Getting Started](./getting-started.md) when you want the full map of what the two repository examples teach.
+Use it after [Getting Started](./getting-started.md) when you want the full map of the four worked BCW cases shipped in `src/example/`.
 
-Read [Library Quickstart](./quickstart-library.md) instead if you want to skip BCW and go straight to the package path.
-
-The repository includes two worked examples based on Bolton, Chen, and Wang (2011):
+The repository examples now cover four paper-aligned cases:
 
 - `src/example/BCW2011Liquidation.py`
+- `src/example/BCW2011Refinancing.py`
 - `src/example/BCW2011Hedging.py`
+- `src/example/BCW2011CreditLine.py`
 
-The original equation transcript used by the repository is:
+The shared paper transcript used for equation references is:
 
 - `src/example/A_unified_theory_of_tobin's_q,_corporate_investment,_financing,_and_risk_management.md`
 
-## What You Learn From BCW
+## What The BCW Path Is For
 
-The BCW examples teach nearly every important FinHJB concept in one coherent setting:
+The BCW track is the shortest route from a continuous-time corporate finance paper to a runnable one-dimensional FinHJB implementation.
 
-- how to encode parameters and boundaries,
-- how to express a policy either explicitly or implicitly,
-- how to search for an endogenous boundary,
-- how to interpret `v`, `dv`, and `d2v`,
-- how financing frictions change policies in low-cash states,
-- how a hedging extension adds a second control and a margin-account mechanism.
+It teaches three things at the same time:
+
+- how BCW reduces a two-state problem to one state by homogeneity,
+- how that reduced problem is expressed in the FinHJB class interface,
+- how endogenous boundaries become numerical search targets.
+
+## Common Notation And Mapping
+
+All four BCW examples use the same one-dimensional reduction:
+
+$$
+P(K, W) = K p(w), \qquad w = W/K.
+$$
+
+The paper's objects map to repository objects as follows:
+
+| Paper object | Meaning | Repository object |
+|---|---|---|
+| `w` | cash-capital ratio | `grid.s` |
+| `p(w)` | value-capital ratio | `grid.v` |
+| `p'(w)` | marginal value of cash | `grid.dv` |
+| `p''(w)` | curvature | `grid.d2v` |
+| `q_a = p-w` | average q | derived series `qa` |
+| `q_m = p-wp'` | marginal q | derived series `qm` |
+| policy functions | `i(w)`, `\psi(w)` | `grid.policy[...]` |
+
+The FinHJB interface mapping is equally stable across the four scripts:
+
+| FinHJB class | BCW role |
+|---|---|
+| `Parameter` | Table I primitives and case-specific parameters |
+| `Boundary` | left/right boundary values and state limits |
+| `PolicyDict` | control variables stored on the grid |
+| `Policy` | FOCs or explicit policy updates |
+| `Model` | HJB residual and outer boundary targets |
+
+## Four Cases, Four Modeling Patterns
+
+| Case | Script | Paper figure | Main numerical idea | Main economic idea |
+|---|---|---|---|---|
+| Case I | `BCW2011Liquidation.py` | Figure 2 | one-target payout-boundary search | severe financing distress triggers disinvestment |
+| Case II | `BCW2011Refinancing.py` | Figure 3 | two-target search over `s_max` and `v_left` | equity issuance softens the liquidation region |
+| Case IV | `BCW2011Hedging.py` | Figure 6 | two-control HJB plus hedge-region diagnostics | hedging and liquidity management are complements |
+| Case V | `BCW2011CreditLine.py` | Figure 7 | piecewise HJB over cash and debt regions | credit lines reduce the marginal value of liquidity |
+
+## How Paper Boundary Conditions Become Numerical Targets
+
+One of the main reasons to study the BCW examples is that they show how a paper's boundary language becomes runnable code.
+
+The recurring pattern is:
+
+1. a paper equation specifies a boundary value,
+2. a paper optimality condition specifies a searched unknown,
+3. the solver searches until the grid satisfies the target residual.
+
+Examples:
+
+- liquidation: search `\bar w` until `p''(\bar w)=0`,
+- refinancing: search `p(0)` and `\bar w`, then infer `m` from `p'(m)=1+\gamma`,
+- hedging: keep the refinancing boundary logic but solve a richer policy problem,
+- credit line: keep issuance and payout logic while switching the HJB residual across regimes.
 
 ## Recommended Reading Order
 
-If you are new to the project, use this sequence:
+If your goal is to understand the package through BCW rather than just run the scripts, use this order:
 
 1. [Installation and Environment](./installation-and-environment.md)
 2. [Getting Started](./getting-started.md)
-3. [BCW Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md)
-4. [Results and Diagnostics](./results-and-diagnostics.md)
-5. [BCW Hedging Walkthrough](./bcw2011-hedging-walkthrough.md)
-6. [Adapting BCW to Your Model](./adapting-bcw-to-your-model.md)
+3. [BCW2011 Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md)
+4. [BCW2011 Refinancing Walkthrough](./bcw2011-refinancing-walkthrough.md)
+5. [BCW2011 Hedging Walkthrough](./bcw2011-hedging-walkthrough.md)
+6. [BCW2011 Credit Line Walkthrough](./bcw2011-credit-line-walkthrough.md)
+7. [Results and Diagnostics](./results-and-diagnostics.md)
+8. [Adapting BCW To Your Model](./adapting-bcw-to-your-model.md)
 
-## Two Cases, Two Learning Goals
+The walkthroughs are the derivation-and-code bridge. `Results and Diagnostics` is the solver-facing companion once you already understand the case logic.
 
-| Case | Script | Main numerical idea | Main economic idea |
-|---|---|---|---|
-| Liquidation | `BCW2011Liquidation.py` | right-boundary search with super-contact condition | low cash sharply depresses investment |
-| Hedging | `BCW2011Hedging.py` | two-control problem with direct search over `s_max` and `v_left`, plus an optional boundary-update-compatible helper | hedge demand binds in distressed states and fades with internal liquidity |
+## Stable Magnitudes To Cross-Check
 
-## Stable Result Patterns To Expect
+Healthy runs in this repository usually look like this:
 
-You do not need to reproduce every printed line. What matters is the pattern.
-
-### Liquidation
-
-Healthy runs in this repository show:
-
-- `v_left` at `0.9`,
-- solved `s_max` around `0.22`,
-- `p'(0)` around `30`,
-- `d2v[-1]` near zero,
-- investment negative in distressed states and positive near the right boundary.
-
-### Hedging
-
-Healthy runs in this repository show:
-
-- left boundary value above the pure liquidation value,
-- solved `s_max` around `0.14`,
-- `w_-` around `0.067`,
-- `w_+` around `0.115`,
-- `psi` between `-5` and `0`,
-- a three-region hedge pattern: fully binding, then interior, then zero hedge.
-
-## How The Case Study Pages Split Responsibilities
-
-Use the other BCW pages intentionally:
-
-- [BCW Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md):
-  line-by-line interpretation of the liquidation script, the boundary-search target, and the expected solution shape.
-- [BCW Hedging Walkthrough](./bcw2011-hedging-walkthrough.md):
-  how `psi`, `kappa`, refinancing, and the three hedge regions are encoded.
-- [Results and Diagnostics](./results-and-diagnostics.md):
-  how to inspect `state`, `grid`, `history`, and continuation outputs without guessing.
-
-## Equation-to-Code Landmarks
-
-The repository already uses BCW as a structured mapping exercise. Some of the most important landmarks are:
-
-| Equation idea | Where it appears in code |
+| Case | Stable magnitudes |
 |---|---|
-| first-best investment rule | `Policy.initialize` in the liquidation case |
-| liquidation value boundary | `Boundary.compute_v_left` |
-| payout-side contact condition | `boundary_condition()` with `grid.d2v[-1]` |
-| hedge FOC and clipping | `Policy.cal_policy` in the hedging case |
-| margin-account share | `kappa = min(|psi| / pi, 1)` inside the hedging model |
+| Liquidation | `\bar w \approx 0.22`, `p'(0) \approx 30`, `i(\bar w) \approx 10.5%` |
+| Refinancing | with `phi=1%`: `\bar w \approx 0.19`, `m \approx 0.06`; with `phi=0`: `\bar w \approx 0.14`, `m \approx 0` |
+| Hedging | costly margin: `w_- \approx 0.07`, `w_+ \approx 0.11`, `\bar w \approx 0.14`, `\psi \in [-5, 0]` |
+| Credit line | with `c=20%`: `\bar w \approx 0.08`, `c+m \approx 0.10`, `p'(0) \approx 1.01` |
 
-## When To Leave The BCW Track
+These are the right first checks before you worry about small grid-to-grid differences.
 
-Stay on the BCW track until you can answer these questions from your own run:
+## Which Walkthrough To Use As A Template
 
-1. Why is `d2v[-1]` the key right-boundary diagnostic?
-2. Why can investment become strongly negative at low cash?
-3. Why does `psi` saturate at `-pi` in the hedging case?
-4. What changes between fixed-boundary solving, boundary search, and boundary update?
+If you later adapt BCW to your own model, pick the closest structural example:
+
+- liquidation for one control and one endogenous payout boundary,
+- refinancing for issuance and smooth pasting at an interior target,
+- hedging for multiple controls and control-dependent variance,
+- credit line for regime-dependent residuals on one shared grid.
 
 ## Next Step
 
-- Read [BCW2011 Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md) for the first deep dive.
-- Read [Results and Diagnostics](./results-and-diagnostics.md) once you have a run to inspect.
-- Read [Adapting BCW to Your Model](./adapting-bcw-to-your-model.md) when you are ready to leave the baseline examples.
+- Start with [BCW2011 Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md).
+- Use [Results and Diagnostics](./results-and-diagnostics.md) once you want a solver-oriented view of the objects returned by `run_case()`.

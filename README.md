@@ -34,12 +34,23 @@ Start here:
 
 ### 2. Learn FinHJB through the BCW examples
 
-Use this path if you want to understand the package by reproducing and adapting the repository's BCW examples.
+Use this path if you want to understand the package by reproducing and adapting the repository's four BCW examples.
+
+This BCW path is now formula-first rather than result-first:
+
+- `Getting Started` tells you how to run the repository examples and what headline magnitudes to expect.
+- `BCW2011 Case Study` gives the common homogeneity reduction and notation map.
+- the four walkthroughs are the main derivation-to-code bridge from BCW equations into `Parameter` / `Boundary` / `PolicyDict` / `Policy` / `Model`.
+- the supported execution contract is repository-root execution, for example `uv run python src/example/BCW2011Liquidation.py`.
 
 Start here:
 
 - [Getting Started](./docs/en/getting-started.md)
 - [BCW2011 Case Study](./docs/en/bcw2011-case-study.md)
+- [BCW2011 Liquidation Walkthrough](./docs/en/bcw2011-liquidation-walkthrough.md)
+- [BCW2011 Refinancing Walkthrough](./docs/en/bcw2011-refinancing-walkthrough.md)
+- [BCW2011 Hedging Walkthrough](./docs/en/bcw2011-hedging-walkthrough.md)
+- [BCW2011 Credit Line Walkthrough](./docs/en/bcw2011-credit-line-walkthrough.md)
 - [Adapting BCW to Your Model](./docs/en/adapting-bcw-to-your-model.md)
 
 ### 3. Use `finhjb-model-coder`
@@ -69,6 +80,8 @@ The `finhjb-model-coder` workflow expects Codex to:
 
 - The published `finhjb` package is the right choice for downstream projects.
 - The BCW example scripts in `src/example/` are repository files. They are not included in the published wheel.
+- The repository BCW path now includes Case I liquidation, Case II refinancing, Case IV hedging, and Case V credit line examples.
+- The BCW scripts are maintained for repository-root execution with imports from `src.example...`.
 - The `finhjb-model-coder` skill also lives in the repository, not in the published wheel.
 
 Install the skill from a repository checkout with:

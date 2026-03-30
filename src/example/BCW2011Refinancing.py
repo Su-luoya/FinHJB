@@ -1,7 +1,7 @@
-"""BCW2011 Case I (Liquidation) for FinHJB.
+"""BCW2011 Case II (Optimal Refinancing) for FinHJB.
 
-This repository example reproduces the main Figure 2 policy objects from
-Bolton, Chen, and Wang (2011).
+This repository example reproduces the main Figure 3 comparison from
+Bolton, Chen, and Wang (2011) using one-dimensional FinHJB code.
 """
 
 from __future__ import annotations
@@ -15,6 +15,7 @@ if __package__ in {None, ""}:  # pragma: no cover - script entrypoint bootstrap
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import jax.numpy as jnp
+import numpy as np
 from jaxtyping import Array
 
 import finhjb as fjb
@@ -30,6 +31,8 @@ from src.example.bcw2011 import (
     paper_figure,
     payout_right_value,
     publish_docs_figure,
+    refinancing_boundary_residual,
+    return_cash_ratio_from_grid,
     save_figure,
     standard_hjb_residual,
     super_contact_residual,
@@ -37,27 +40,28 @@ from src.example.bcw2011 import (
     write_test_report,
 )
 
-DOCS_ASSET_NAME = "bcw2011-liquidation-main.svg"
-CASE_SLUG = "liquidation"
+DEFAULT_SEARCH_METHOD = "hybr"
+DOCS_ASSET_NAME = "bcw2011-refinancing-main.svg"
+CASE_SLUG = "refinancing"
 
 
 class Parameter(BCWBaseParameter):
-    """BCW liquidation parameters."""
+    """BCW refinancing parameters."""
 
 
 class PolicyDict(fjb.AbstractPolicyDict):
-    """Policy map for the BCW liquidation case."""
+    """Policy map for the BCW refinancing case."""
 
     investment: Array
 
 
 @dataclass
 class Boundary(fjb.AbstractBoundary[Parameter]):
-    """Boundary conditions for the BCW liquidation case."""
+    """Boundary conditions for the BCW refinancing case."""
 
     @staticmethod
     def compute_v_left(p: Parameter) -> float:
-        return p.l
+        return p.v_left_guess
 
     @staticmethod
     def compute_v_right(p: Parameter, s_max: float) -> float:
@@ -66,7 +70,7 @@ class Boundary(fjb.AbstractBoundary[Parameter]):
 
 @dataclass
 class Policy(fjb.AbstractPolicy[Parameter, PolicyDict]):
-    """Single-control investment policy for BCW liquidation."""
+    """Single-control investment policy for BCW refinancing."""
 
     @staticmethod
     def initialize(grid: fjb.Grid, p: Parameter) -> PolicyDict:
@@ -88,7 +92,7 @@ class Policy(fjb.AbstractPolicy[Parameter, PolicyDict]):
 
 @dataclass
 class Model(fjb.AbstractModel[Parameter, PolicyDict]):
-    """BCW liquidation model."""
+    """BCW refinancing model solved on the cash-capital ratio grid."""
 
     @staticmethod
     def hjb_residual(
@@ -105,24 +109,50 @@ class Model(fjb.AbstractModel[Parameter, PolicyDict]):
 
     @staticmethod
     def boundary_condition():
+        def v_left_condition(grid):
+            return refinancing_boundary_residual(grid)
+
         return [
             fjb.BoundaryConditionTarget(
                 boundary_name="s_max",
                 condition_func=super_contact_residual,
                 low=0.10,
-                high=0.50,
+                high=0.26,
                 tol=1e-6,
                 max_iter=80,
-            )
+            ),
+            fjb.BoundaryConditionTarget(
+                boundary_name="v_left",
+                condition_func=v_left_condition,
+                low=0.90,
+                high=1.50,
+                tol=1e-6,
+                max_iter=80,
+            ),
         ]
 
 
-def build_solver(*, number: int = 1000) -> fjb.Solver:
-    """Construct the BCW liquidation solver."""
-    parameter = Parameter()
-    boundary = Boundary(p=parameter, s_min=0.0, s_max=0.22)
+def build_solver(
+    *,
+    phi: float = 0.01,
+    number: int = 1000,
+    sigma: float | None = None,
+) -> fjb.Solver:
+    """Construct a solver for one BCW refinancing scenario."""
+    parameter_kwargs = {
+        "phi": phi,
+        "v_left_guess": 0.9 if phi > 0 else 1.05,
+    }
+    if sigma is not None:
+        parameter_kwargs["sigma"] = sigma
+    parameter = Parameter(**parameter_kwargs)
+    boundary = Boundary(
+        p=parameter,
+        s_min=0.0,
+        s_max=0.19 if phi > 0 else 0.14,
+    )
     model = Model(policy=Policy())
-    config = make_config(pi_patience=100)
+    config = make_config()
     return fjb.Solver(
         boundary=boundary,
         model=model,
@@ -133,91 +163,78 @@ def build_solver(*, number: int = 1000) -> fjb.Solver:
 
 
 def summarize_results(result: dict) -> dict:
-    """Extract stable diagnostics from a solved liquidation run."""
+    """Extract stable diagnostics from one solved refinancing scenario."""
     grid = result["grid"]
     series = result["series"]
+    m, idx = return_cash_ratio_from_grid(grid)
     summary = common_summary(grid, series)
     summary.update(
         {
+            "phi": float(grid.p.phi),
             "liquidation_value": float(grid.p.l),
-            "dv_at_zero": float(series["dv"][0]),
-            "figure_reference_payout_boundary": 0.22,
+            "p0_above_l": bool(series["v"][0] > float(grid.p.l)),
+            "return_cash_ratio": float(m),
+            "dv_at_m": float(series["dv"][int(idx)]),
+            "max_investment_sensitivity": float(np.max(series["investment_sensitivity"])),
+            "boundary_search_method": result["boundary_search_method"],
+            "derivative_method": result["derivative_method"],
         }
     )
     return summary
 
 
-def solve_case(*, number: int = 1000) -> dict:
-    """Solve the BCW liquidation case."""
-    solver = build_solver(number=number)
-    state = solver.boundary_search(method="bisection", verbose=False)
+def solve_case(
+    *,
+    phi: float = 0.01,
+    number: int = 1000,
+    sigma: float | None = None,
+) -> dict:
+    """Solve one BCW refinancing scenario."""
+    solver = build_solver(phi=phi, number=number, sigma=sigma)
+    state = solver.boundary_search(method=DEFAULT_SEARCH_METHOD, verbose=False)
     grid = state.grid
     series = build_series(grid)
     result = {
         "state": state,
         "grid": grid,
         "series": series,
-        "label": "Liquidation",
+        "label": "Fixed financing cost" if phi > 0 else "No fixed financing cost",
         "style": {
-            "color": "#1f1f1f",
-            "linestyle": "-",
-            "marker_linestyle": ":",
+            "color": "#1f1f1f" if phi > 0 else "#8a4f3d",
+            "linestyle": "-" if phi > 0 else "--",
+            "marker_linestyle": ":" if phi > 0 else "-.",
         },
         "derivative_method": "central",
-        "boundary_search_method": "bisection",
+        "boundary_search_method": DEFAULT_SEARCH_METHOD,
     }
     result["summary"] = summarize_results(result)
     return result
 
 
 def plot_main_figure(results: dict[str, dict], output_path: str | Path) -> Path:
-    """Create the Figure 2-style main panel figure."""
-    result = next(iter(results.values()))
-    series = result["series"]
+    """Create the Figure 3-style main panel figure."""
     fig, axes = paper_figure()
-
-    axes[0, 0].plot(series["s"], series["v"], color=result["style"]["color"], linewidth=2.2)
-    axes[0, 0].plot(
-        series["s"],
-        series["s"] + result["summary"]["liquidation_value"],
-        color="#8a8a8a",
-        linestyle="--",
-        linewidth=1.4,
-    )
-    add_boundary_markers(axes[0, 0], result, ["payout_boundary"])
-    finalize_axes(axes[0, 0], title="A. Firm value-capital ratio: p(w)")
-
-    axes[0, 1].plot(series["s"], series["dv"], color=result["style"]["color"], linewidth=2.2)
-    add_boundary_markers(axes[0, 1], result, ["payout_boundary"])
-    finalize_axes(axes[0, 1], title="B. Marginal value of cash: p'(w)")
-
-    axes[1, 0].plot(
-        series["s"],
-        series["investment"],
-        color=result["style"]["color"],
-        linewidth=2.2,
-        label="Investment",
-    )
-    axes[1, 0].axhline(
-        result["grid"].p.first_best_investment,
-        color="#8a4f3d",
-        linestyle="--",
-        linewidth=1.4,
-        label="First best",
-    )
-    add_boundary_markers(axes[1, 0], result, ["payout_boundary"])
-    finalize_axes(axes[1, 0], title="C. Investment-capital ratio: i(w)")
-    axes[1, 0].legend(frameon=False)
-
-    axes[1, 1].plot(
-        series["s"],
-        series["investment_sensitivity"],
-        color=result["style"]["color"],
-        linewidth=2.2,
-    )
-    add_boundary_markers(axes[1, 1], result, ["payout_boundary"])
-    finalize_axes(axes[1, 1], title="D. Investment-cash sensitivity: i'(w)")
-
+    panels = [
+        ("v", "A. Firm value-capital ratio: p(w)"),
+        ("dv", "B. Marginal value of cash: p'(w)"),
+        ("investment", "C. Investment-capital ratio: i(w)"),
+        ("investment_sensitivity", "D. Investment-cash sensitivity: i'(w)"),
+    ]
+    for ax, (metric, title) in zip(axes.flat, panels, strict=True):
+        for result in results.values():
+            series = result["series"]
+            ax.plot(
+                series["s"],
+                series[metric],
+                color=result["style"]["color"],
+                linestyle=result["style"]["linestyle"],
+                linewidth=2.0,
+                label=result["label"],
+            )
+            add_boundary_markers(ax, result, ["return_cash_ratio", "payout_boundary"])
+        finalize_axes(ax, title=title)
+    handles, labels = axes.flat[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="upper center", ncol=2, frameon=False)
     return save_figure(fig, output_path)
 
 
@@ -227,20 +244,22 @@ def run_case(
     number: int = 1000,
     publish_docs_assets: bool = False,
 ) -> dict:
-    """Run the BCW liquidation case and materialize artifacts."""
+    """Run the full BCW refinancing comparison and write artifacts."""
     output_dir = case_output_dir(CASE_SLUG, output_dir=output_dir)
-    result = solve_case(number=number)
-    results = {"baseline": result}
-    figure_svg = plot_main_figure(results, output_dir / "figure_2_liquidation.svg")
-    summary_payload = result["summary"]
+    results = {
+        "fixed-cost": solve_case(phi=0.01, number=number),
+        "no-fixed-cost": solve_case(phi=0.0, number=number),
+    }
+    figure_svg = plot_main_figure(results, output_dir / "figure_3_refinancing.svg")
+    summary_payload = {label: result["summary"] for label, result in results.items()}
     summary_path = write_summary_json(output_dir, summary_payload)
     report_payload = {
-        "case": "BCW2011 Case I",
+        "case": "BCW2011 Case II",
         "environment": {"status": "repo-backed", "smoke_test": 'uv run python -c "import finhjb"'},
         "numerical_methods": {
             "derivative_method": "central",
-            "boundary_search_method": "bisection",
-            "boundary_target_count": 1,
+            "boundary_search_method": DEFAULT_SEARCH_METHOD,
+            "boundary_target_count": 2,
         },
         "artifacts": {
             "figure_svg": str(figure_svg),
@@ -268,6 +287,8 @@ if __name__ == "__main__":
     bundle = run_case()
     printable = {
         "artifacts": {k: str(v) for k, v in bundle["artifact_paths"].items()},
-        "summary": bundle["results"]["baseline"]["summary"],
+        "summaries": {
+            label: result["summary"] for label, result in bundle["results"].items()
+        },
     }
     print(json.dumps(printable, indent=2, sort_keys=True))

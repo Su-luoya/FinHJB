@@ -2,24 +2,22 @@
 
 This documentation serves three equal workflows:
 
-- use FinHJB directly as a Python library
-- learn the package through the BCW examples in this repository
-- use `finhjb-model-coder` to translate theory into code
+- use FinHJB directly as a Python library,
+- learn the package through the repository BCW examples,
+- use `finhjb-model-coder` to translate theory into code.
 
 If you do not yet have a runnable FinHJB environment, start with [Installation and Environment](./installation-and-environment.md).
 
 ## Choose Your Path
 
-### Use FinHJB as a Library
-
-This path is for readers who already know the economics they want to implement and want the shortest path to the package API.
+### Use FinHJB As A Library
 
 Start here:
 
 - [Installation and Environment](./installation-and-environment.md)
 - [Library Quickstart](./quickstart-library.md)
 
-Then read:
+Then continue with:
 
 - [Modeling Guide](./modeling-guide.md)
 - [Solver Guide](./solver-guide.md)
@@ -28,38 +26,34 @@ Then read:
 
 ### Learn Through BCW
 
-This path is for readers who want to understand FinHJB through the repository's worked BCW examples before adapting the framework to a new model.
-
 Start here:
 
 - [Getting Started](./getting-started.md)
 - [BCW2011 Case Study](./bcw2011-case-study.md)
 
-Then read:
+Then continue with:
 
 - [BCW2011 Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md)
+- [BCW2011 Refinancing Walkthrough](./bcw2011-refinancing-walkthrough.md)
 - [BCW2011 Hedging Walkthrough](./bcw2011-hedging-walkthrough.md)
+- [BCW2011 Credit Line Walkthrough](./bcw2011-credit-line-walkthrough.md)
 - [Adapting BCW To Your Model](./adapting-bcw-to-your-model.md)
 
-### Use `finhjb-model-coder`
+The BCW path is now organized in two layers:
 
-This path is for readers who want Codex to work from equations, paper excerpts, or LaTeX instead of starting from an existing Python file.
+- `Getting Started` and `Case Study` tell you what to run and how the path is structured,
+- the four walkthroughs provide the derivation-level bridge from BCW equations to FinHJB code.
+
+### Use `finhjb-model-coder`
 
 Start here:
 
 - [FinHJB Model Coder](./finhjb-model-coder.md)
 - [Model Coder Overview](./finhjb-model-coder-overview.md)
-
-Then read:
-
 - [Inputs and Readiness](./finhjb-model-coder-inputs-and-readiness.md)
 - [Output and Validation](./finhjb-model-coder-output-and-validation.md)
 
-This path assumes a runnable FinHJB environment and asks Codex to make derivative-scheme, boundary-search, and validation decisions explicit.
-
 ### Shared Reference
-
-Use the reference pages when you need exact names, diagnostics, or recovery steps.
 
 - [API Reference](./api-reference.md)
 - [Troubleshooting](./troubleshooting.md)
@@ -88,7 +82,9 @@ results-and-diagnostics
 
 bcw2011-case-study
 bcw2011-liquidation-walkthrough
+bcw2011-refinancing-walkthrough
 bcw2011-hedging-walkthrough
+bcw2011-credit-line-walkthrough
 adapting-bcw-to-your-model
 ```
 

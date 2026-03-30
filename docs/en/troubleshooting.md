@@ -153,7 +153,15 @@ For BCW:
 Before editing the code, compare your pattern to:
 
 - [BCW Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md)
+- [BCW Refinancing Walkthrough](./bcw2011-refinancing-walkthrough.md)
 - [BCW Hedging Walkthrough](./bcw2011-hedging-walkthrough.md)
+- [BCW Credit Line Walkthrough](./bcw2011-credit-line-walkthrough.md)
+
+Also remember the case-specific patterns:
+
+- refinancing should raise `p(0)` above liquidation value and create an interior issuance target `m`,
+- credit lines can push `p'(0)` close to `1` and keep investment positive around `w=0`,
+- frictionless hedging should move the payout boundary left relative to costly margin.
 
 ### Convergence is slow or unstable
 

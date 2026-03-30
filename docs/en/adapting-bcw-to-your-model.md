@@ -2,7 +2,7 @@
 
 This page is the bridge from the BCW path into your first custom model.
 
-Read it after [BCW2011 Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md), [BCW2011 Hedging Walkthrough](./bcw2011-hedging-walkthrough.md), and [Modeling Guide](./modeling-guide.md).
+Read it after [BCW2011 Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md), [BCW2011 Refinancing Walkthrough](./bcw2011-refinancing-walkthrough.md), [BCW2011 Hedging Walkthrough](./bcw2011-hedging-walkthrough.md), [BCW2011 Credit Line Walkthrough](./bcw2011-credit-line-walkthrough.md), and [Modeling Guide](./modeling-guide.md).
 
 Read [Library Quickstart](./quickstart-library.md) instead if you are not using BCW as your template.
 
@@ -16,21 +16,29 @@ The guiding principle is simple:
 - change the economics gradually,
 - re-validate after every small step.
 
+Treat the four BCW walkthroughs as the theory-to-code source material. This page starts after you already understand how each paper equation was turned into a `Parameter` / `Boundary` / `PolicyDict` / `Policy` / `Model` implementation.
+
 ## Read This After
 
 - [Getting Started](./getting-started.md)
 - [BCW2011 Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md)
+- [BCW2011 Refinancing Walkthrough](./bcw2011-refinancing-walkthrough.md)
 - [BCW2011 Hedging Walkthrough](./bcw2011-hedging-walkthrough.md)
+- [BCW2011 Credit Line Walkthrough](./bcw2011-credit-line-walkthrough.md)
 - [Modeling Guide](./modeling-guide.md)
 
 ## Choose The Right Starting Template
 
 | Your model resembles... | Best starting file |
 |---|---|
-| one state variable, one control, endogenous right boundary | `src/example/BCW2011Liquidation.py` |
-| one state variable, multiple controls, refinancing or boundary updates | `src/example/BCW2011Hedging.py` |
+| one state variable, one control, liquidation at the left edge, endogenous payout boundary | `src/example/BCW2011Liquidation.py` |
+| one state variable, one control, equity issuance or cash-target smooth pasting | `src/example/BCW2011Refinancing.py` |
+| one state variable, two controls, hedge demand, or control-dependent variance | `src/example/BCW2011Hedging.py` |
+| one state variable with debt and cash regions, or a state domain that crosses zero | `src/example/BCW2011CreditLine.py` |
 
-If you are unsure, start from liquidation. It is easier to debug one control than two.
+If you are unsure, start from liquidation. It is easier to debug one control than two, and it gives you the cleanest reference for the payout-side boundary logic.
+
+Also keep the execution contract unchanged while you adapt a case: run from the repository root and keep imports in the BCW style `from src.example.bcw2011 import ...`. Do not reintroduce relative imports or local-directory execution assumptions inside `src/example/`.
 
 ## What You Can Usually Reuse Almost Verbatim
 
@@ -224,7 +232,7 @@ Reuse the diagnostic pattern, not the literal target without thought.
 ## A Suggested Work Sequence For Researchers
 
 1. reproduce liquidation unchanged,
-2. reproduce hedging unchanged if your model has multiple controls or refinancing,
+2. reproduce the closest advanced BCW case unchanged: refinancing for issuance boundaries, hedging for two controls, credit line for piecewise state regions,
 3. fork the closer example,
 4. change parameters and names,
 5. get `solve()` stable,
@@ -232,16 +240,27 @@ Reuse the diagnostic pattern, not the literal target without thought.
 7. write down your own success checks,
 8. only then begin comparative statics or paper tables.
 
-## When To Move From Liquidation To Hedging As A Template
+## When To Move Beyond Liquidation As A Template
 
-Move to the hedging template if your model needs any of the following:
+Move to the refinancing template if your model needs:
+
+- issuance with value matching at the left edge,
+- an interior cash target `m`,
+- smooth pasting around an issuance point.
+
+Move to the hedging template if your model needs:
 
 - more than one control,
-- an outer boundary-update rule,
 - control-dependent state variance,
-- financing or issuance conditions tied to an interior threshold.
+- costly or constrained hedge demand.
 
-If not, staying closer to liquidation keeps the code easier to reason about.
+Move to the credit-line template if your model needs:
+
+- separate debt and cash regions,
+- a state domain with `s_min < 0`,
+- different HJB residuals on different parts of the state grid.
+
+If none of those apply, staying closer to liquidation keeps the code easier to reason about.
 
 ## Final Rule Of Thumb
 

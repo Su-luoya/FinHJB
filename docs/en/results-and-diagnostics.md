@@ -6,6 +6,8 @@ Read it after [Library Quickstart](./quickstart-library.md) or [Getting Started]
 
 Read [API Reference](./api-reference.md) instead if you only need exact object members.
 
+Use the BCW walkthrough pages first if you need derivations, homogeneity mapping, or exact equation-to-code correspondence. This page assumes you already know what model you solved and want to inspect the returned objects.
+
 The main purpose is to help you answer:
 
 - what object did the solver return?
@@ -18,7 +20,9 @@ The main purpose is to help you answer:
 - [Library Quickstart](./quickstart-library.md)
 - [Getting Started](./getting-started.md)
 - [BCW2011 Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md)
+- [BCW2011 Refinancing Walkthrough](./bcw2011-refinancing-walkthrough.md)
 - [BCW2011 Hedging Walkthrough](./bcw2011-hedging-walkthrough.md)
+- [BCW2011 Credit Line Walkthrough](./bcw2011-credit-line-walkthrough.md)
 
 ## Solver Return Types
 
@@ -104,14 +108,14 @@ This is the cleanest place to read the solved boundary values:
 print(grid.boundary)
 ```
 
-For the BCW examples, healthy representative outputs look like:
+For the four BCW repository examples, healthy boundary objects usually follow these patterns:
 
-```text
-ImmutableBoundary(s_min=0.0, s_max=0.22176666, v_left=0.9, v_right=1.380003)
-ImmutableBoundary(s_min=0.0, s_max=0.13850403, v_left=1.16119385, v_right=1.31352204)
-```
+- liquidation: `s_min=0`, `s_max≈0.22`, `v_left=0.9`,
+- refinancing: `s_min=0`, `s_max≈0.19`, `v_left>0.9`, with an interior issuance target `m≈0.06`,
+- hedging: `s_min=0`, `s_max≈0.14`, `v_left>0.9`, plus hedge-region cutoffs around `w_-≈0.07` and `w_+≈0.11`,
+- credit line: `s_min≈-0.2`, `s_max≈0.08`, and a much flatter marginal value around `w=0`.
 
-The point is not exact replication. The point is to recognize the right order of magnitude and the right boundary relationships.
+The point is not exact replication. The point is to recognize the right order of magnitude and the right boundary relationships for each case.
 
 ## `grid.df`: Column-By-Column Interpretation
 
@@ -123,6 +127,7 @@ The point is not exact replication. The point is to recognize the right order of
 | `d2v` | second derivative | curvature and right-boundary contact diagnostic |
 | `investment` | investment policy | shows how real decisions vary with cash |
 | `psi` | hedge policy in hedging case | shows constrained vs interior vs zero hedge regions |
+| `psi_interior` | unconstrained hedge policy in hedging case | helps diagnose where clipping to `[-pi, 0]` binds |
 
 ## The Three Highest-Value Diagnostics
 
@@ -146,7 +151,8 @@ Ask:
 
 - does `v[0]` match the intended left-boundary condition?
 - in liquidation, is it near the liquidation value?
-- in hedging, is it higher once refinancing is active?
+- in refinancing and hedging, is it higher once issuance is active?
+- in the credit-line case, does the left boundary live at `s=-c` and line up with the issuance condition?
 
 ### Right boundary
 
@@ -167,6 +173,11 @@ Typical BCW interpretation:
 - low cash: investment is sharply reduced or negative,
 - middle region: investment recovers,
 - right tail: investment becomes mildly positive.
+
+Case-specific refinements:
+
+- refinancing: the recovery in investment should line up with the issuance target `m`,
+- credit line: investment can stay positive around `w=0` even when the no-credit benchmark is still constrained.
 
 You are looking for a smooth economic pattern, not a perfectly linear curve.
 

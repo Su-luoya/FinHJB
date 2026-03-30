@@ -34,12 +34,23 @@ pip install finhjb
 
 ### 2. 通过 BCW 示例学习 FinHJB
 
-如果你希望先复现并理解仓库里的 BCW 示例，再改成自己的模型，这条路径最合适。
+如果你希望先复现并理解仓库里的四个 BCW 示例，再改成自己的模型，这条路径最合适。
+
+这条 BCW 路径现在是“公式优先”而不是“结果优先”：
+
+- `快速开始` 负责告诉你怎样运行仓库示例，以及 headline number 大致应落在哪些区间。
+- `BCW2011 案例总览` 统一解释齐次性降维和记号映射。
+- 四个 walkthrough 才是从 BCW 论文方程走到 `Parameter` / `Boundary` / `PolicyDict` / `Policy` / `Model` 的主桥。
+- 正式支持的执行契约是“在仓库根目录运行”，例如 `uv run python src/example/BCW2011Liquidation.py`。
 
 从这里开始：
 
 - [快速开始](./docs/zh/getting-started.md)
 - [BCW2011 案例总览](./docs/zh/bcw2011-case-study.md)
+- [BCW2011 Liquidation 逐步讲解](./docs/zh/bcw2011-liquidation-walkthrough.md)
+- [BCW2011 Refinancing 逐步讲解](./docs/zh/bcw2011-refinancing-walkthrough.md)
+- [BCW2011 Hedging 逐步讲解](./docs/zh/bcw2011-hedging-walkthrough.md)
+- [BCW2011 Credit Line 逐步讲解](./docs/zh/bcw2011-credit-line-walkthrough.md)
 - [把 BCW 改成你自己的模型](./docs/zh/adapting-bcw-to-your-model.md)
 
 ### 3. 使用 `finhjb-model-coder`
@@ -69,6 +80,8 @@ pip install finhjb
 
 - 发布到 PyPI 的 `finhjb` 包适合下游项目直接依赖。
 - `src/example/` 里的 BCW 示例脚本是仓库文件，不包含在发布版 wheel 中。
+- 仓库内 BCW 路径现在覆盖了 Case I liquidation、Case II refinancing、Case IV hedging 和 Case V credit line。
+- BCW 脚本按“仓库根目录运行 + `src.example...` 绝对导入”的约定维护。
 - `finhjb-model-coder` 这个 Skill 也只存在于仓库里，不包含在发布版 wheel 中。
 
 从仓库源码安装这个 Skill：

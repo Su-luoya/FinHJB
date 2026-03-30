@@ -1,113 +1,124 @@
 # BCW2011 案例总览
 
-这一页是 BCW 路径的总入口。
+这一页是仓库 BCW 路径的总入口。
 
-如果你已经完成 [快速开始](./getting-started.md)，并且想知道这两份仓库示例合起来到底在教什么，就继续读这一页。
+如果你已经读过 [快速开始](./getting-started.md)，并想系统理解 `src/example/` 里四个 BCW 案例分别在教什么，就从这里继续。
 
-如果你并不打算走 BCW 这条学习线，而是想直接使用包 API，请改看 [库快速上手](./quickstart-library.md)。
-
-仓库里包含两个基于 Bolton, Chen, and Wang (2011) 的完整案例：
+仓库现在提供四个与论文主图对应的案例：
 
 - `src/example/BCW2011Liquidation.py`
+- `src/example/BCW2011Refinancing.py`
 - `src/example/BCW2011Hedging.py`
+- `src/example/BCW2011CreditLine.py`
 
-仓库同时附带了论文原文的转录稿，便于对照公式：
+论文转录稿作为统一公式来源保存在：
 
 - `src/example/A_unified_theory_of_tobin's_q,_corporate_investment,_financing,_and_risk_management.md`
 
-## 为什么要从 BCW 学 FinHJB
+## BCW 路径到底是用来干什么的
 
-BCW 这两份示例几乎把 FinHJB 最关键的概念都串在了一起：
+BCW 主线的价值，在于它把“连续时间公司金融论文”到“可运行的一维 FinHJB 实现”这段桥搭得非常完整。
 
-- 如何组织参数和边界；
-- 如何把策略写成显式更新或隐式残差；
-- 如何搜索内生边界；
-- 如何解释 `v`、`dv`、`d2v`；
-- 融资摩擦如何改变低现金状态下的策略；
-- 加入对冲扩展后，第二个控制变量如何改变数值工作流。
+它同时教你三件事：
 
-对研究者和学生来说，这是一条非常自然的学习主线：
+- BCW 如何利用齐次性把二维问题降成一维；
+- 这个降维后的问题如何映射到 FinHJB 的类接口；
+- 论文里的内生边界条件如何变成数值搜索 target。
 
-- 先复现文献中的经典结构，
-- 再逐步改造成自己的模型。
+## 共同记号与对象映射
+
+四个案例都使用同一个一维降维：
+
+$$
+P(K, W) = K p(w), \qquad w = W/K.
+$$
+
+论文里的对象和仓库对象一一对应如下：
+
+| 论文对象 | 含义 | 仓库对象 |
+|---|---|---|
+| `w` | 现金资本比 | `grid.s` |
+| `p(w)` | 价值资本比 | `grid.v` |
+| `p'(w)` | 边际现金价值 | `grid.dv` |
+| `p''(w)` | 曲率 | `grid.d2v` |
+| `q_a = p-w` | 平均 q | 派生序列 `qa` |
+| `q_m = p-wp'` | 边际 q | 派生序列 `qm` |
+| 策略函数 | `i(w)`、`\psi(w)` | `grid.policy[...]` |
+
+而 FinHJB 的类接口映射也在四个脚本里保持稳定：
+
+| FinHJB 类 | 在 BCW 里的角色 |
+|---|---|
+| `Parameter` | Table I 原始参数和案例特有参数 |
+| `Boundary` | 左右边界值与状态域限制 |
+| `PolicyDict` | 网格上的控制变量容器 |
+| `Policy` | FOC 或显式策略更新 |
+| `Model` | HJB 残差与外层边界 target |
+
+## 四个案例分别教什么
+
+| 案例 | 脚本 | 论文图 | 主要数值结构 | 主要经济含义 |
+|---|---|---|---|---|
+| Case I | `BCW2011Liquidation.py` | Figure 2 | 单 target 的 payout-boundary 搜索 | 极端融资约束会触发大规模 asset sales |
+| Case II | `BCW2011Refinancing.py` | Figure 3 | 同时搜索 `s_max` 和 `v_left` | 股权发行会把 liquidation region 变成 issuance region |
+| Case IV | `BCW2011Hedging.py` | Figure 6 | 双控制 HJB 与 hedge-region 诊断 | 对冲和流动性管理是互补的 |
+| Case V | `BCW2011CreditLine.py` | Figure 7 | 单一网格上的分段 HJB | 信用额度会显著降低边际流动性价值 |
+
+## 论文边界条件如何变成数值 target
+
+学习 BCW 的一个核心原因，就是看清楚论文里的边界语言怎样变成可执行代码。
+
+反复出现的模式是：
+
+1. 论文给出某个边界值公式；
+2. 论文再给出某个最优性条件，用来钉住边界位置；
+3. 求解器在外层搜索，直到网格满足这个 residual。
+
+例如：
+
+- liquidation：搜索 `\bar w`，直到 `p''(\bar w)=0`；
+- refinancing：同时搜索 `p(0)` 与 `\bar w`，再用 `p'(m)=1+\gamma` 恢复 `m`；
+- hedging：保留 refinancing 的边界逻辑，但内部策略问题更丰富；
+- credit line：保留发行与 payout 逻辑，同时按区域切换 HJB residual。
 
 ## 推荐阅读顺序
 
-如果你是第一次接触本项目，建议按这个顺序阅读：
+如果你的目标不只是“把脚本跑通”，而是想通过 BCW 学会包的建模方法，推荐按这个顺序读：
 
 1. [安装与环境](./installation-and-environment.md)
 2. [快速开始](./getting-started.md)
-3. [BCW Liquidation 逐步讲解](./bcw2011-liquidation-walkthrough.md)
-4. [结果与诊断](./results-and-diagnostics.md)
-5. [BCW Hedging 逐步讲解](./bcw2011-hedging-walkthrough.md)
-6. [把 BCW 改成你自己的模型](./adapting-bcw-to-your-model.md)
+3. [BCW2011 Liquidation 逐步讲解](./bcw2011-liquidation-walkthrough.md)
+4. [BCW2011 Refinancing 逐步讲解](./bcw2011-refinancing-walkthrough.md)
+5. [BCW2011 Hedging 逐步讲解](./bcw2011-hedging-walkthrough.md)
+6. [BCW2011 Credit Line 逐步讲解](./bcw2011-credit-line-walkthrough.md)
+7. [结果与诊断](./results-and-diagnostics.md)
+8. [把 BCW 改成你自己的模型](./adapting-bcw-to-your-model.md)
 
-## 两个案例，对应两层学习目标
+这里四个 walkthrough 是“公式到代码”的主桥。`结果与诊断` 则是当你已经理解案例结构之后，用来从求解器对象角度读解的补充页。
 
-| 案例 | 脚本 | 主要数值思想 | 主要经济思想 |
-|---|---|---|---|
-| Liquidation | `BCW2011Liquidation.py` | 用 super-contact 条件搜索右边界 | 低现金状态下投资大幅受限 |
-| Hedging | `BCW2011Hedging.py` | 两个控制变量，并通过边界搜索直接解 `s_max` 和 `v_left`，同时附带一个可复用的 boundary-update-compatible helper | 对冲需求在困境状态最强，内部流动性改善后逐步消失 |
+## 稳定量级检查
 
-## 你应该期待看到什么样的结果模式
+仓库里健康运行通常满足：
 
-你不需要逐字复现脚本打印出的每一行，但应该知道哪些模式才算“跑得对”。
-
-### Liquidation
-
-健康运行通常表现为：
-
-- `v_left = 0.9`；
-- 解出来的 `s_max` 大约在 `0.22`；
-- `p'(0)` 大约在 `30`；
-- `d2v[-1]` 接近零；
-- 投资在左端显著为负，在右端转为正值。
-
-### Hedging
-
-健康运行通常表现为：
-
-- 左边界价值高于纯 liquidation 的值；
-- `s_max` 大约在 `0.14`；
-- `w_-` 大约在 `0.067`；
-- `w_+` 大约在 `0.115`；
-- `psi` 落在 `-5` 到 `0` 之间；
-- 对冲策略呈现“三分区”结构：先完全绑定，再进入内部区间，最后收敛到零对冲。
-
-## 其他 BCW 页面各自负责什么
-
-请有意识地分工阅读：
-
-- [BCW Liquidation 逐步讲解](./bcw2011-liquidation-walkthrough.md)
-  负责逐段解释 liquidation 脚本、右边界搜索目标和结果形状。
-- [BCW Hedging 逐步讲解](./bcw2011-hedging-walkthrough.md)
-  负责解释 `psi`、`kappa`、再融资逻辑和三分区对冲。
-- [结果与诊断](./results-and-diagnostics.md)
-  负责告诉你 `state`、`grid`、`history`、continuation 输出到底怎么看。
-
-## 方程到代码的地标
-
-BCW 在本仓库里本来就是以“方程映射到代码”为主线组织的。几个最值得先记住的地标是：
-
-| 方程含义 | 代码位置 |
+| 案例 | 稳定量级 |
 |---|---|
-| 一阶最优投资初值 | liquidation 的 `Policy.initialize` |
-| liquidation 左边界价值 | `Boundary.compute_v_left` |
-| 支付端接触条件 | `boundary_condition()` 中的 `grid.d2v[-1]` |
-| hedge FOC 与 clipping | hedging 的 `Policy.cal_policy` |
-| 保证金账户占比 | hedging 模型里的 `kappa = min(|psi| / pi, 1)` |
+| Liquidation | `\bar w \approx 0.22`、`p'(0) \approx 30`、`i(\bar w) \approx 10.5%` |
+| Refinancing | `phi=1%` 时 `\bar w \approx 0.19`、`m \approx 0.06`；`phi=0` 时 `\bar w \approx 0.14`、`m \approx 0` |
+| Hedging | costly margin：`w_- \approx 0.07`、`w_+ \approx 0.11`、`\bar w \approx 0.14`、`\psi \in [-5, 0]` |
+| Credit line | `c=20%` 时 `\bar w \approx 0.08`、`c+m \approx 0.10`、`p'(0) \approx 1.01` |
 
-## 什么时候可以离开 BCW 主线
+在纠结小的网格差异之前，先看这些 headline number 是否站得住。
 
-建议你至少能用自己的话回答下面四个问题，再开始大规模改模型：
+## 以后应该把哪一页当模板
 
-1. 为什么 `d2v[-1]` 是右边界最关键的诊断量？
-2. 为什么低现金状态下投资可能大幅为负？
-3. 为什么 hedging 案例里 `psi` 会在左端贴着 `-pi`？
-4. `solve`、`boundary_update`、`boundary_search` 三者分别适用于什么场景？
+如果后面你要把 BCW 改成自己的模型，优先选择结构最接近的案例：
+
+- liquidation：一个控制、一个内生 payout boundary；
+- refinancing：带发行、value matching 和 interior smooth-pasting；
+- hedging：多控制与控制进入扩散项；
+- credit line：单一网格上的 regime-dependent residual。
 
 ## 下一步
 
-- 继续读 [BCW2011 Liquidation 逐步讲解](./bcw2011-liquidation-walkthrough.md)：进入第一篇深入讲解。
-- 一旦你已经有求解结果：看 [结果与诊断](./results-and-diagnostics.md)。
-- 当你准备离开 baseline：看 [把 BCW 改成你自己的模型](./adapting-bcw-to-your-model.md)。
+- 从 [BCW2011 Liquidation 逐步讲解](./bcw2011-liquidation-walkthrough.md) 开始。
+- 当你想从求解器对象角度读 `run_case()` 返回值时，再配合 [结果与诊断](./results-and-diagnostics.md) 一起看。

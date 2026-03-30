@@ -1,282 +1,236 @@
 # BCW2011 Liquidation 逐步讲解
 
-这一页是 BCW 路径里的第一篇深入讲解页。
+建议在 [快速开始](./getting-started.md) 和 [BCW2011 案例总览](./bcw2011-case-study.md) 之后阅读这一页。
 
-请在 [快速开始](./getting-started.md) 和 [BCW2011 案例总览](./bcw2011-case-study.md) 之后阅读。
-
-如果你的目标只是最短路径学包 API，而不是沿着 BCW 教程走，请改看 [库快速上手](./quickstart-library.md)。
-
-这一页详细拆解第一个 BCW 示例：
+这一页是下面这个仓库脚本的“公式到代码”讲解：
 
 - `src/example/BCW2011Liquidation.py`
 
-目标不只是告诉你“命令怎么敲”，而是帮助你把代码、论文方程和结果诊断真正连起来。
-
 ## 目标
 
-读完这一页后，你应该理解：
+读完以后，你应该能够双向理解这个案例：
 
-- liquidation 案例到底在求什么；
-- BCW 方程是如何映射到 `Parameter`、`Boundary`、`Policy`、`Model` 中的；
-- 为什么求解器要搜索 `s_max`；
-- 怎么判断解出来的价值函数和策略函数是健康的。
+- 从 BCW 论文里的 liquidation 方程走到 FinHJB 实现；
+- 从 FinHJB 里的类和求解流程，反推它们各自对应的经济含义。
 
-## 前置条件
+这是最适合入门的一页，因为这个案例只有：
 
-你至少应该已经能做到：
+- 一个状态变量，
+- 一个控制变量，
+- 一个内生边界 target，
+- 没有再融资，也没有分段 regime。
 
-- 成功导入 `finhjb`；
-- 在仓库根目录运行命令；
-- 如果是 headless 环境，知道先设置 `MPLBACKEND=Agg`。
+## 运行约定
 
-如果还做不到，请先看 [安装与环境](./installation-and-environment.md)。
-
-## 运行命令
+请在仓库根目录执行：
 
 ```bash
 MPLBACKEND=Agg uv run python src/example/BCW2011Liquidation.py
 ```
 
-这个脚本会：
+这套 BCW 示例按“仓库根目录运行”的方式维护，不再围绕 `src/example` 内部本地直跑做兼容。
 
-1. 读取 BCW Table I 的基准参数；
-2. 构造 liquidation 边界问题；
-3. 用 `bisection` 搜索右边界；
-4. 打印最终状态并查看求解后的网格。
+## 经济设定与状态降维
 
-## 这个案例到底在求什么
+BCW 原始问题写在资本 `K` 和现金 `W` 上。FinHJB 当前解的是利用齐次性降维后的单状态版本：
 
-状态变量是“现金相对于资本的比值”。
+$$
+P(K, W) = K p(w), \qquad w = W/K.
+$$
 
-代码里对应的变量是：
+正是这一步，把原来的二维公司金融问题变成了当前包可以直接求解的一维 HJB。
 
-- `s`：状态网格；
-- `v`：价值资本比；
-- `dv`：现金的边际价值；
-- `d2v`：曲率；
-- `investment`：最优投资资本比。
+论文里的核心对象对应为：
 
-从经济直觉上，这个案例最重要的启发是：
+$$
+P_K = p(w) - w p'(w), \qquad P_W = p'(w), \qquad P_{WW} = p''(w) / K.
+$$
 
-- 现金越紧，融资摩擦越严重；
-- 融资摩擦会把投资压得很低，甚至转负；
-- 右边界不是先验给定的，而是要通过接触条件反推出一个内生 `s_max`。
+在仓库对象里，这些量对应到：
 
-## 方程到代码的映射
+- `grid.s`：状态网格 `w`，
+- `grid.v`：价值资本比 `p(w)`，
+- `grid.dv`：现金的边际价值 `p'(w)`，
+- `grid.d2v`：曲率 `p''(w)`。
 
-脚本内部其实已经写了很多注释。最值得先记住的映射如下：
+## 这个案例用到的论文方程
 
-| BCW 对象 | 脚本位置 | 实际含义 |
+Liquidation 案例使用的是 BCW 的内部融资 HJB，加上 liquidation / payout 边界。
+
+### HJB：Eq. (13)
+
+$$
+r p(w) =
+\left(i(w) - \delta\right)\left(p(w) - w p'(w)\right)
++ \left((r-\lambda)w + \mu - i(w) - g(i(w))\right)p'(w)
++ \frac{\sigma^2}{2} p''(w).
+$$
+
+在 BCW 的二次调整成本下，
+
+$$
+g(i) = \frac{\theta i^2}{2}.
+$$
+
+### 投资 FOC：Eq. (14)
+
+$$
+i(w) = \frac{1}{\theta}\left(\frac{p(w)}{p'(w)} - w - 1\right).
+$$
+
+### 边界条件：Eq. (16)-(18)
+
+在 payout 边界 `\bar w`：
+
+$$
+p'(\bar w) = 1, \qquad p''(\bar w) = 0.
+$$
+
+在 liquidation 边界：
+
+$$
+p(0) = l.
+$$
+
+## 这些方程如何变成 FinHJB 对象
+
+仓库实现遵循一套很稳定的对象映射：
+
+| 经济对象 | FinHJB 对象 | 在本案例中的作用 |
 |---|---|---|
-| Eq. (7) 一阶最优投资初值 | `Policy.initialize` | 给策略迭代一个稳定起点 |
-| Eq. (14) 投资规则 | `Policy.cal_investment_without_explicit` | 以隐式残差形式求解 |
-| Eq. (13) HJB 方程 | `Model.hjb_residual` | 内部网格上要逼近零的残差 |
-| Eq. (18) liquidation 边界价值 | `Boundary.compute_v_left` | 固定 `v_left = l` |
-| Eq. (17) super-contact 条件 | `Model.boundary_condition` | 数值上用 `grid.d2v[-1]` 实现 |
+| 基准参数 | `Parameter` | 保存 Table I 参数，如 `r`、`delta`、`mu`、`sigma`、`theta`、`lambda_`、`l` |
+| 左右边界值 | `Boundary` | 固定 `p(0)=l`，并提供 payout 侧的闭式 value |
+| 控制容器 | `PolicyDict` | 这里只保存单个控制 `investment` |
+| 投资更新 | `Policy` | 用隐式策略残差表达 Eq. (14) |
+| HJB 残差 | `Model` | 在内部网格上实现 Eq. (13) |
 
-你真正要学会的不是“背公式编号”，而是理解：
+更具体地说：
 
-右边界搜索要满足的不是一个随便打印出来的数，而是“让右端曲率满足接触条件”。
+- Eq. (14) 通过 `investment_rule_residual(...)` 和 `Policy.cal_investment(...)` 实现；
+- Eq. (13) 通过 `standard_hjb_residual(...)` 和 `Model.hjb_residual(...)` 实现；
+- `Boundary.compute_v_left(...)` 返回 liquidation value `l`；
+- `Boundary.compute_v_right(...)` 使用与 Eq. (16) 一致的 payout 侧闭式。
 
-## 代码分段阅读
+这也是 FinHJB 里一维单控制模型最标准的组织方式：
 
-## 1. 参数层
+1. `Parameter` 放原始参数；
+2. `Boundary` 放边界值；
+3. `PolicyDict` 放控制变量；
+4. `Policy` 放 FOC 或显式控制更新；
+5. `Model` 放 HJB 本体。
 
-`Parameter` 里放的是：
+## 为什么数值工作流是 `boundary_search(method="bisection")`
 
-- `r`、`delta`、`mu`、`sigma`
-- `theta`
-- `lambda_`
-- `l`
+Liquidation 案例数值上只需要搜索一个内生对象：
 
-以后你改自己的模型时，这一层几乎总是最早改动的地方。
+- payout 边界 `\bar w`。
 
-## 2. 边界层
+左边界已经固定为 `w=0` 且 `p(0)=l`。右边界则由 super-contact 条件决定：
 
-`Boundary` 做了两件关键事：
+$$
+p''(\bar w) = 0.
+$$
 
-- 通过 `compute_v_left` 固定左边界价值；
-- 通过 `s_max` 推导 `v_right`。
+在数值实现里，这变成：
 
-这很重要，因为 `v_right` 在这个模型里不是一个独立、随便设的常数，而是与右状态边界联动决定的。
+- 搜索 `s_max = \bar w`，
+- 检查 `grid.d2v[-1]`，
+- 当右尾曲率逼近零时停止。
 
-## 3. 策略层
+这正是脚本使用一维 `boundary_search()` 加 `bisection` 的原因：
 
-liquidation 案例只有一个控制变量：
+- 只有一个未知 target，
+- 搜索区间在经济上很好设定，
+- 根条件是标量问题，bisection 很稳。
 
-- `investment`
+## 仓库里的边界逻辑到底分几层
 
-初始化器使用一阶最优投资规则作为数值上的合理初值。真正的更新则通过 `@implicit_policy(...)` 完成，因为这个策略最自然的数学表达是一个残差方程，而不是脚本内部直接代出来的闭式更新。
+这个案例的边界信息可以分成三层：
 
-## 4. 模型层
+1. 左边界：
+   `Boundary.compute_v_left(...) = l`
 
-`Model.hjb_residual` 把下面几部分拼成了残差：
+2. 右边界 value：
+   脚本使用与 BCW payout region 相容的闭式边界值，并内含 `p'(\bar w)=1`
 
-- 资本漂移项，
-- 折现项，
-- 现金漂移项，
-- 扩散项。
+3. 右边界 optimality target：
+   `super_contact_residual(grid) = grid.d2v[-1]`
 
-如果你以后写自己的模型，最有帮助的习惯之一，就是把你的残差拆成这些有含义的块，而不是一整行堆在一起。
+这三层必须区分开。FinHJB 里：
 
-## 5. 边界搜索层
+- 边界值负责告诉求解器“网格边缘的 value 是什么”；
+- 边界 target 负责告诉外层搜索“边界本身应该往哪边移动”。
 
-搜索目标是：
+## Figure 2：如何按经济含义读图
 
-```python
-def s_max_condition(grid) -> float:
-    return grid.d2v[-1]
-```
+![BCW liquidation main figure](./assets/bcw2011-liquidation-main.svg)
 
-含义是：
+### Panel A：`p(w)`
 
-- 求解器提出一个候选 `s_max`；
-- 在这个候选边界上解 HJB；
-- 取出右端曲率；
-- 持续搜索，直到曲率接近零。
+价值资本比从 liquidation value `l=0.9` 出发，始终高于 liquidation line `l+w`，并在 `\bar w \approx 0.22` 附近平滑接入 payout boundary。
 
-所以在这个案例里，`d2v[-1]` 是最关键的单一诊断量。
+这对应 BCW 的核心结论之一：即使无法再融资，公司也不会在现金还大于零时提前清算。
 
-## 代表性输出
+### Panel B：`p'(w)`
 
-本仓库一次代表性求解结果是：
+当 `w \to 0` 时，边际现金价值迅速爆炸。因为在这个案例里，每一单位额外现金都能显著推迟被迫清算。
 
-```text
-LIQ_BOUNDARY ImmutableBoundary(s_min=0.0, s_max=0.22176666, v_left=0.9, v_right=1.380003)
-```
+### Panel C：`i(w)`
 
-解出来的 DataFrame 头部大致是：
+在低现金区域，投资转成负值。用 BCW 的语言，这就是公司通过 asset sales 远离 liquidation boundary。
 
-```text
-       s        v        dv          d2v  investment
-0.000000 0.900000 30.369404 -3666.264845   -0.646910
-0.000222 0.906654 29.577508 -3567.279695   -0.646379
-0.000444 0.913132 28.796599 -3468.294545   -0.645823
-0.000666 0.919439 28.037362 -3372.026647   -0.645248
-0.000888 0.925580 27.299203 -3278.402476   -0.644655
-```
+### Panel D：`i'(w)`
 
-尾部大致是：
+投资随现金上升，但不是线性的。这个对象比 `i(w)` 更直接地告诉你“投资-现金敏感度”。
 
-```text
-       s        v       dv           d2v  investment
-0.220879 1.379115 1.000001 -2.212603e-03    0.105490
-0.221101 1.379337 1.000001 -1.656398e-03    0.105490
-0.221323 1.379559 1.000000 -1.102528e-03    0.105491
-0.221545 1.379781 1.000000 -5.509463e-04    0.105491
-0.221767 1.380003 1.000000  6.263160e-07    0.105491
-```
+## 稳定的量级检查
 
-这些数字最重要的地方在于它们展示了正确的“形状”：
+健康运行通常应当看到：
 
-- 左端现金边际价值非常高；
-- 困境状态下曲率很强烈；
-- `dv` 最终逼近 `1`；
-- `d2v` 最终逼近 `0`；
-- 投资从显著负值逐步上升，最后变成小幅正值。
+- `\bar w \approx 0.22`，
+- `p'(0) \approx 30`，
+- `i(\bar w) \approx 10.5%`，
+- `w=0` 附近投资显著为负，
+- `p''(\bar w)` 数值上接近零。
 
-## 和 BCW 原文对照时，最值得看的量级
+在解释更细的图形差异之前，先看这些量级是否站住。
 
-这些仓库输出也和 BCW 原文里强调的 benchmark 量级是对得上的：
-
-- payout boundary `w_bar` 大约是 `0.2218`；
-- 现金接近零时的边际价值满足 `p'(0) ≈ 30`；
-- 左端投资大约是 `-0.647`，对应年化超过 60% 的资产出售强度；
-- 右边界附近投资大约是 `0.105`。
-
-所以如果你的运行结果大致落在这个量级附近，说明你对上的不只是本仓库示例输出，也对上了论文里强调的数量级。
-
-## 图形检查
-
-### 整体形状
-
-![Liquidation overview](./assets/liquidation-overview.svg)
-
-你应该重点看：
-
-- `v` 是否单调上升；
-- `dv` 是否左高右低并逼近 `1`；
-- `investment` 是否随现金增加而上升。
-
-### 右端曲率
-
-![Liquidation right tail](./assets/liquidation-right-tail.svg)
-
-你应该重点看：
-
-- `d2v` 是否平滑靠近零；
-- 最后几个网格点是否出现不合理振荡；
-- 曲线在靠近右边界时有没有爆炸。
-
-## 成功检查表
-
-把下面这些理解成“范围和趋势”，而不是死记硬背某个精确数值。
-
-| 检查点 | 健康运行的模式 |
-|---|---|
-| `grid.dv[0]` | 大约在 `30` 左右 |
-| `grid.v[0]` | 精确等于或极接近 `0.9` |
-| `grid.boundary.s_max` | 大约在 `0.22` 左右 |
-| `grid.dv[-1]` | 基本等于 `1.0` |
-| `grid.d2v[-1]` | 非常接近 `0` |
-| `investment.min()` | 明显为负 |
-| `investment.max()` | 右端附近小幅为正 |
-
-## 为什么低现金状态下负投资不是 bug
-
-很多人第一次跑这个案例时，会本能地觉得“投资怎么能是负的”。
-
-但在 BCW 的融资摩擦设定中，低现金恰恰对应最受约束的状态，所以左端投资显著为负是经济上合理的。真正该问的是：
-
-- 它是否随着现金增加而回升？
-- 它是否平滑地连接到了右端较健康区域？
-
-## 一个很实用的交互式检查片段
+## 代码检查模式
 
 ```python
-import finhjb as fjb
-from src.example.BCW2011Liquidation import Boundary, Model, Parameter, Policy
+from src.example.BCW2011Liquidation import run_case
 
-parameter = Parameter()
-boundary = Boundary(p=parameter, s_min=0.0, s_max=0.2)
-solver = fjb.Solver(boundary=boundary, model=Model(policy=Policy()), number=1000)
-state = solver.boundary_search(method="bisection", verbose=False)
-grid = state.grid
+bundle = run_case(number=1000)
+result = bundle["results"]["baseline"]
 
-print(grid.boundary)
-print(grid.df[["s", "v", "dv", "d2v", "investment"]].tail())
+print(result["summary"])
+print(result["grid"].df.head())
+print(result["grid"].df.tail())
 ```
 
-如果你已经能顺畅读懂这段输出，就说明你已经迈过了“只会跑命令”的阶段。
+这个案例最值得先看的量是：
 
-## 常见失败症状
+- `result["summary"]["payout_boundary"]`，
+- `result["summary"]["dv_at_zero"]`，
+- `result["grid"].d2v[-1]`，
+- `result["grid"].policy["investment"]`。
 
-### `d2v[-1]` 离零很远
+## 如何把这个模式迁移到自己的模型
 
-大概率意味着：
+如果你的模型仍然具有下面这些结构，就优先从这个案例起步：
 
-- 搜索目标写错了；
-- base solve 不稳定；
-- bracket 不合适。
+- 一个降维后状态变量，
+- 一个控制变量，
+- 固定左边界，
+- 右端一个内生 payout boundary。
 
-### `dv[-1]` 远离 1
+只有当你的模型真的需要以下结构时，才应跳到后面的案例：
 
-大概率意味着：
-
-- 右边界解释不正确；
-- 求解并没有真正进入支付侧极限区；
-- 网格太粗或边界条件与方程不一致。
-
-### 整条曲线都很噪
-
-请先检查：
-
-- 环境是否稳定；
-- 策略公式是否正确；
-- 你对照的是不是正确的 BCW 案例。
+- 发行与 value matching，
+- 多控制变量，
+- 或按区域切换 residual。
 
 ## 下一步
 
-- 如果你想系统学习怎么读 `state`、`history` 和 `grid`：看 [结果与诊断](./results-and-diagnostics.md)。
-- 然后继续读 [BCW Hedging 逐步讲解](./bcw2011-hedging-walkthrough.md)。
-- 如果你已经想从 liquidation 模板开始改：看 [把 BCW 改成你自己的模型](./adapting-bcw-to-your-model.md)。
+- 继续看 [BCW2011 Refinancing 逐步讲解](./bcw2011-refinancing-walkthrough.md)。
+- 当你想从“求解器对象”的角度读 `grid`、`summary` 和边界诊断时，再配合 [结果与诊断](./results-and-diagnostics.md) 一起看。

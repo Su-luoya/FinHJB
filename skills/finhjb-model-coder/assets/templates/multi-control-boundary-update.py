@@ -65,8 +65,6 @@ class Model(fjb.AbstractModel[Parameter, PolicyDict]):
         boundary: fjb.ImmutableBoundary,
         p: Parameter,
     ) -> Array:
-        control_a = policy["control_a"]
-        control_b = policy["control_b"]
         drift_term = jnp.zeros_like(v)
         diffusion_term = 0.5 * p.volatility**2 * d2v
         discount_term = -p.discount_rate * v

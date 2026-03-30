@@ -1,277 +1,195 @@
 # BCW2011 Hedging Walkthrough
 
-This page is the second deep-dive page in the BCW path.
+Read this page after [BCW2011 Refinancing Walkthrough](./bcw2011-refinancing-walkthrough.md).
 
-Read it after [BCW2011 Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md).
-
-Read [Library Quickstart](./quickstart-library.md) instead if your goal is to learn the package API without the BCW tutorial track.
-
-This page is the second BCW tutorial page:
+This page is the formula-first walkthrough for:
 
 - `src/example/BCW2011Hedging.py`
-
-The hedging example reuses the same basic HJB structure and then adds a second control plus refinancing-aware boundary logic.
 
 ## Goal
 
 By the end of this page, you should understand:
 
-- how the hedging extension changes the liquidation baseline,
-- what `psi` and `kappa` mean economically,
-- why the hedge policy has a three-region structure,
-- how to tell whether the hedging solve is numerically healthy.
+- how BCW's hedging case modifies the HJB rather than just adding a plotted series,
+- how Eq. (28)-(30) become a two-control FinHJB problem,
+- why the hedge rule splits into maximum-hedging, interior, and zero-hedging regions,
+- how the costly-margin solution differs from the frictionless comparison object.
 
-## Prerequisites
+## Run Contract
 
-Before using this page, you should already be comfortable with:
-
-- [Getting Started](./getting-started.md),
-- [BCW2011 Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md),
-- basic interpretation of `v`, `dv`, and `d2v`.
-
-## Run Command
+Run this example from the repository root:
 
 ```bash
 MPLBACKEND=Agg uv run python src/example/BCW2011Hedging.py
 ```
 
-## What Changes Relative To Liquidation
+## What Changes Relative To Refinancing
 
-The hedging case keeps the same one-dimensional state variable but introduces additional economics:
+The hedging case keeps the same reduced state variable `w = W/K`, and it keeps the same issuance and payout logic as the refinancing case. The structural change is that the firm now chooses both:
 
-- external financing costs through `phi` and `gamma`,
-- hedge demand through `psi`,
-- a margin-account mechanism summarized by `kappa`,
-- an updated left boundary tied to refinancing.
+- investment `i(w)`,
+- hedge demand `\psi(w)`.
 
-So the educational jump from liquidation to hedging is not "new package features only." It is also "new economic objects require different numerical workflows."
+This means the value function still solves on one state dimension, but the policy problem is now genuinely multi-control.
 
-## What The Main Script Actually Runs
+## Paper Equations Used In This Case
 
-The current example script's main workflow is still:
+### Costly-Margin HJB: Eq. (28)
 
-```python
-state = solver.boundary_search(method="bisection", verbose=False)
-```
+BCW's HJB becomes:
 
-For this hedging implementation, `boundary_condition()` returns two active targets:
+$$
+\begin{aligned}
+rP(K,W) = \max_{I,\psi,\kappa} \;& (I-\delta K)P_K \\
+&+ \left((r-\lambda)W + \mu K - I - G(I,K) - \epsilon \kappa W\right)P_W \\
+&+ \frac{1}{2}\left(\sigma^2 K^2 + \psi^2 \sigma_m^2 W^2 + 2\rho\sigma_m\sigma\psi WK\right)P_{WW}.
+\end{aligned}
+$$
 
-- `s_max`,
-- `v_left`.
+After homogeneity reduction, the repository solves the one-dimensional form in `w`.
 
-That means the example is solving a two-boundary search problem directly through `boundary_search()`. The `update_boundary(grid)` method is still useful, but here it is best read as an extra reusable pattern for future models rather than the default workflow of the example script.
+### Margin Constraint: Eq. (29)
 
-## Extra Parameters To Understand
+$$
+\kappa = \min\left\{\frac{|\psi|}{\pi}, 1\right\}.
+$$
 
-| Parameter | Meaning |
-|---|---|
-| `phi` | fixed external financing cost |
-| `gamma` | proportional external financing cost |
-| `rho` | correlation between productivity shock and market return |
-| `sigma_m` | volatility of the futures/index hedge |
-| `pi` | hedge limit or margin multiplier |
-| `epsilon` | flow cost of cash held in the margin account |
+With `\rho > 0`, BCW focuses on short futures positions, so `\psi \leq 0`.
 
-These are the parameters that most visibly change the policy logic compared with the liquidation case.
+### Interior Hedge Rule: Eq. (30)
 
-## Equation-To-Code Map
+$$
+\psi^*(w) =
+\frac{1}{w}
+\left(
+\frac{-\rho \sigma}{\sigma_m}
+- \frac{\epsilon}{\pi}\frac{p'(w)}{p''(w)}\frac{1}{\sigma_m^2}
+\right).
+$$
 
-| Economic object | Script location | Interpretation |
+This is the unconstrained interior hedge policy. The actual hedge rule is then clipped into the admissible regions:
+
+- `\psi=-\pi` in the maximum-hedging region,
+- Eq. (30) in the interior region,
+- `\psi=0` in the zero-hedging region.
+
+### Frictionless Comparison: Eq. (27)
+
+The paper's no-margin benchmark fully eliminates systematic risk. In implementation, the repository does not solve a separate closed-form benchmark object outside FinHJB. Instead, it solves a comparison HJB with:
+
+- `epsilon = 0`,
+- very large `pi`,
+- the same issuance/payout workflow,
+- the same plotting interface as the costly-margin case.
+
+This gives a directly comparable numerical object for Figure 6.
+
+## How The Two-Control Problem Becomes FinHJB Code
+
+| Economic object | FinHJB object | Repository role |
 |---|---|---|
-| frictionless hedge benchmark | `Policy.initialize` | starting guess for `psi` |
-| interior hedge FOC | `Policy.cal_policy` | unconstrained hedge demand |
-| maximum hedge region | `psi_clipped = max(psi_interior, -pi)` | low-cash binding region |
-| zero-hedge region | `jnp.where(should_hedge, psi_clipped, 0.0)` | high-cash no-hedge region |
-| margin share `kappa` | `kappa = min(|psi| / pi, 1)` | fraction of cash effectively tied up in margin account |
-| refinancing search target | `boundary_condition()` | solve `v_left` from the issuance condition during boundary search |
-| optional update helper | `update_boundary(grid)` | reusable boundary-update-compatible version of the same refinancing logic |
+| hedging parameters | `Parameter` | adds `rho`, `sigma_m`, `pi`, `epsilon` to the refinancing baseline |
+| controls | `PolicyDict` | stores `investment`, `psi`, and `psi_interior` |
+| policy update | `Policy.cal_policy(...)` | computes both controls explicitly from the current grid |
+| HJB residual | `Model.hjb_residual(...)` | implements Eq. (28) in reduced form |
+| issuance and payout boundaries | `Boundary` + boundary targets | reused from the refinancing logic |
+
+The design choice here is different from the single-control cases:
+
+- `investment` and `psi` are updated together in one explicit policy step,
+- `psi_interior` is stored separately so the code can diagnose `w_-` and `w_+` even though the actual hedge rule is clipped.
+
+## Why The Solver Still Uses `boundary_search()`
+
+Even though the policy problem is richer, the state dimension is still one. The outer numerical problem still asks for:
+
+- the left issuance value,
+- the right payout boundary.
+
+So the workflow stays:
+
+1. solve the interior HJB for the current boundary guesses,
+2. recover issuance information from `p'(w)`,
+3. update the boundary targets,
+4. stop when issuance matching and payout super-contact both hold.
+
+The script uses `method="hybr"` because these targets are coupled and the hedge control changes the curvature of the value function in a materially nonlinear way.
 
 ## The Three Hedge Regions
 
-The repository comments already point to the BCW three-region interpretation:
+The repository extracts BCW's two endogenous cutoffs from `psi_interior`:
 
-1. low cash: hedge is fully binding and `psi = -pi`,
-2. interior region: hedge follows the interior FOC,
-3. high cash: hedging goes to zero.
+- `w_-` solves `\psi^*(w_-) = -\pi`,
+- `w_+` solves `\psi^*(w_+) = 0`.
 
-That shape is more important than matching one exact number at one grid point.
+That gives the three-region interpretation:
 
-## Why `psi` Runs From `-pi` To `0`
+1. `w \leq w_-`: maximum hedging, `\psi=-\pi`,
+2. `w_- < w < w_+`: interior hedging, `\psi=\psi^*(w)`,
+3. `w \geq w_+`: no hedging, `\psi=0`.
 
-In this implementation:
+This is one of the cleanest examples in the repository of using an auxiliary policy series both for plotting and for economic diagnostics.
 
-- more negative `psi` means more hedge demand,
-- `-pi` is the binding lower limit,
-- `0` is the no-hedge region.
+## Figure 6: How To Read The Comparison
 
-So a healthy BCW hedging solve often looks like this:
+![BCW hedging main figure](./assets/bcw2011-hedging-main.svg)
 
-- `psi` is flat at `-5.0` in the distressed region,
-- then it rises,
-- then it reaches `0.0` and stays there.
+### Panel A: `\psi(w)`
 
-## Why `kappa` Matters
+The costly-margin solution shows BCW's three regions. The frictionless comparison is clipped for display, matching the paper's plotting convention.
 
-`kappa` summarizes how much of the firm's cash is effectively committed to the margin account:
+### Panel B: `i(w)`
 
-```python
-kappa = jnp.minimum(jnp.abs(psi) / p.pi, 1.0)
-```
+Hedging affects investment because better risk management changes both firm value and the marginal value of cash.
 
-Economic reading:
+### Panel C: `p(w)`
 
-- when hedge demand is large in magnitude, more cash is tied up in margin,
-- margin usage feeds back into the cash-flow term,
-- this changes the HJB residual and therefore changes both value and investment policies.
+The value-capital ratio is higher with better risk management, but the gain is strongest away from the most constrained states.
 
-This is why the hedging case is not just "liquidation plus one extra plotted line." The second control changes the economics of the state dynamics.
+### Panel D: `p'(w)`
 
-## Representative Output
+The marginal value of cash generally falls when the firm can hedge more effectively, except in the severe-constraint region where hedging capacity itself becomes liquidity-sensitive.
 
-One representative solve in this repository produced:
+## Stable Quantitative Targets
 
-```text
-HEDGE_BOUNDARY ImmutableBoundary(s_min=0.0, s_max=0.13850403, v_left=1.16119385, v_right=1.31352204)
-```
+Healthy runs usually show:
 
-Head of the solved DataFrame:
+- costly margin: `w_- \approx 0.07`, `w_+ \approx 0.11`, `\bar w \approx 0.14`, `\psi \in [-5, 0]`,
+- frictionless comparison: payout occurs earlier than under costly margin,
+- the frictionless display line is clipped at `-10` for the figure.
 
-```text
-       s        v       dv        d2v  investment  psi
-0.000000 1.161194 1.818353 -54.285395   -0.240936 -5.0
-0.000139 1.161445 1.810904 -53.726194   -0.239184 -5.0
-0.000277 1.161696 1.803494 -53.166992   -0.237427 -5.0
-0.000416 1.161946 1.796161 -52.613947   -0.235674 -5.0
-0.000555 1.162194 1.788905 -52.066995   -0.233924 -5.0
-```
+These are the right economic checks before you compare cosmetic line shapes.
 
-Tail of the solved DataFrame:
-
-```text
-       s        v  dv           d2v  investment  psi
-0.137949 1.312967 1.0 -1.376132e-03    0.116678  0.0
-0.138088 1.313106 1.0 -1.031406e-03    0.116678  0.0
-0.138227 1.313245 1.0 -6.873962e-04    0.116679  0.0
-0.138365 1.313383 1.0 -3.440447e-04    0.116679  0.0
-0.138504 1.313522 1.0 -7.046545e-07    0.116679  0.0
-```
-
-What this output tells you:
-
-- the left value is above pure liquidation because refinancing is active,
-- the hedge is fully binding at the left edge,
-- the right tail again satisfies the contact condition through `d2v[-1]`,
-- investment remains negative in distressed states and recovers near the right boundary.
-
-## BCW Benchmark Magnitudes To Cross-Check
-
-For this implementation, the most useful BCW-style benchmark magnitudes are:
-
-- maximum-hedging boundary `w_- ≈ 0.067`,
-- zero-hedging boundary `w_+ ≈ 0.115`,
-- payout boundary `w_bar ≈ 0.1385`,
-- hedge ratio range `psi ∈ [-5, 0]`.
-
-Those values match both the current repository output and the qualitative benchmark pattern discussed in BCW.
-
-## Visual Checks
-
-### Overall policy and value shape
-
-![Hedging overview](./assets/hedging-overview.svg)
-
-Look for:
-
-- increasing value with cash,
-- recovering investment policy,
-- a hedge policy that relaxes as cash rises.
-
-### Hedge-region picture
-
-![Hedging regions](./assets/hedging-regions.svg)
-
-Look for:
-
-- a binding left region at `psi = -5`,
-- a transition region,
-- a right region at `psi = 0`.
-
-## Success Checklist
-
-| Checkpoint | Healthy pattern |
-|---|---|
-| `grid.boundary.v_left` | clearly above `0.9` |
-| `grid.boundary.s_max` | roughly `0.14` |
-| `grid.d2v[-1]` | very close to `0` |
-| `psi.min()` | near `-5.0` |
-| `psi.max()` | near `0.0` |
-| left tail hedge | pinned at lower bound |
-| right tail hedge | relaxed to zero |
-
-## Refinancing Boundary Logic
-
-The hedging script also implements:
+## Code Inspection Pattern
 
 ```python
-def update_boundary(grid):
-    ...
+from src.example.BCW2011Hedging import run_case
+
+bundle = run_case(number=1000)
+for label, result in bundle["results"].items():
+    print(label, result["summary"])
 ```
 
-This does not mean the example script itself defaults to `boundary_update()`. The current script still uses `boundary_search(method="bisection")` as the main workflow.
+The most informative outputs are:
 
-What `update_boundary(grid)` gives you is a second, reusable expression of the same refinancing logic:
+- `psi`,
+- `psi_interior`,
+- `max_hedging_boundary`,
+- `zero_hedging_boundary`,
+- `return_cash_ratio`.
 
-- solve on the current boundary,
-- read a refinancing-implied quantity from the solved grid,
-- update the left value boundary,
-- solve again.
+## How To Adapt This Pattern
 
-That is why the hedging case is a good bridge from "I can reproduce BCW" to "I can design my own workflow." It shows both the current script's direct boundary-search path and an alternative boundary-update-compatible hook.
+Start from this case if your own model has:
 
-## Common Failure Symptoms
+- more than one control,
+- a control-dependent diffusion term,
+- an economically meaningful clipped interior control,
+- boundary logic that still looks like refinancing.
 
-### `psi` never leaves `-pi`
-
-Possible causes:
-
-- the interior hedge formula is unstable,
-- the no-hedge test is never triggered,
-- the model is effectively stuck in the distressed region.
-
-### `psi` becomes positive
-
-That is a warning sign for this specific example. Re-check:
-
-- the sign conventions in the hedge FOC,
-- the clipping logic,
-- the `should_hedge` condition.
-
-### `v_left` stays near liquidation value
-
-Likely causes:
-
-- the refinancing boundary update is not being used,
-- or the financing-cost logic is not being transmitted into the boundary condition properly.
-
-## A Useful Interactive Inspection Snippet
-
-```python
-import finhjb as fjb
-from src.example.BCW2011Hedging import Boundary, Model, Parameter, Policy
-
-parameter = Parameter()
-boundary = Boundary(p=parameter, s_min=0.0, s_max=0.13)
-solver = fjb.Solver(boundary=boundary, model=Model(policy=Policy()), number=1000)
-state = solver.boundary_search(method="bisection", verbose=False)
-grid = state.grid
-
-print(grid.boundary)
-print(grid.df[["s", "investment", "psi"]].head())
-print(grid.df[["s", "investment", "psi"]].tail())
-```
+It is the right template for one-dimensional models whose complexity comes from policies, not from extra state variables.
 
 ## Next Step
 
-- Read [Results and Diagnostics](./results-and-diagnostics.md) for a structured guide to states, histories, grids, and continuation outputs.
-- Continue to [Adapting BCW to Your Model](./adapting-bcw-to-your-model.md) if your goal is to change the economics rather than just understand BCW.
-- Read [Modeling Guide](./modeling-guide.md) if you are ready to map these patterns onto your own abstractions.
+- Continue to [BCW2011 Credit Line Walkthrough](./bcw2011-credit-line-walkthrough.md).
+- Use [Results and Diagnostics](./results-and-diagnostics.md) when you want a solver-oriented way to inspect `psi`, `psi_interior`, and the inferred region boundaries.

@@ -6,6 +6,8 @@
 
 如果你现在只想查对象成员而不是学诊断思路，请改看 [API 参考](./api-reference.md)。
 
+如果你还需要看推导、齐次性降维和公式如何映射到代码，请先回到四个 BCW walkthrough。这一页默认你已经知道自己解的是什么模型，现在只是要检查返回对象和数值形状。
+
 这一页的目标，是让你在看到求解输出时不必靠猜。
 
 你应该能用它回答：
@@ -20,7 +22,9 @@
 - [库快速上手](./quickstart-library.md)
 - [快速开始](./getting-started.md)
 - [BCW Liquidation 逐步讲解](./bcw2011-liquidation-walkthrough.md)
+- [BCW Refinancing 逐步讲解](./bcw2011-refinancing-walkthrough.md)
 - [BCW Hedging 逐步讲解](./bcw2011-hedging-walkthrough.md)
+- [BCW Credit Line 逐步讲解](./bcw2011-credit-line-walkthrough.md)
 
 ## 求解器返回类型
 
@@ -106,14 +110,14 @@ print(state.df.tail())
 print(grid.boundary)
 ```
 
-BCW 两个案例的一次代表性输出大致是：
+对仓库里的四个 BCW 案例来说，一个健康的 `grid.boundary` 通常会有这些模式：
 
-```text
-ImmutableBoundary(s_min=0.0, s_max=0.22176666, v_left=0.9, v_right=1.380003)
-ImmutableBoundary(s_min=0.0, s_max=0.13850403, v_left=1.16119385, v_right=1.31352204)
-```
+- liquidation: `s_min=0`、`s_max≈0.22`、`v_left=0.9`；
+- refinancing: `s_min=0`、`s_max≈0.19`、`v_left>0.9`，并且内部会出现 `m≈0.06`；
+- hedging: `s_min=0`、`s_max≈0.14`、`v_left>0.9`，同时对冲区域切点大致在 `w_-≈0.07` 和 `w_+≈0.11`；
+- credit line: `s_min≈-0.2`、`s_max≈0.08`，并且 `w=0` 附近的边际价值明显更平。
 
-重点不是逐位复现，而是确认量级和边界关系是否合理。
+重点不是逐位复现，而是确认每个案例的量级和边界关系是否合理。
 
 ## `grid.df`：逐列解读
 
@@ -125,6 +129,7 @@ ImmutableBoundary(s_min=0.0, s_max=0.13850403, v_left=1.16119385, v_right=1.3135
 | `d2v` | 二阶导数 | 曲率与右边界接触条件诊断 |
 | `investment` | 投资策略 | 真实决策如何随现金变化 |
 | `psi` | hedging 案例中的对冲策略 | 识别绑定区、内部区和零对冲区 |
+| `psi_interior` | hedging 案例中的未裁剪对冲策略 | 用来诊断何时需要把策略裁剪到 `[-pi, 0]` |
 
 ## 三个信息量最高的诊断
 
@@ -148,7 +153,8 @@ ImmutableBoundary(s_min=0.0, s_max=0.13850403, v_left=1.16119385, v_right=1.3135
 
 - `v[0]` 是否符合你定义的左边界条件？
 - liquidation 中，它是否接近 liquidation value？
-- hedging 中，它是否因为再融资而高于 liquidation 的值？
+- refinancing 和 hedging 中，它是否因为发行而高于 liquidation 的值？
+- credit line 中，左边界是否真的落在 `s=-c`，并且和发行条件拼接一致？
 
 ### 右边界
 
@@ -172,6 +178,11 @@ BCW 中比较典型的模式是：
 - 左端：投资大幅收缩，甚至为负；
 - 中间：逐步恢复；
 - 右端：变成小幅正值。
+
+再细一点看：
+
+- refinancing 中，投资恢复通常会和发行目标 `m` 附近的区域对齐；
+- credit line 中，有额度时 `w=0` 附近的投资可以保持为正，而无额度基准仍然更受约束。
 
 关键在于经济形状是否合理，而不是曲线必须线性或特别平滑。
 

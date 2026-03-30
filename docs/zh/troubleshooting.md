@@ -150,10 +150,18 @@ print(grid.boundary)
 - hedging 里低现金区域 `psi` 贴在 `-pi` 也是正常的；
 - 右端附近才出现小幅正投资。
 
-在改代码之前，先与这两页对照：
+在改代码之前，先与这几页对照：
 
 - [BCW Liquidation 逐步讲解](./bcw2011-liquidation-walkthrough.md)
+- [BCW Refinancing 逐步讲解](./bcw2011-refinancing-walkthrough.md)
 - [BCW Hedging 逐步讲解](./bcw2011-hedging-walkthrough.md)
+- [BCW Credit Line 逐步讲解](./bcw2011-credit-line-walkthrough.md)
+
+另外也要记住各案例自己的“正常形状”：
+
+- refinancing 里 `p(0)` 应该高于 liquidation value，并出现内部发行目标 `m`；
+- credit line 里有额度时 `p'(0)` 会明显降到接近 `1`，`w=0` 附近投资可能仍为正；
+- frictionless hedging 的 payout boundary 应该比 costly margin 更靠左。
 
 ### 收敛很慢或很不稳定
 

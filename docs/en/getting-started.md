@@ -1,8 +1,8 @@
 # Getting Started
 
-This page now means repository quickstart for the BCW track.
+This page is the repository quickstart for the BCW path.
 
-Read this page if your question is: “I cloned the repository. How do I run the BCW examples and tell whether the outputs look healthy?”
+Use it if your question is: “I cloned the repository. How do I run the four BCW examples and tell whether the outputs look healthy?”
 
 If you want the package-only path, read [Library Quickstart](./quickstart-library.md) instead.
 
@@ -10,10 +10,11 @@ If you want the package-only path, read [Library Quickstart](./quickstart-librar
 
 By the end of this page, you should be able to:
 
-- confirm the repository environment works
-- run the BCW liquidation example
-- run the BCW hedging example
-- recognize the main numerical success patterns without reading every line of output
+- confirm the repository environment works,
+- run all four BCW example scripts,
+- recognize the main success patterns without reading every printed line.
+
+This page is intentionally execution-first. For derivations, boundary logic, and equation-to-code mapping, move from here into the four BCW walkthroughs.
 
 ## Step 1: Prepare The Repository Environment
 
@@ -24,56 +25,79 @@ uv sync
 uv run python -c "import finhjb as fjb; print(fjb.__all__[:5])"
 ```
 
-If you are on a headless machine, also use:
+If you are on a headless machine, also set:
 
 ```bash
 export MPLBACKEND=Agg
 ```
 
-## Step 2: Run The BCW Liquidation Example
+The BCW scripts are documented as repository-root examples. The supported usage pattern is:
+
+```bash
+uv run python src/example/BCW2011Liquidation.py
+```
+
+not local-directory execution from inside `src/example/`.
+
+## Step 2: Run Case I
 
 ```bash
 MPLBACKEND=Agg uv run python src/example/BCW2011Liquidation.py
 ```
 
-Healthy runs in this repository usually show:
+Healthy runs usually show `w_bar ≈ 0.22`, `p'(0) ≈ 30`, and a strongly negative investment policy at very low cash.
 
-- `v_left` around `0.9`
-- solved `s_max` around `0.22`
-- `dv[-1]` close to `1`
-- `d2v[-1]` close to `0`
-- investment strongly negative at low cash and positive near the right boundary
+## Step 3: Run Case II
 
-## Step 3: Run The BCW Hedging Example
+```bash
+MPLBACKEND=Agg uv run python src/example/BCW2011Refinancing.py
+```
+
+Healthy runs usually show:
+
+- with `phi=1%`: `w_bar ≈ 0.19`, `m ≈ 0.06`,
+- with `phi=0`: `w_bar ≈ 0.14`, `m ≈ 0`.
+
+## Step 4: Run Case IV
 
 ```bash
 MPLBACKEND=Agg uv run python src/example/BCW2011Hedging.py
 ```
 
-Healthy runs in this repository usually show:
+Healthy runs usually show `w_- ≈ 0.07`, `w_+ ≈ 0.11`, `w_bar ≈ 0.14`, and `psi in [-5, 0]` for the costly-margin case.
 
-- `v_left` above the pure liquidation value
-- solved `s_max` around `0.14`
-- `psi` staying in `[-5, 0]`
-- `d2v[-1]` again close to `0`
-- a three-region hedge pattern: binding, interior, then zero hedge
+## Step 5: Run Case V
 
-## Step 4: Read The Result Intentionally
+```bash
+MPLBACKEND=Agg uv run python src/example/BCW2011CreditLine.py
+```
+
+Healthy runs usually show `w_bar ≈ 0.08`, `c+m ≈ 0.10`, and `p'(0)` near `1.01` when the credit line is active.
+
+## Step 6: Read The Result Intentionally
 
 After a run, check these first:
 
 ```python
-print(final_state.grid.boundary)
-print(final_state.grid.df.head())
-print(final_state.grid.df.tail())
-print(final_state.grid.d2v[-1])
+print(bundle["artifact_paths"])
+print(bundle["results"])
 ```
 
-For the BCW path, that is the shortest route from “it ran” to “I know what happened.”
+If you want the solved grid for one scenario:
+
+```python
+result = bundle["results"]["fixed-cost"]
+print(result["summary"])
+print(result["grid"].df.head())
+print(result["grid"].df.tail())
+```
 
 ## Where To Go Next
 
-- [BCW2011 Case Study](./bcw2011-case-study.md) for the full learning map
-- [BCW2011 Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md) for line-by-line interpretation
-- [BCW2011 Hedging Walkthrough](./bcw2011-hedging-walkthrough.md) for the second control and refinancing logic
-- [Adapting BCW To Your Model](./adapting-bcw-to-your-model.md) once the baseline is stable
+- [BCW2011 Case Study](./bcw2011-case-study.md)
+- [BCW2011 Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md)
+- [BCW2011 Refinancing Walkthrough](./bcw2011-refinancing-walkthrough.md)
+- [BCW2011 Hedging Walkthrough](./bcw2011-hedging-walkthrough.md)
+- [BCW2011 Credit Line Walkthrough](./bcw2011-credit-line-walkthrough.md)
+
+Use the walkthroughs when you want the full bridge from paper equations to `Parameter` / `Boundary` / `PolicyDict` / `Policy` / `Model`.

@@ -1,279 +1,195 @@
 # BCW2011 Hedging 逐步讲解
 
-这一页是 BCW 路径里的第二篇深入讲解页。
+建议在 [BCW2011 Refinancing 逐步讲解](./bcw2011-refinancing-walkthrough.md) 之后阅读。
 
-请在 [BCW2011 Liquidation 逐步讲解](./bcw2011-liquidation-walkthrough.md) 之后阅读。
-
-如果你的目标只是最短路径学包 API，而不是沿着 BCW 教程走，请改看 [库快速上手](./quickstart-library.md)。
-
-这一页对应第二个 BCW 教程案例：
+这一页是下面这个仓库脚本的“公式到代码”讲解：
 
 - `src/example/BCW2011Hedging.py`
 
-hedging 案例是在同一条 HJB 主线上，进一步加入第二个控制变量和再融资边界逻辑。
-
 ## 目标
 
-读完这一页后，你应该理解：
+读完以后，你应该能理解：
 
-- hedging 扩展相对 liquidation 到底多了什么；
-- `psi` 和 `kappa` 的经济含义是什么；
-- 为什么对冲策略会呈现“三分区”结构；
-- 如何判断 hedging 求解结果是否数值健康。
+- 为什么 BCW 的 hedging 案例不是“多画一条曲线”，而是 HJB 本身变了；
+- Eq. (28)-(30) 如何变成一个双控制 FinHJB 问题；
+- 为什么对冲策略会自然分成 maximum-hedging、interior、zero-hedging 三段；
+- costly margin 解和 frictionless comparison object 在实现上到底有什么区别。
 
-## 前置条件
+## 运行约定
 
-建议你先熟悉：
-
-- [快速开始](./getting-started.md)
-- [BCW Liquidation 逐步讲解](./bcw2011-liquidation-walkthrough.md)
-- `v`、`dv`、`d2v` 的基本含义
-
-## 运行命令
+请在仓库根目录执行：
 
 ```bash
 MPLBACKEND=Agg uv run python src/example/BCW2011Hedging.py
 ```
 
-## 相比 liquidation，多了什么
+## 相比 Refinancing，结构上变了什么
 
-hedging 案例保留了一维状态变量，但加入了新的经济结构：
+Hedging 案例保留了同一个降维状态变量 `w = W/K`，也保留了与 refinancing 相同的发行和 payout 逻辑。真正的结构变化是，公司现在同时选择：
 
-- 外部融资成本 `phi` 和 `gamma`；
-- 对冲控制变量 `psi`；
-- 保证金账户机制 `kappa`；
-- 与再融资相关的左边界更新逻辑。
+- 投资 `i(w)`，
+- 对冲头寸 `\psi(w)`。
 
-因此，从 liquidation 过渡到 hedging，不只是“代码里多画了一条线”，而是：
+所以它虽然还是一维状态问题，但已经是一个真正的多控制问题。
 
-- 控制变量变多了，
-- 状态动态和残差结构变了，
-- 边界工作流也更复杂了。
+## 这个案例用到的论文方程
 
-## 当前主脚本实际运行的工作流
+### 有保证金成本时的 HJB：Eq. (28)
 
-当前示例主脚本真正调用的仍然是：
+BCW 的 HJB 变成：
 
-```python
-state = solver.boundary_search(method="bisection", verbose=False)
-```
+$$
+\begin{aligned}
+rP(K,W) = \max_{I,\psi,\kappa} \;& (I-\delta K)P_K \\
+&+ \left((r-\lambda)W + \mu K - I - G(I,K) - \epsilon \kappa W\right)P_W \\
+&+ \frac{1}{2}\left(\sigma^2 K^2 + \psi^2 \sigma_m^2 W^2 + 2\rho\sigma_m\sigma\psi WK\right)P_{WW}.
+\end{aligned}
+$$
 
-在这个 hedging 实现里，`boundary_condition()` 当前返回两个活跃 target：
+仓库实现里仍然是先做齐次性降维，再在 `w` 上求解。
 
-- `s_max`，
-- `v_left`。
+### 保证金约束：Eq. (29)
 
-这意味着当前示例主流程是在 `boundary_search()` 里直接同时搜索两个边界。`update_boundary(grid)` 依然很有用，但在这里更适合被理解为“额外提供的、可复用的 boundary-update 模式”，而不是这个脚本默认走的工作流。
+$$
+\kappa = \min\left\{\frac{|\psi|}{\pi}, 1\right\}.
+$$
 
-## 需要先理解的新参数
+在 `\rho > 0` 的设定下，BCW 关注的是做空指数期货，因此 `\psi \leq 0`。
 
-| 参数 | 经济含义 |
-|---|---|
-| `phi` | 固定外部融资成本 |
-| `gamma` | 比例型外部融资成本 |
-| `rho` | 生产率冲击与市场收益的相关性 |
-| `sigma_m` | 对冲标的（期货/指数）的波动率 |
-| `pi` | 对冲约束或保证金倍数 |
-| `epsilon` | 保证金账户资金占用带来的流量成本 |
+### 内部对冲规则：Eq. (30)
 
-## 方程到代码的映射
+$$
+\psi^*(w) =
+\frac{1}{w}
+\left(
+\frac{-\rho \sigma}{\sigma_m}
+- \frac{\epsilon}{\pi}\frac{p'(w)}{p''(w)}\frac{1}{\sigma_m^2}
+\right).
+$$
 
-| 经济对象 | 脚本位置 | 如何理解 |
+这是未受约束的内部对冲规则。真正的最优对冲需要再裁剪到可行区间：
+
+- 在 maximum-hedging 区令 `\psi=-\pi`；
+- 在 interior 区使用 Eq. (30)；
+- 在 zero-hedging 区令 `\psi=0`。
+
+### 无摩擦对照：Eq. (27)
+
+论文里的 no-margin benchmark 会完全对冲系统性风险。仓库实现并没有在 FinHJB 外面单独放一个闭式 benchmark，而是通过下面这组参数解一个可比较的 HJB：
+
+- `epsilon = 0`，
+- `pi` 取非常大，
+- 发行和 payout 流程与 costly-margin 情形保持一致，
+- 画图接口也完全一致。
+
+这样得到的是一个数值上可直接和 costly-margin 解并排比较的对象。
+
+## 双控制问题如何变成 FinHJB 代码
+
+| 经济对象 | FinHJB 对象 | 仓库里的角色 |
 |---|---|---|
-| frictionless hedge benchmark | `Policy.initialize` | `psi` 的起始猜测 |
-| interior hedge FOC | `Policy.cal_policy` | 内部区间的对冲需求 |
-| 最大对冲区 | `psi_clipped = max(psi_interior, -pi)` | 低现金状态下的绑定区 |
-| 零对冲区 | `jnp.where(should_hedge, psi_clipped, 0.0)` | 高现金状态下的无对冲区 |
-| 保证金占比 `kappa` | `kappa = min(|psi| / pi, 1)` | 有多少现金被占用于保证金账户 |
-| 再融资搜索目标 | `boundary_condition()` | 在边界搜索里直接解出 `v_left` |
-| 可选更新辅助 | `update_boundary(grid)` | 同一套再融资逻辑的 boundary-update-compatible 写法 |
+| 对冲相关参数 | `Parameter` | 在 refinancing baseline 上增加 `rho`、`sigma_m`、`pi`、`epsilon` |
+| 控制变量 | `PolicyDict` | 保存 `investment`、`psi`、`psi_interior` |
+| 策略更新 | `Policy.cal_policy(...)` | 一次性显式计算两个控制 |
+| HJB 残差 | `Model.hjb_residual(...)` | 在降维后实现 Eq. (28) |
+| 发行与 payout 边界 | `Boundary` + boundary targets | 沿用 refinancing 的外层逻辑 |
 
-## 三分区对冲结构
+这里的关键设计是：
 
-仓库注释里已经指出了 BCW 的三分区：
+- `investment` 和 `psi` 在一次显式策略更新里一起算；
+- `psi_interior` 会被单独存下来，这样即使真正的 `psi` 被裁剪了，代码仍然能诊断 `w_-` 和 `w_+`。
 
-1. 低现金区域：对冲完全绑定，`psi = -pi`；
-2. 中间区域：进入内部解；
-3. 高现金区域：最优对冲回到 `0`。
+## 为什么外层还是 `boundary_search()`
 
-你真正要验证的是这个结构是否出现，而不是只盯住某一个网格点的数值。
+虽然策略问题更复杂，但状态维度没有增加。外层数值问题仍然是在求：
 
-## 为什么 `psi` 会在 `-pi` 到 `0` 之间变化
+- 左边发行 value，
+- 右边 payout boundary。
 
-在这份实现里：
+所以整体流程还是：
 
-- `psi` 越负，代表对冲需求越强；
-- `-pi` 是下界，也就是完全绑定的最大对冲状态；
-- `0` 表示不对冲。
+1. 给定当前边界猜测解内部 HJB；
+2. 从 `p'(w)` 恢复发行信息；
+3. 更新边界 target；
+4. 当 issuance matching 和 payout super-contact 同时满足时停止。
 
-所以一个健康的 BCW hedging 解，通常长这样：
+脚本固定使用 `method="hybr"`，因为双控制会更强地影响 value function 曲率，从而让两个边界 target 的耦合更明显。
 
-- 左端 `psi` 平贴在 `-5.0`；
-- 中间逐步抬升；
-- 右端最终贴到 `0.0`。
+## 三个对冲区域
 
-## 为什么 `kappa` 很重要
+仓库通过 `psi_interior` 恢复 BCW 里的两个 cutoff：
 
-`kappa` 总结了有多少现金被保证金账户占用：
+- `w_-` 满足 `\psi^*(w_-) = -\pi`，
+- `w_+` 满足 `\psi^*(w_+) = 0`。
 
-```python
-kappa = jnp.minimum(jnp.abs(psi) / p.pi, 1.0)
-```
+于是有三段经济解释：
 
-经济解释是：
+1. `w \leq w_-`：maximum hedging，`psi=-pi`；
+2. `w_- < w < w_+`：interior hedging，`psi=\psi^*(w)`；
+3. `w \geq w_+`：不对冲，`psi=0`。
 
-- 对冲需求越强，保证金占用越高；
-- 保证金占用会反过来影响现金流漂移；
-- 现金流漂移变了，HJB 残差、价值函数和投资策略都会跟着变。
+这是仓库里一个很重要的模式：把“内部控制规则”和“真正执行后的可行控制”同时存下来，既便于画图，也便于做经济诊断。
 
-这就是为什么 hedging 案例不是“liquidation + 一个额外控制”这么简单。
+## Figure 6：如何读这个对照
 
-## 代表性输出
+![BCW hedging main figure](./assets/bcw2011-hedging-main.svg)
 
-本仓库一次代表性求解结果为：
+### Panel A：`\psi(w)`
 
-```text
-HEDGE_BOUNDARY ImmutableBoundary(s_min=0.0, s_max=0.13850403, v_left=1.16119385, v_right=1.31352204)
-```
+costly-margin 解呈现 BCW 论文里的三段结构。frictionless 对照线做了 display clipping，这和原文画图约定一致。
 
-DataFrame 头部大致是：
+### Panel B：`i(w)`
 
-```text
-       s        v       dv        d2v  investment  psi
-0.000000 1.161194 1.818353 -54.285395   -0.240936 -5.0
-0.000139 1.161445 1.810904 -53.726194   -0.239184 -5.0
-0.000277 1.161696 1.803494 -53.166992   -0.237427 -5.0
-0.000416 1.161946 1.796161 -52.613947   -0.235674 -5.0
-0.000555 1.162194 1.788905 -52.066995   -0.233924 -5.0
-```
+对冲能力会改变投资，因为更好的风险管理会同时影响 firm value 和边际现金价值。
 
-尾部大致是：
+### Panel C：`p(w)`
 
-```text
-       s        v  dv           d2v  investment  psi
-0.137949 1.312967 1.0 -1.376132e-03    0.116678  0.0
-0.138088 1.313106 1.0 -1.031406e-03    0.116678  0.0
-0.138227 1.313245 1.0 -6.873962e-04    0.116679  0.0
-0.138365 1.313383 1.0 -3.440447e-04    0.116679  0.0
-0.138504 1.313522 1.0 -7.046545e-07    0.116679  0.0
-```
+风险管理改善会提高 value-capital ratio，但提升幅度在不同状态区间并不均匀。
 
-这些输出最重要的含义是：
+### Panel D：`p'(w)`
 
-- 左边界价值高于纯 liquidation，因为再融资机制在发挥作用；
-- 左端对冲完全绑定；
-- 右端仍通过 `d2v[-1]` 满足接触条件；
-- 投资在困境状态下仍为负，在右端逐渐恢复。
+在大多数区域里，更容易对冲会降低边际现金价值；但在极端受约束区域，额外现金本身还能扩张 hedging capacity，因此效果更复杂。
 
-## 和 BCW 原文对照时，最值得看的量级
+## 稳定的量级检查
 
-对这个实现来说，最有用的 BCW benchmark 量级是：
+健康运行通常表现为：
 
-- 最大对冲边界 `w_- ≈ 0.067`；
-- 零对冲边界 `w_+ ≈ 0.115`；
-- payout boundary `w_bar ≈ 0.1385`；
-- 对冲比率范围 `psi ∈ [-5, 0]`。
+- costly margin：`w_- \approx 0.07`、`w_+ \approx 0.11`、`\bar w \approx 0.14`、`\psi \in [-5, 0]`；
+- frictionless 对照：比 costly margin 更早进入 payout；
+- 图上的 frictionless 线会在 `-10` 附近做 display clipping。
 
-这些量级同时和当前仓库输出以及 BCW 原文里的定性 benchmark 图形是对得上的。
+这些量是和 Figure 6 对照时最有信息量的检查点。
 
-## 图形检查
-
-### 整体价值与策略形状
-
-![Hedging overview](./assets/hedging-overview.svg)
-
-重点看：
-
-- `v` 是否随现金上升；
-- `investment` 是否逐步恢复；
-- `psi` 是否随现金增加而减弱。
-
-### 对冲三分区
-
-![Hedging regions](./assets/hedging-regions.svg)
-
-重点看：
-
-- 左边是否有一个 `psi = -5` 的绑定区；
-- 中间是否存在过渡区；
-- 右边是否回到 `psi = 0`。
-
-## 成功检查表
-
-| 检查点 | 健康运行的模式 |
-|---|---|
-| `grid.boundary.v_left` | 明显高于 `0.9` |
-| `grid.boundary.s_max` | 大约 `0.14` |
-| `grid.d2v[-1]` | 非常接近 `0` |
-| `psi.min()` | 接近 `-5.0` |
-| `psi.max()` | 接近 `0.0` |
-| 左端对冲 | 贴着下界 |
-| 右端对冲 | 回到零 |
-
-## 再融资边界逻辑
-
-hedging 脚本还实现了：
+## 代码检查模式
 
 ```python
-def update_boundary(grid):
-    ...
+from src.example.BCW2011Hedging import run_case
+
+bundle = run_case(number=1000)
+for label, result in bundle["results"].items():
+    print(label, result["summary"])
 ```
 
-但这并不表示当前示例脚本默认走的是 `boundary_update()`。当前主脚本仍然是用 `boundary_search(method="bisection")` 作为主流程。
+这个案例最值得先看的输出是：
 
-`update_boundary(grid)` 提供的是同一套再融资逻辑的另一种可复用表达：
+- `psi`，
+- `psi_interior`，
+- `max_hedging_boundary`，
+- `zero_hedging_boundary`，
+- `return_cash_ratio`。
 
-1. 在当前边界下求解；
-2. 从已解出的网格里读出新的边界信息；
-3. 更新左边界值；
-4. 再继续求解。
+## 如何把这个模式迁移到自己的模型
 
-这也是为什么 hedging 是从“会复现 BCW”走向“能搭自己的工作流”的桥梁案例。它同时展示了当前脚本的直接边界搜索路径，以及一种可复用的 boundary-update-compatible 钩子。
+如果你的模型具有下面这些结构，就优先从这个案例起步：
 
-## 常见失败症状
+- 多于一个控制变量，
+- 控制变量会进入扩散项，
+- 存在“内部控制规则 + 可行域裁剪”的结构，
+- 但边界逻辑整体仍更像 refinancing。
 
-### `psi` 一直停在 `-pi`
-
-可能原因：
-
-- 内部区间对冲公式不稳定；
-- 零对冲判定从未被触发；
-- 整个解都被困在低现金区域。
-
-### `psi` 变成正值
-
-对这个具体案例而言，这是一个警报信号。请回查：
-
-- 对冲 FOC 的符号；
-- clipping 逻辑；
-- `should_hedge` 判定条件。
-
-### `v_left` 一直接近 liquidation 值
-
-可能原因：
-
-- 再融资边界更新没有真正生效；
-- 融资成本逻辑没有正确传递到边界条件中。
-
-## 一个很实用的交互式检查片段
-
-```python
-import finhjb as fjb
-from src.example.BCW2011Hedging import Boundary, Model, Parameter, Policy
-
-parameter = Parameter()
-boundary = Boundary(p=parameter, s_min=0.0, s_max=0.13)
-solver = fjb.Solver(boundary=boundary, model=Model(policy=Policy()), number=1000)
-state = solver.boundary_search(method="bisection", verbose=False)
-grid = state.grid
-
-print(grid.boundary)
-print(grid.df[["s", "investment", "psi"]].head())
-print(grid.df[["s", "investment", "psi"]].tail())
-```
+它最适合那些“复杂性来自策略，而不是来自多状态变量”的一维模型。
 
 ## 下一步
 
-- 如果你想系统学习怎么读 `state`、`history`、`grid` 与 continuation 结果：看 [结果与诊断](./results-and-diagnostics.md)。
-- 如果你的目标已经从“理解 BCW”转向“改成自己的模型”：看 [把 BCW 改成你自己的模型](./adapting-bcw-to-your-model.md)。
-- 如果你已经开始抽象自己的类分工：看 [建模指南](./modeling-guide.md)。
+- 继续看 [BCW2011 Credit Line 逐步讲解](./bcw2011-credit-line-walkthrough.md)。
+- 当你想从求解器角度看 `psi`、`psi_interior` 和切点诊断时，再配合 [结果与诊断](./results-and-diagnostics.md) 一起看。

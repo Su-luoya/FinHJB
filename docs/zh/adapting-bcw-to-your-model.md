@@ -2,7 +2,7 @@
 
 这一页是 BCW 路径通向“第一个自定义模型”的桥接页。
 
-建议在 [BCW Liquidation 逐步讲解](./bcw2011-liquidation-walkthrough.md)、[BCW Hedging 逐步讲解](./bcw2011-hedging-walkthrough.md) 和 [建模指南](./modeling-guide.md) 之后阅读。
+建议在 [BCW Liquidation 逐步讲解](./bcw2011-liquidation-walkthrough.md)、[BCW Refinancing 逐步讲解](./bcw2011-refinancing-walkthrough.md)、[BCW Hedging 逐步讲解](./bcw2011-hedging-walkthrough.md)、[BCW Credit Line 逐步讲解](./bcw2011-credit-line-walkthrough.md) 和 [建模指南](./modeling-guide.md) 之后阅读。
 
 如果你根本不打算把 BCW 当模板，而是直接从自己的问题开始建模，请改看 [库快速上手](./quickstart-library.md)。
 
@@ -16,21 +16,29 @@
 - 经济设定逐步改，
 - 每改一步都重新验证。
 
+四个 BCW walkthrough 应该被当成“理论到代码”的底稿来读。这一页默认你已经理解论文方程是怎样落到 `Parameter` / `Boundary` / `PolicyDict` / `Policy` / `Model` 上的。
+
 ## 建议在什么之后阅读
 
 - [快速开始](./getting-started.md)
 - [BCW Liquidation 逐步讲解](./bcw2011-liquidation-walkthrough.md)
+- [BCW Refinancing 逐步讲解](./bcw2011-refinancing-walkthrough.md)
 - [BCW Hedging 逐步讲解](./bcw2011-hedging-walkthrough.md)
+- [BCW Credit Line 逐步讲解](./bcw2011-credit-line-walkthrough.md)
 - [建模指南](./modeling-guide.md)
 
 ## 先选对模板
 
 | 你的模型更像…… | 最适合起步的模板 |
 |---|---|
-| 一维状态、一个控制、内生右边界 | `src/example/BCW2011Liquidation.py` |
-| 一维状态、多个控制、带再融资或边界更新 | `src/example/BCW2011Hedging.py` |
+| 一维状态、一个控制、左端 liquidation、右端内生 payout 边界 | `src/example/BCW2011Liquidation.py` |
+| 一维状态、一个控制、带股权发行或内部现金目标 `m` | `src/example/BCW2011Refinancing.py` |
+| 一维状态、两个控制、对冲需求或控制影响方差 | `src/example/BCW2011Hedging.py` |
+| 一维状态跨越债务区和现金区，或状态域需要穿过零点 | `src/example/BCW2011CreditLine.py` |
 
-如果拿不准，先从 liquidation 开始。一个控制总比两个控制更容易调。
+如果拿不准，先从 liquidation 开始。一个控制总比两个控制更容易调，而且它给了你最干净的 payout-side 边界基线。
+
+另外，在你开始改写之前，先保持这套执行约定不变：从仓库根目录运行，并继续使用 `from src.example.bcw2011 import ...` 这一类绝对导入。不要再把相对导入或“切进 `src/example/` 本地直跑”的假设带回来。
 
 ## 哪些部分通常可以原样复用
 
@@ -224,7 +232,7 @@ continuation 很有价值，但它只是把基础求解放大很多次。如果 
 ## 给研究者的推荐工作流
 
 1. 先一字不改地复现 liquidation；
-2. 如果你的模型更复杂，再一字不改地复现 hedging；
+2. 再一字不改地复现最接近你的高级 BCW 案例：发行边界用 refinancing，双控制用 hedging，分段状态域用 credit line；
 3. 复制更接近你的那个示例；
 4. 先改参数和命名；
 5. 先让 `solve()` 稳定；
@@ -232,14 +240,25 @@ continuation 很有价值，但它只是把基础求解放大很多次。如果 
 7. 为自己的模型写一套成功检查点；
 8. 最后才做 comparative statics、图表和论文数值结果。
 
-## 什么时候该从 liquidation 模板切换到 hedging 模板
+## 什么时候该从 liquidation 切到别的模板
 
-当你的模型具有下面任意一种特征时，通常更适合从 hedging 起步：
+当你的模型需要下面这些结构时，更适合切到 refinancing：
+
+- 左边界有发行 value matching；
+- 存在内部现金目标 `m`；
+- 需要围绕发行点做 smooth pasting。
+
+当你的模型需要下面这些结构时，更适合切到 hedging：
 
 - 多于一个控制变量；
-- 需要外层边界更新；
 - 方差项本身受控制变量影响；
-- 融资或发行条件与某个内部阈值相关。
+- 对冲需求带有成本或约束。
+
+当你的模型需要下面这些结构时，更适合切到 credit line：
+
+- 债务区和现金区的 HJB 不一样；
+- 状态域需要 `s_min < 0`；
+- 同一条网格上要拼接分段 residual。
 
 如果都没有，尽量留在 liquidation 这条更简单的主线，会更容易调试。
 

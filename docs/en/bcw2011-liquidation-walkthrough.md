@@ -1,282 +1,236 @@
 # BCW2011 Liquidation Walkthrough
 
-This page is the first deep-dive page in the BCW path.
+Read this page after [Getting Started](./getting-started.md) and [BCW2011 Case Study](./bcw2011-case-study.md).
 
-Read it after [Getting Started](./getting-started.md) and [BCW2011 Case Study](./bcw2011-case-study.md).
-
-Read [Library Quickstart](./quickstart-library.md) instead if you want the shortest direct package workflow.
-
-This page is the detailed walkthrough for the first BCW example:
+This page is the formula-first walkthrough for:
 
 - `src/example/BCW2011Liquidation.py`
 
-It explains not only how to run the example, but how to read the code and decide whether the result is healthy.
-
 ## Goal
 
-By the end of this page, you should understand:
+By the end of this page, you should be able to move in both directions:
 
-- what the liquidation example is solving,
-- how the BCW equations map into `Parameter`, `Boundary`, `Policy`, and `Model`,
-- why the solver searches over `s_max`,
-- how to verify the resulting value and policy functions.
+- from BCW's liquidation equations to the FinHJB implementation,
+- from the FinHJB classes back to the economics they represent.
 
-## Prerequisites
+This is the cleanest entry point because the case has:
 
-You should already be able to do all of these:
+- one state variable,
+- one control,
+- one endogenous boundary target,
+- no refinancing and no regime switching.
 
-- import `finhjb`,
-- run commands from the repository root,
-- use `MPLBACKEND=Agg` if you are on a headless machine.
+## Run Contract
 
-If not, start with [Installation and Environment](./installation-and-environment.md).
-
-## Run Command
+Run this example from the repository root:
 
 ```bash
 MPLBACKEND=Agg uv run python src/example/BCW2011Liquidation.py
 ```
 
-This script:
+The BCW scripts are documented and supported as repository-root examples. They are not designed around local-directory execution inside `src/example/`.
 
-1. defines BCW Table I baseline parameters,
-2. constructs a liquidation boundary problem,
-3. runs a right-boundary search using `bisection`,
-4. prints the final state and inspects the solved grid.
+## Economic Setup And State Reduction
 
-## What The Example Is Solving
+The original BCW problem is written in firm capital `K` and cash `W`. FinHJB solves the one-dimensional reduced form after BCW's homogeneity step:
 
-The state variable is cash scaled by capital.
+$$
+P(K, W) = K p(w), \qquad w = W/K.
+$$
 
-The code uses:
+This reduction is what makes the example fit the current one-dimensional FinHJB interface.
 
-- `s` for the state grid,
-- `v` for the value-capital ratio,
-- `dv` for the marginal value of cash,
-- `d2v` for curvature,
-- `investment` for the optimal investment-capital ratio.
+The paper's key objects become:
 
-Economically, the liquidation case teaches the most important "baseline friction" intuition:
+$$
+P_K = p(w) - w p'(w), \qquad P_W = p'(w), \qquad P_{WW} = p''(w) / K.
+$$
 
-- when cash is scarce, investment is sharply constrained,
-- as cash rises, investment recovers,
-- the payout-side boundary is not fixed ex ante and must be solved so the right-tail contact condition holds.
+In repository terms:
 
-## Equation-To-Code Map
+- `grid.s` stores the state grid for `w`,
+- `grid.v` stores the solved value-capital ratio `p(w)`,
+- `grid.dv` stores the marginal value of cash `p'(w)`,
+- `grid.d2v` stores the curvature `p''(w)`.
 
-The example script already annotates the main landmarks. The most important ones are:
+## Paper Equations Used In This Case
 
-| BCW object | Script location | What it means in practice |
+The liquidation case uses BCW's internal-financing HJB and the liquidation/payout boundaries.
+
+### HJB: Eq. (13)
+
+$$
+r p(w) =
+\left(i(w) - \delta\right)\left(p(w) - w p'(w)\right)
++ \left((r-\lambda)w + \mu - i(w) - g(i(w))\right)p'(w)
++ \frac{\sigma^2}{2} p''(w).
+$$
+
+With BCW's quadratic adjustment cost,
+
+$$
+g(i) = \frac{\theta i^2}{2}.
+$$
+
+### Investment FOC: Eq. (14)
+
+$$
+i(w) = \frac{1}{\theta}\left(\frac{p(w)}{p'(w)} - w - 1\right).
+$$
+
+### Boundary Conditions: Eq. (16)-(18)
+
+At the payout boundary `\bar w`:
+
+$$
+p'(\bar w) = 1, \qquad p''(\bar w) = 0.
+$$
+
+At the liquidation boundary:
+
+$$
+p(0) = l.
+$$
+
+## How Those Equations Become FinHJB Objects
+
+The repository implementation follows a stable object mapping:
+
+| Economic object | FinHJB object | What it does in this case |
 |---|---|---|
-| Eq. (7) first-best investment rule | `Policy.initialize` | creates a stable starting guess |
-| Eq. (14) investment rule | `Policy.cal_investment_without_explicit` | solved as an implicit residual |
-| Eq. (13) HJB equation | `Model.hjb_residual` | the interior equation the solver drives toward zero |
-| Eq. (18) liquidation value | `Boundary.compute_v_left` | pins `v_left = l` |
-| Eq. (17) super-contact condition | `Model.boundary_condition` | implemented numerically as `grid.d2v[-1]` |
+| benchmark parameters | `Parameter` | stores Table I values such as `r`, `delta`, `mu`, `sigma`, `theta`, `lambda_`, `l` |
+| left and right boundary values | `Boundary` | pins `p(0)=l` and provides the payout-side closed-form value |
+| control container | `PolicyDict` | stores the single control `investment` |
+| investment update | `Policy` | imposes Eq. (14) as an implicit policy residual |
+| HJB residual | `Model` | imposes Eq. (13) on the interior grid |
 
-The critical learning idea is that the numerical target for the right boundary is not "match one printed number." It is "choose `s_max` so the right-tail contact condition is satisfied."
+In code, the exact decomposition is:
 
-## Code Structure, Step By Step
+- Eq. (14) is implemented through `investment_rule_residual(...)` and exposed in `Policy.cal_investment(...)`.
+- Eq. (13) is implemented through `standard_hjb_residual(...)` and called from `Model.hjb_residual(...)`.
+- `Boundary.compute_v_left(...)` returns the liquidation value `l`.
+- `Boundary.compute_v_right(...)` uses the payout-side closed form implied by Eq. (16).
 
-## 1. Parameters
+This is the clean pattern FinHJB expects for a one-control continuous-time model:
 
-The `Parameter` class stores the economic constants:
+1. put primitive parameters in `Parameter`,
+2. put boundary values in `Boundary`,
+3. put controls in `PolicyDict`,
+4. encode the FOC in `Policy`,
+5. encode the HJB in `Model`.
 
-- `r`, `delta`, `mu`, `sigma`,
-- `theta` for adjustment costs,
-- `lambda_` for carrying costs,
-- `l` for liquidation value.
+## Why The Numerical Workflow Is `boundary_search(method="bisection")`
 
-If you later adapt BCW to your own model, this class is usually the first place you edit.
+The liquidation case has one endogenous object to solve for numerically:
 
-## 2. Boundary
+- the payout boundary `\bar w`.
 
-The `Boundary` class does two things:
+The left boundary is fixed at `w = 0` with `p(0)=l`. The right boundary is pinned by the super-contact condition:
 
-- it fixes the left value boundary through `compute_v_left`,
-- it computes `v_right` from `s_max`.
+$$
+p''(\bar w) = 0.
+$$
 
-This matters because `v_right` is not treated as an unrelated constant. It is derived from the candidate right state boundary.
+Numerically, that becomes:
 
-## 3. Policy
+- search over `s_max = \bar w`,
+- evaluate `grid.d2v[-1]`,
+- stop when the right-tail curvature is approximately zero.
 
-The liquidation case uses one control:
+That is exactly why the script uses a one-target `boundary_search()` with `bisection`:
 
-- `investment`.
+- there is only one unknown boundary target,
+- the search bracket is economically well-behaved,
+- the root condition is scalar and monotone enough for bisection to be robust.
 
-The initializer uses the first-best investment rule as a numerically reasonable guess. The update itself is implemented with `@implicit_policy(...)`, which is useful because the natural mathematical object is a residual equation rather than a direct closed form in the code path.
+## Boundary Logic In Repository Terms
 
-## 4. Model
+This case uses three layers of boundary information:
 
-`Model.hjb_residual` combines:
+1. Left boundary:
+   `Boundary.compute_v_left(...) = l`
 
-- the capital drift term,
-- discounting,
-- cash drift,
-- diffusion.
+2. Right boundary value:
+   the script uses the payout-side closed-form value consistent with BCW's payout region and `p'(\bar w)=1`
 
-If you are ever unsure whether your custom model is wrong, comparing its residual structure against this compact BCW baseline is one of the best debugging moves.
+3. Right boundary optimality target:
+   `super_contact_residual(grid) = grid.d2v[-1]`
 
-## 5. Boundary Search
+This separation matters. In FinHJB, the boundary value and the boundary optimality condition are not the same object:
 
-The search target is:
+- the boundary value tells the solver what value to pin at the grid edge,
+- the boundary target tells the outer search how to move the edge itself.
 
-```python
-def s_max_condition(grid) -> float:
-    return grid.d2v[-1]
-```
+## Figure 2: How To Read The Output Economically
 
-Interpretation:
+![BCW liquidation main figure](./assets/bcw2011-liquidation-main.svg)
 
-- the solver proposes a candidate `s_max`,
-- solves the HJB on that candidate boundary,
-- evaluates the resulting right-tail curvature,
-- keeps searching until the curvature is approximately zero.
+### Panel A: `p(w)`
 
-That is why `d2v[-1]` is the single most important scalar diagnostic in this example.
+The value-capital ratio starts at liquidation value `l=0.9`, stays above the liquidation line `l+w`, and bends into the payout boundary near `\bar w \approx 0.22`.
 
-## Representative Output
+That is BCW's statement that the firm does not liquidate early even when refinancing is unavailable.
 
-One representative solve in this repository produced:
+### Panel B: `p'(w)`
 
-```text
-LIQ_BOUNDARY ImmutableBoundary(s_min=0.0, s_max=0.22176666, v_left=0.9, v_right=1.380003)
-```
+The marginal value of cash explodes as `w \to 0`. In this case, extra cash is valuable because it delays forced liquidation.
 
-Head of the solved DataFrame:
+### Panel C: `i(w)`
 
-```text
-       s        v        dv          d2v  investment
-0.000000 0.900000 30.369404 -3666.264845   -0.646910
-0.000222 0.906654 29.577508 -3567.279695   -0.646379
-0.000444 0.913132 28.796599 -3468.294545   -0.645823
-0.000666 0.919439 28.037362 -3372.026647   -0.645248
-0.000888 0.925580 27.299203 -3278.402476   -0.644655
-```
+Investment becomes negative near zero cash. In BCW's language, the firm sells assets to move away from the liquidation boundary.
 
-Tail of the solved DataFrame:
+### Panel D: `i'(w)`
 
-```text
-       s        v       dv           d2v  investment
-0.220879 1.379115 1.000001 -2.212603e-03    0.105490
-0.221101 1.379337 1.000001 -1.656398e-03    0.105490
-0.221323 1.379559 1.000000 -1.102528e-03    0.105491
-0.221545 1.379781 1.000000 -5.509463e-04    0.105491
-0.221767 1.380003 1.000000  6.263160e-07    0.105491
-```
+Investment rises with cash, but not linearly. This is the right object to inspect when you want to discuss investment-cash sensitivity rather than just the investment level.
 
-These numbers are not meant to be memorized. They are useful because they show the correct shape:
+## Stable Quantitative Targets
 
-- very high marginal value of cash at the left edge,
-- strong negative curvature in distressed states,
-- `dv` approaching `1`,
-- `d2v` approaching `0`,
-- investment rising from negative to slightly positive.
+Healthy runs in this repository usually look like:
 
-## BCW Benchmark Magnitudes To Cross-Check
+- `\bar w \approx 0.22`,
+- `p'(0) \approx 30`,
+- `i(\bar w) \approx 10.5%`,
+- strongly negative investment close to `w=0`,
+- `p''(\bar w)` numerically close to zero.
 
-These repository outputs also line up with the benchmark magnitudes discussed in BCW:
+Those are the right first checks before you read deeper meaning into minor grid-level differences.
 
-- payout boundary `w_bar` is about `0.2218`,
-- marginal value of cash near zero satisfies `p'(0) ≈ 30`,
-- low-cash investment is about `-0.647`, meaning asset sales exceed 60% at an annual rate,
-- right-boundary investment is about `0.105`.
-
-So if your run lands in that neighborhood, you are matching not only this repository's example output but also the scale emphasized in the paper.
-
-## Visual Checks
-
-### Overall shape
-
-![Liquidation overview](./assets/liquidation-overview.svg)
-
-What to look for:
-
-- `v` should be increasing in `s`,
-- `dv` should be high on the left and move toward `1`,
-- investment should rise with cash.
-
-### Right-tail curvature
-
-![Liquidation right tail](./assets/liquidation-right-tail.svg)
-
-What to look for:
-
-- `d2v` should approach zero smoothly at the right edge,
-- the final few grid points should not oscillate wildly,
-- the curve should not blow up as it approaches the boundary.
-
-## Success Checklist
-
-Treat these as stable ranges and patterns, not brittle exact values.
-
-| Checkpoint | Healthy pattern |
-|---|---|
-| `grid.dv[0]` | roughly `30` |
-| `grid.v[0]` | exactly or almost exactly `0.9` |
-| `grid.boundary.s_max` | roughly `0.22` |
-| `grid.dv[-1]` | essentially `1.0` |
-| `grid.d2v[-1]` | very close to `0` |
-| `investment.min()` | clearly negative |
-| `investment.max()` | mildly positive near the right boundary |
-
-## Why Negative Investment At Low Cash Is Not A Bug
-
-New users often expect investment to stay positive everywhere.
-
-In this example, low-cash states are exactly where financing frictions are most severe. So a strongly negative low-cash investment policy is economically consistent with the BCW setup. The important question is not "is it negative?" but:
-
-- does it rise as cash improves?
-- does it connect smoothly to the healthier right tail?
-
-## A Useful Interactive Inspection Snippet
-
-After solving, inspect the object directly:
+## Code Inspection Pattern
 
 ```python
-import finhjb as fjb
-from src.example.BCW2011Liquidation import Boundary, Model, Parameter, Policy
+from src.example.BCW2011Liquidation import run_case
 
-parameter = Parameter()
-boundary = Boundary(p=parameter, s_min=0.0, s_max=0.2)
-solver = fjb.Solver(boundary=boundary, model=Model(policy=Policy()), number=1000)
-state = solver.boundary_search(method="bisection", verbose=False)
-grid = state.grid
+bundle = run_case(number=1000)
+result = bundle["results"]["baseline"]
 
-print(grid.boundary)
-print(grid.df[["s", "v", "dv", "d2v", "investment"]].tail())
+print(result["summary"])
+print(result["grid"].df.head())
+print(result["grid"].df.tail())
 ```
 
-If you can read that output comfortably, you are ready for the next BCW page.
+The key quantities to inspect are:
 
-## Common Failure Symptoms
+- `result["summary"]["payout_boundary"]`,
+- `result["summary"]["dv_at_zero"]`,
+- `result["grid"].d2v[-1]`,
+- `result["grid"].policy["investment"]`.
 
-### `d2v[-1]` is far from zero
+## How To Adapt This Pattern
 
-Most likely causes:
+Start from this case if your own model still has:
 
-- the boundary search target is not the intended one,
-- the base solve is unstable,
-- the bracket is poor.
+- one reduced state variable,
+- one control,
+- a fixed left boundary,
+- a single endogenous payout boundary on the right.
 
-### `dv[-1]` is not close to one
+Only move to the later BCW examples if your model genuinely needs:
 
-Likely causes:
-
-- right boundary interpretation is wrong,
-- the solve never really reached the payout-side regime,
-- the grid is too coarse or the equations are inconsistent.
-
-### The whole curve looks noisy
-
-Check:
-
-- whether the environment is stable,
-- whether the policy formula is coded correctly,
-- whether you are comparing against the correct case.
+- issuance with value matching,
+- multiple controls,
+- or a piecewise residual across regions.
 
 ## Next Step
 
-- Read [Results and Diagnostics](./results-and-diagnostics.md) to inspect `state`, `history`, and `grid` systematically.
-- Continue to [BCW2011 Hedging Walkthrough](./bcw2011-hedging-walkthrough.md) for the second BCW case.
-- Read [Adapting BCW to Your Model](./adapting-bcw-to-your-model.md) if you already want to start customizing from the liquidation template.
+- Continue to [BCW2011 Refinancing Walkthrough](./bcw2011-refinancing-walkthrough.md).
+- Use [Results and Diagnostics](./results-and-diagnostics.md) once you want a solver-centric view of `grid`, `summary`, and boundary diagnostics.
