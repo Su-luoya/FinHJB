@@ -2,11 +2,11 @@
 
 建议在 [BCW2011 Hedging 逐步讲解](./bcw2011-hedging-walkthrough.md) 之后阅读。
 
-这一页是下面这个仓库脚本的“公式到代码”讲解：
+这里对应的仓库脚本是：
 
 - `src/example/BCW2011CreditLine.py`
 
-## 目标
+## 这一页重点看什么
 
 读完以后，你应该能理解：
 
@@ -15,7 +15,7 @@
 - 发行与 payout 条件如何和分段 HJB 并存；
 - 为什么 Figure 7 是仓库里最典型的 regime-dependent residual 例子。
 
-## 运行约定
+## 复现命令
 
 请在仓库根目录执行：
 
@@ -179,7 +179,7 @@ for label, result in bundle["results"].items():
 
 这是仓库里最直接的“分段 residual”模板。
 
-## 下一步
+## 相关页面
 
 - 回到 [结果与诊断](./results-and-diagnostics.md)，直接检查负 `w` 区域上的网格结果。
 - 然后再看 [把 BCW 改成你自己的模型](./adapting-bcw-to-your-model.md)，把这种 regime-switching 模式迁移到自己的问题上。

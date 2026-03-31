@@ -30,6 +30,7 @@ from .diagnostics import (
 from .parameters import BCWBaseParameter
 from .plotting import (
     add_boundary_markers,
+    add_shared_legend,
     finalize_axes,
     paper_figure,
     save_figure,
@@ -40,6 +41,7 @@ __all__ = [
     "CASE_ARTIFACT_ROOT",
     "DEFAULT_GRID_SIZE",
     "add_boundary_markers",
+    "add_shared_legend",
     "build_series",
     "case_output_dir",
     "common_summary",

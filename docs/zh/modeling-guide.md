@@ -1,10 +1,8 @@
 # 建模指南
 
-这一页同时属于 package 路径，以及 BCW 路径里“开始写自己的模型”这一段。
+这一页真正要回答的问题，不是“API 里有哪些名字”，而是“经济学里的哪一部分应该放到哪个 FinHJB 对象里”。
 
-如果你是直接使用 FinHJB 包，请在 [库快速上手](./quickstart-library.md) 后阅读；如果你是从仓库示例走过来，请在 [BCW2011 案例总览](./bcw2011-case-study.md) 后阅读。
-
-如果你现在只想查精确导出名和签名，而不是理解接口分工，请改看 [API 参考](./api-reference.md)。
+直接使用 package 时，请在 [库快速上手](./quickstart-library.md) 之后阅读；从 BCW 模板走向自己的模型时，请在 [BCW2011 案例总览](./bcw2011-case-study.md) 之后阅读。如果你现在只想查精确导出名和签名，请改看 [API 参考](./api-reference.md)。
 
 ## 四个核心组件
 
@@ -314,7 +312,7 @@ class Model(fjb.AbstractModel[Parameter, PolicyDict]):
         return -p.r * v + (s - inv) * dv + 0.5 * p.sigma**2 * d2v
 ```
 
-## 下一步
+## 相关页面
 
 - 看 [求解器指南](./solver-guide.md)：决定工作流。
 - 看 [把 BCW 改成你自己的模型](./adapting-bcw-to-your-model.md)：沿 BCW 主线做迁移。

@@ -1,12 +1,12 @@
 # BCW2011 Liquidation Walkthrough
 
-Read this page after [Getting Started](./getting-started.md) and [BCW2011 Case Study](./bcw2011-case-study.md).
+Work through this page after [Getting Started](./getting-started.md) and [BCW2011 Case Study](./bcw2011-case-study.md).
 
-This page is the formula-first walkthrough for:
+The code discussed here is:
 
 - `src/example/BCW2011Liquidation.py`
 
-## Goal
+## What To Watch
 
 By the end of this page, you should be able to move in both directions:
 
@@ -20,7 +20,7 @@ This is the cleanest entry point because the case has:
 - one endogenous boundary target,
 - no refinancing and no regime switching.
 
-## Run Contract
+## Reproduction
 
 Run this example from the repository root:
 
@@ -230,7 +230,7 @@ Only move to the later BCW examples if your model genuinely needs:
 - multiple controls,
 - or a piecewise residual across regions.
 
-## Next Step
+## Related Pages
 
 - Continue to [BCW2011 Refinancing Walkthrough](./bcw2011-refinancing-walkthrough.md).
 - Use [Results and Diagnostics](./results-and-diagnostics.md) once you want a solver-centric view of `grid`, `summary`, and boundary diagnostics.

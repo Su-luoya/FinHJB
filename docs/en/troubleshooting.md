@@ -1,10 +1,8 @@
 # Troubleshooting
 
-This page is the shared failure-recovery page for every documentation path.
+Use this page when something fails, or when the script runs but the output does not look trustworthy.
 
-Read it when something fails or when the output "runs" but does not look trustworthy.
-
-Read [Installation and Environment](./installation-and-environment.md) instead if you are setting up for the first time rather than debugging a failure.
+If you are still in the first-time setup stage, go back to [Installation and Environment](./installation-and-environment.md). The purpose here is separation and diagnosis, not initial setup.
 
 The best troubleshooting habit in FinHJB is to separate three layers:
 
@@ -261,7 +259,7 @@ Step back and re-check the model if:
 
 That usually signals a formulation problem, not a tuning problem.
 
-## Next Step
+## Related Pages
 
 - Return to [Getting Started](./getting-started.md) if you want to re-run the BCW baseline cleanly.
 - Read [Results and Diagnostics](./results-and-diagnostics.md) if the solve now runs and you need to inspect it.

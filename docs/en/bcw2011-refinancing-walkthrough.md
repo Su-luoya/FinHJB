@@ -1,12 +1,12 @@
 # BCW2011 Refinancing Walkthrough
 
-Read this page after [BCW2011 Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md).
+Work through this page after [BCW2011 Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md).
 
-This page is the formula-first walkthrough for:
+The code discussed here is:
 
 - `src/example/BCW2011Refinancing.py`
 
-## Goal
+## What To Watch
 
 By the end of this page, you should understand:
 
@@ -15,7 +15,7 @@ By the end of this page, you should understand:
 - how the issuance target `m` is recovered numerically,
 - how the `phi=1%` and `phi=0` comparison maps to Figure 3.
 
-## Run Contract
+## Reproduction
 
 Run this example from the repository root:
 
@@ -195,7 +195,7 @@ Start from this case if your own model needs:
 
 This is the right template for many financing models even when the later hedging and credit-line extensions are unnecessary.
 
-## Next Step
+## Related Pages
 
 - Continue to [BCW2011 Hedging Walkthrough](./bcw2011-hedging-walkthrough.md).
 - Revisit [Results and Diagnostics](./results-and-diagnostics.md) if you want to inspect how `m` is inferred from `grid.dv`.

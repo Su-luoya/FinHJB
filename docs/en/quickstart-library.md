@@ -1,16 +1,8 @@
 # Library Quickstart
 
-This page is for the package path.
+Use this page when you want the shortest route from a working installation to a first direct `finhjb` solve, without going through the BCW examples.
 
-Read it if you want the fastest route from a working installation to a first direct `finhjb` solve without going through the BCW examples.
-
-## Goal
-
-By the end of this page, you should be able to:
-
-- define the smallest useful FinHJB model shape
-- run one fixed-boundary solve
-- inspect the returned objects instead of guessing what solved
+The example below is deliberately small. It is not meant to be an economic model; it is meant to show the package object split clearly.
 
 ## Before You Start
 
@@ -90,7 +82,7 @@ print(grid.df.head())
 print(grid.aux)
 ```
 
-## What This Example Teaches
+## What This Example Shows
 
 - `Parameter` holds model inputs.
 - `Boundary` defines the state and value boundaries.
@@ -111,7 +103,7 @@ After a first solve, check these objects first:
 - `state.grid.df.tail()`
 - `state.grid.aux` if your model implements `auxiliary(grid)`
 
-## Where To Go Next
+## Related Pages
 
 - [Modeling Guide](./modeling-guide.md) for the full object model
 - [Solver Guide](./solver-guide.md) for workflow choice

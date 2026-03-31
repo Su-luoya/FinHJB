@@ -22,6 +22,7 @@ import finhjb as fjb
 from src.example.bcw2011 import (
     BCWBaseParameter,
     add_boundary_markers,
+    add_shared_legend,
     build_series,
     case_output_dir,
     common_summary,
@@ -215,10 +216,10 @@ def plot_main_figure(results: dict[str, dict], output_path: str | Path) -> Path:
     """Create the Figure 3-style main panel figure."""
     fig, axes = paper_figure()
     panels = [
-        ("v", "A. Firm value-capital ratio: p(w)"),
-        ("dv", "B. Marginal value of cash: p'(w)"),
-        ("investment", "C. Investment-capital ratio: i(w)"),
-        ("investment_sensitivity", "D. Investment-cash sensitivity: i'(w)"),
+        ("v", "A. Value ratio p(w)"),
+        ("dv", "B. Cash value p'(w)"),
+        ("investment", "C. Investment ratio i(w)"),
+        ("investment_sensitivity", "D. Investment sensitivity i'(w)"),
     ]
     for ax, (metric, title) in zip(axes.flat, panels, strict=True):
         for result in results.values():
@@ -233,8 +234,7 @@ def plot_main_figure(results: dict[str, dict], output_path: str | Path) -> Path:
             )
             add_boundary_markers(ax, result, ["return_cash_ratio", "payout_boundary"])
         finalize_axes(ax, title=title)
-    handles, labels = axes.flat[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="upper center", ncol=2, frameon=False)
+    add_shared_legend(fig, axes)
     return save_figure(fig, output_path)
 
 

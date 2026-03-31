@@ -1,6 +1,6 @@
 # Inputs And Readiness
 
-This page covers the two things that determine whether `finhjb-model-coder` can produce runnable output honestly:
+`finhjb-model-coder` can only deliver runnable output when two pieces are in place:
 
 - the model materials you provide
 - the execution environment behind the conversation
@@ -87,7 +87,7 @@ Use this heuristic:
 
 If the first default fails the test-repair loop, the final implementation should be upgraded explicitly.
 
-## Read Next
+## Related Pages
 
 - [Output and Validation](./finhjb-model-coder-output-and-validation.md)
 - [Full consolidated skill page](./finhjb-model-coder.md)

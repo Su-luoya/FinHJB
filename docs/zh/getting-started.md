@@ -1,20 +1,8 @@
 # 快速开始
 
-这一页是 BCW 路径下的仓库快速上手。
+这一页是一份 BCW 仓库示例的执行清单。环境准备好以后，先把四个脚本跑通，再去读后面的推导页，会更容易把数值对象和论文对象对起来。
 
-如果你的问题是“我已经 clone 了仓库，怎么把四个 BCW 示例都跑通，并快速判断结果是否正常”，就从这里开始。
-
-如果你要走纯 package 路径，请改读 [库快速上手](./quickstart-library.md)。
-
-## 目标
-
-读完以后，你应该能做到：
-
-- 确认仓库环境可用；
-- 跑通四个 BCW 示例脚本；
-- 不需要逐行研究全部输出，也能抓住主要成功信号。
-
-这一页故意只强调“怎么运行”和“怎么看 headline number”。如果你要看公式推导、边界逻辑和 equation-to-code mapping，请从这里继续读四个 BCW walkthrough。
+目标很直接：在仓库根目录运行四个案例，并用一组 headline number 判断结果是否大体正常。
 
 ## 第一步：准备仓库环境
 
@@ -45,7 +33,7 @@ uv run python src/example/BCW2011Liquidation.py
 MPLBACKEND=Agg uv run python src/example/BCW2011Liquidation.py
 ```
 
-健康运行通常表现为 `w_bar ≈ 0.22`、`p'(0) ≈ 30`，以及低现金区域投资显著为负。
+先看 `w_bar ≈ 0.22`、`p'(0) ≈ 30`，以及低现金区域投资显著为负。
 
 ## 第三步：运行 Case II
 
@@ -53,7 +41,7 @@ MPLBACKEND=Agg uv run python src/example/BCW2011Liquidation.py
 MPLBACKEND=Agg uv run python src/example/BCW2011Refinancing.py
 ```
 
-健康运行通常表现为：
+先看：
 
 - `phi=1%` 时 `w_bar ≈ 0.19`、`m ≈ 0.06`；
 - `phi=0` 时 `w_bar ≈ 0.14`、`m ≈ 0`。
@@ -64,7 +52,7 @@ MPLBACKEND=Agg uv run python src/example/BCW2011Refinancing.py
 MPLBACKEND=Agg uv run python src/example/BCW2011Hedging.py
 ```
 
-对 costly-margin 那条线，健康运行通常表现为 `w_- ≈ 0.07`、`w_+ ≈ 0.11`、`w_bar ≈ 0.14`，且 `psi` 落在 `[-5, 0]`。
+对 costly-margin 那条线，先看 `w_- ≈ 0.07`、`w_+ ≈ 0.11`、`w_bar ≈ 0.14`，以及 `psi` 落在 `[-5, 0]`。
 
 ## 第五步：运行 Case V
 
@@ -72,7 +60,7 @@ MPLBACKEND=Agg uv run python src/example/BCW2011Hedging.py
 MPLBACKEND=Agg uv run python src/example/BCW2011CreditLine.py
 ```
 
-健康运行通常表现为 `w_bar ≈ 0.08`、`c+m ≈ 0.10`，以及有 credit line 时 `p'(0)` 大约在 `1.01`。
+先看 `w_bar ≈ 0.08`、`c+m ≈ 0.10`，以及有 credit line 时 `p'(0)` 大约在 `1.01`。
 
 ## 第六步：带着目的读结果
 
@@ -92,7 +80,7 @@ print(result["grid"].df.head())
 print(result["grid"].df.tail())
 ```
 
-## 下一步去哪里
+## 相关页面
 
 - [BCW2011 案例总览](./bcw2011-case-study.md)
 - [BCW2011 Liquidation 逐步讲解](./bcw2011-liquidation-walkthrough.md)

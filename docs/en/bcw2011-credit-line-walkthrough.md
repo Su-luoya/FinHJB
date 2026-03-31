@@ -1,12 +1,12 @@
 # BCW2011 Credit Line Walkthrough
 
-Read this page after [BCW2011 Hedging Walkthrough](./bcw2011-hedging-walkthrough.md).
+Work through this page after [BCW2011 Hedging Walkthrough](./bcw2011-hedging-walkthrough.md).
 
-This page is the formula-first walkthrough for:
+The code discussed here is:
 
 - `src/example/BCW2011CreditLine.py`
 
-## Goal
+## What To Watch
 
 By the end of this page, you should understand:
 
@@ -15,7 +15,7 @@ By the end of this page, you should understand:
 - how issuance and payout conditions coexist with a piecewise HJB,
 - why Figure 7 is the repository's clearest example of regime-dependent residual logic.
 
-## Run Contract
+## Reproduction
 
 Run this example from the repository root:
 
@@ -179,7 +179,7 @@ Start from this case if your own model has:
 
 This is the cleanest repository template for regime-dependent one-dimensional finance models.
 
-## Next Step
+## Related Pages
 
 - Revisit [Results and Diagnostics](./results-and-diagnostics.md) to inspect the negative-`w` region directly on the solved grid.
 - Then move to [Adapting BCW To Your Model](./adapting-bcw-to-your-model.md) if you want to reuse the regime-switching pattern in your own model.

@@ -1,20 +1,8 @@
 # Getting Started
 
-This page is the repository quickstart for the BCW path.
+Use this page as an operational checklist for the four BCW repository examples, after the environment is ready and before you start reading the derivation-heavy walkthroughs.
 
-Use it if your question is: “I cloned the repository. How do I run the four BCW examples and tell whether the outputs look healthy?”
-
-If you want the package-only path, read [Library Quickstart](./quickstart-library.md) instead.
-
-## Goal
-
-By the end of this page, you should be able to:
-
-- confirm the repository environment works,
-- run all four BCW example scripts,
-- recognize the main success patterns without reading every printed line.
-
-This page is intentionally execution-first. For derivations, boundary logic, and equation-to-code mapping, move from here into the four BCW walkthroughs.
+The objective is simple: run the four scripts from the repository root and compare the output to a small set of headline magnitudes.
 
 ## Step 1: Prepare The Repository Environment
 
@@ -45,7 +33,7 @@ not local-directory execution from inside `src/example/`.
 MPLBACKEND=Agg uv run python src/example/BCW2011Liquidation.py
 ```
 
-Healthy runs usually show `w_bar ≈ 0.22`, `p'(0) ≈ 30`, and a strongly negative investment policy at very low cash.
+Use `w_bar ≈ 0.22`, `p'(0) ≈ 30`, and strongly negative investment at very low cash as the first-pass checks.
 
 ## Step 3: Run Case II
 
@@ -53,7 +41,7 @@ Healthy runs usually show `w_bar ≈ 0.22`, `p'(0) ≈ 30`, and a strongly negat
 MPLBACKEND=Agg uv run python src/example/BCW2011Refinancing.py
 ```
 
-Healthy runs usually show:
+Use these magnitudes as the first checks:
 
 - with `phi=1%`: `w_bar ≈ 0.19`, `m ≈ 0.06`,
 - with `phi=0`: `w_bar ≈ 0.14`, `m ≈ 0`.
@@ -64,7 +52,7 @@ Healthy runs usually show:
 MPLBACKEND=Agg uv run python src/example/BCW2011Hedging.py
 ```
 
-Healthy runs usually show `w_- ≈ 0.07`, `w_+ ≈ 0.11`, `w_bar ≈ 0.14`, and `psi in [-5, 0]` for the costly-margin case.
+For the costly-margin line, use `w_- ≈ 0.07`, `w_+ ≈ 0.11`, `w_bar ≈ 0.14`, and `psi in [-5, 0]` as the first checks.
 
 ## Step 5: Run Case V
 
@@ -72,7 +60,7 @@ Healthy runs usually show `w_- ≈ 0.07`, `w_+ ≈ 0.11`, `w_bar ≈ 0.14`, and 
 MPLBACKEND=Agg uv run python src/example/BCW2011CreditLine.py
 ```
 
-Healthy runs usually show `w_bar ≈ 0.08`, `c+m ≈ 0.10`, and `p'(0)` near `1.01` when the credit line is active.
+Use `w_bar ≈ 0.08`, `c+m ≈ 0.10`, and `p'(0)` near `1.01` when the credit line is active as the first checks.
 
 ## Step 6: Read The Result Intentionally
 
@@ -92,7 +80,7 @@ print(result["grid"].df.head())
 print(result["grid"].df.tail())
 ```
 
-## Where To Go Next
+## Related Pages
 
 - [BCW2011 Case Study](./bcw2011-case-study.md)
 - [BCW2011 Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md)

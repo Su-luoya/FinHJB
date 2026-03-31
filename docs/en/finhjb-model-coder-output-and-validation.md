@@ -1,6 +1,6 @@
 # Output And Validation
 
-This page covers what `finhjb-model-coder` should hand back once a model is in scope and the environment is ready.
+Once the model is in scope and the environment is ready, `finhjb-model-coder` should return something you can inspect and run, not just code that looks plausible.
 
 ## Expected Delivery
 
@@ -58,7 +58,7 @@ The skill should stop instead of pretending success when:
 - plot requirements are still ambiguous
 - the model is outside one-dimensional FinHJB scope
 
-## Read Next
+## Related Pages
 
 - [Full consolidated skill page](./finhjb-model-coder.md)
 - [Solver Guide](./solver-guide.md)

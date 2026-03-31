@@ -1,8 +1,6 @@
 # Model Coder 总览
 
-这一页是 `finhjb-model-coder` 路径的入口页。
-
-如果你想先判断这个 Skill 是否适合你的任务，而不是马上准备全部方程和环境细节，就先读这一页。
+如果你还没决定 `finhjb-model-coder` 是否适合当前任务，就先看这里。
 
 ## 这个 Skill 适合什么
 
@@ -47,7 +45,7 @@
 
 这些情况应该先走 package 路径或 BCW 路径。
 
-## 下一步
+## 相关页面
 
 - [输入材料与环境就绪](./finhjb-model-coder-inputs-and-readiness.md)
 - [输出与验证](./finhjb-model-coder-output-and-validation.md)

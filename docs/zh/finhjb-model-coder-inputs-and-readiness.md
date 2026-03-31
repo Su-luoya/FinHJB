@@ -1,6 +1,6 @@
 # 输入材料与环境就绪
 
-这一页专门讲两件决定 `finhjb-model-coder` 能否诚实交付“可运行代码”的事情：
+`finhjb-model-coder` 能否诚实地交付“可运行代码”，取决于两件事：
 
 - 你提供的模型材料
 - 对话背后的执行环境
@@ -87,7 +87,7 @@ uv run python -c "import finhjb"
 
 如果第一默认值在测试修复闭环里失败，最终实现应该显式升级。
 
-## 下一步
+## 相关页面
 
 - [输出与验证](./finhjb-model-coder-output-and-validation.md)
 - [完整整合页](./finhjb-model-coder.md)

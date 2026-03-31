@@ -1,12 +1,8 @@
 # Results and Diagnostics
 
-This page is the shared diagnostics reference for the package path and the BCW path.
+Use this page once you already have a solve and want to answer a narrower question: what did the solver actually return, and do the objects look economically and numerically sensible?
 
-Read it after [Library Quickstart](./quickstart-library.md) or [Getting Started](./getting-started.md), once you already have a solve and want to inspect it cleanly.
-
-Read [API Reference](./api-reference.md) instead if you only need exact object members.
-
-Use the BCW walkthrough pages first if you need derivations, homogeneity mapping, or exact equation-to-code correspondence. This page assumes you already know what model you solved and want to inspect the returned objects.
+Read it after [Library Quickstart](./quickstart-library.md) or [Getting Started](./getting-started.md). If you only need exact object members, use [API Reference](./api-reference.md). If you still need derivations or equation-to-code mapping, go back to the BCW walkthroughs first.
 
 The main purpose is to help you answer:
 
@@ -15,7 +11,7 @@ The main purpose is to help you answer:
 - what does a "healthy" solution look like numerically?
 - which symptoms point to modeling errors versus numerical tuning issues?
 
-## Read This After
+## Most Useful Companions
 
 - [Library Quickstart](./quickstart-library.md)
 - [Getting Started](./getting-started.md)
@@ -309,7 +305,7 @@ Stop adjusting tolerances and go back to the equations if:
 
 That is usually a modeling issue, not a numerical fine-tuning issue.
 
-## Next Step
+## Related Pages
 
 - Read [Solver Guide](./solver-guide.md) if you want to choose the right workflow for your own model.
 - Read [Adapting BCW to Your Model](./adapting-bcw-to-your-model.md) if you are ready to migrate away from the BCW baselines.

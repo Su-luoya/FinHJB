@@ -1,14 +1,8 @@
 # 把 BCW 改成你自己的模型
 
-这一页是 BCW 路径通向“第一个自定义模型”的桥接页。
+当你已经能复现 BCW，而问题变成“怎样改经济设定、又不要一次把数值结构改崩”时，就应该看这一页。
 
-建议在 [BCW Liquidation 逐步讲解](./bcw2011-liquidation-walkthrough.md)、[BCW Refinancing 逐步讲解](./bcw2011-refinancing-walkthrough.md)、[BCW Hedging 逐步讲解](./bcw2011-hedging-walkthrough.md)、[BCW Credit Line 逐步讲解](./bcw2011-credit-line-walkthrough.md) 和 [建模指南](./modeling-guide.md) 之后阅读。
-
-如果你根本不打算把 BCW 当模板，而是直接从自己的问题开始建模，请改看 [库快速上手](./quickstart-library.md)。
-
-这一页回答的是一个非常实际的问题：
-
-“我已经能复现 BCW 了。接下来怎样把它改造成我自己的模型，而且不要一次改崩全部东西？”
+建议在四个 BCW walkthrough 和 [建模指南](./modeling-guide.md) 之后阅读。如果你根本不打算把 BCW 当模板，而是直接从自己的问题开始建模，请改看 [库快速上手](./quickstart-library.md)。
 
 核心原则很简单：
 
@@ -18,7 +12,7 @@
 
 四个 BCW walkthrough 应该被当成“理论到代码”的底稿来读。这一页默认你已经理解论文方程是怎样落到 `Parameter` / `Boundary` / `PolicyDict` / `Policy` / `Model` 上的。
 
-## 建议在什么之后阅读
+## 建议先具备的上下文
 
 - [快速开始](./getting-started.md)
 - [BCW Liquidation 逐步讲解](./bcw2011-liquidation-walkthrough.md)
@@ -276,7 +270,7 @@ continuation 很有价值，但它只是把基础求解放大很多次。如果 
 
 这条“看上去不花哨”的路径，往往反而是最快进入可信研究工作流的方式。
 
-## 下一步
+## 相关页面
 
 - 回 [建模指南](./modeling-guide.md) 查看接口职责细节。
 - 回 [求解器指南](./solver-guide.md) 决定工作流。

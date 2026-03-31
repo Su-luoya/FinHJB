@@ -1,10 +1,8 @@
 # API Reference
 
-This page is the exact-name companion to the tutorial and workflow pages.
+Use this page when you already know what object or method you are looking for and want exact exported names, members, and loader behavior.
 
-Read it after [Library Quickstart](./quickstart-library.md), [Getting Started](./getting-started.md), or [Solver Guide](./solver-guide.md) once you already know what you are trying to do.
-
-Read [Modeling Guide](./modeling-guide.md) or [Results and Diagnostics](./results-and-diagnostics.md) instead if you still need conceptual guidance.
+Read it after [Library Quickstart](./quickstart-library.md), [Getting Started](./getting-started.md), or [Solver Guide](./solver-guide.md). If you still need conceptual guidance, go back to [Modeling Guide](./modeling-guide.md) or [Results and Diagnostics](./results-and-diagnostics.md).
 
 Use the tutorials first if you are still learning the workflow:
 
@@ -291,7 +289,7 @@ For interpretation, go to [Results and Diagnostics](./results-and-diagnostics.md
    :no-index:
 ```
 
-## Next Step
+## Related Pages
 
 - Read [Modeling Guide](./modeling-guide.md) if you need interface roles rather than signatures.
 - Read [Results and Diagnostics](./results-and-diagnostics.md) if you are interpreting solved objects.

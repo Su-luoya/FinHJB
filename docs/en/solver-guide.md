@@ -1,10 +1,8 @@
 # Solver Guide
 
-This page is the shared workflow reference for the package path, the BCW path, and the Model Coder path.
+Use this page when the equations are already on the page and the remaining question is numerical workflow: `solve()`, `boundary_update()`, `boundary_search()`, or `sensitivity_analysis()`.
 
-Read it after [Modeling Guide](./modeling-guide.md) if you are building a model directly, or after [Getting Started](./getting-started.md) if you are still grounding yourself in the repository examples.
-
-Read [Troubleshooting](./troubleshooting.md) instead if the workflow already fails and you need recovery steps more than workflow selection.
+Read it after [Modeling Guide](./modeling-guide.md) for direct model construction, or after [Getting Started](./getting-started.md) once the repository examples are running. If the workflow already fails and you mainly need recovery steps, go straight to [Troubleshooting](./troubleshooting.md).
 
 ## Workflow Decision Table
 
@@ -271,7 +269,7 @@ Most often, one of these is wrong:
 
 That is normal when each point requires a full nonlinear solve. Start with a short parameter grid and expand only after you trust the path.
 
-## Next Step
+## Related Pages
 
 - Read [Results and Diagnostics](./results-and-diagnostics.md) to interpret returned objects.
 - Read [Troubleshooting](./troubleshooting.md) if a workflow fails numerically.

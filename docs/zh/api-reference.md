@@ -1,10 +1,8 @@
 # API 参考
 
-这一页是教程页和工作流页的“精确接口补充”，不是最推荐的第一站。
+当你已经知道自己要找哪个对象、哪个方法，或者想确认精确导出名与 loader 行为时，再来这里最合适。
 
-如果你已经通过 [库快速上手](./quickstart-library.md)、[快速开始](./getting-started.md) 或 [求解器指南](./solver-guide.md) 知道自己在找什么，再来这里查最合适。
-
-如果你现在还需要概念解释，而不是查精确名字，请先去 [建模指南](./modeling-guide.md) 或 [结果与诊断](./results-and-diagnostics.md)。
+如果你还需要概念解释，而不是查精确名字，请先去 [建模指南](./modeling-guide.md) 或 [结果与诊断](./results-and-diagnostics.md)。
 
 如果你还在熟悉工作流，建议先读这些教程，再回来查名字和成员：
 
@@ -299,7 +297,7 @@ print(loaded.df.head())
    :no-index:
 ```
 
-## 下一步
+## 相关页面
 
 - 如果你需要接口职责而不是签名：看 [建模指南](./modeling-guide.md)。
 - 如果你在读求解输出：看 [结果与诊断](./results-and-diagnostics.md)。

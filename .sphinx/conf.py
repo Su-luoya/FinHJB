@@ -40,7 +40,7 @@ extensions = [
 source_suffix = {
     ".md": "markdown",
 }
-root_doc = "en/index"
+root_doc = "index"
 exclude_patterns = [
     "_build",
     "Thumbs.db",
@@ -177,17 +177,6 @@ def add_language_switcher_context(app, pagename, templatename, context, doctree)
     }
 
 
-def collect_redirect_pages(app):
-    yield (
-        "index",
-        {
-            "title": "FinHJB Documentation",
-            "redirect_target": "./en/",
-        },
-        "redirect.html",
-    )
-
-
 def normalize_markdown_math_source(app, docname, source) -> None:
     docpath = app.env.doc2path(docname, base=False)
     if not docpath.endswith(".md"):
@@ -198,5 +187,4 @@ def normalize_markdown_math_source(app, docname, source) -> None:
 def setup(app):
     app.add_css_file("language-switcher.css")
     app.connect("html-page-context", add_language_switcher_context)
-    app.connect("html-collect-pages", collect_redirect_pages)
     app.connect("source-read", normalize_markdown_math_source)

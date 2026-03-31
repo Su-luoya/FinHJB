@@ -1,8 +1,6 @@
 # Model Coder Overview
 
-This page is the front door for the `finhjb-model-coder` path.
-
-Read it if you want to know whether the skill is the right tool before you prepare equations or environment details.
+Use this page to decide whether `finhjb-model-coder` is the right tool before you prepare the full equation bundle.
 
 ## What The Skill Is For
 
@@ -47,7 +45,7 @@ Do not use the skill as the primary path when:
 
 In those cases, start with the package path or the BCW path instead.
 
-## Read Next
+## Related Pages
 
 - [Inputs and Readiness](./finhjb-model-coder-inputs-and-readiness.md)
 - [Output and Validation](./finhjb-model-coder-output-and-validation.md)

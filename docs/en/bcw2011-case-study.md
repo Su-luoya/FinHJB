@@ -1,10 +1,8 @@
 # BCW2011 Case Study
 
-This page is the hub for the repository BCW path.
+Use this page to keep the four BCW repository cases in one frame. After you have run the scripts once, this is the cleanest place to align notation, numerical targets, and implementation patterns.
 
-Use it after [Getting Started](./getting-started.md) when you want the full map of the four worked BCW cases shipped in `src/example/`.
-
-The repository examples now cover four paper-aligned cases:
+The repository currently covers four paper-aligned cases:
 
 - `src/example/BCW2011Liquidation.py`
 - `src/example/BCW2011Refinancing.py`
@@ -15,7 +13,7 @@ The shared paper transcript used for equation references is:
 
 - `src/example/A_unified_theory_of_tobin's_q,_corporate_investment,_financing,_and_risk_management.md`
 
-## What The BCW Path Is For
+## What The BCW Path Teaches
 
 The BCW track is the shortest route from a continuous-time corporate finance paper to a runnable one-dimensional FinHJB implementation.
 
@@ -81,7 +79,7 @@ Examples:
 - hedging: keep the refinancing boundary logic but solve a richer policy problem,
 - credit line: keep issuance and payout logic while switching the HJB residual across regimes.
 
-## Recommended Reading Order
+## Reading Order
 
 If your goal is to understand the package through BCW rather than just run the scripts, use this order:
 
@@ -118,7 +116,7 @@ If you later adapt BCW to your own model, pick the closest structural example:
 - hedging for multiple controls and control-dependent variance,
 - credit line for regime-dependent residuals on one shared grid.
 
-## Next Step
+## Related Pages
 
 - Start with [BCW2011 Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md).
 - Use [Results and Diagnostics](./results-and-diagnostics.md) once you want a solver-oriented view of the objects returned by `run_case()`.

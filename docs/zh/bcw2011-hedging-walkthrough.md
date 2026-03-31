@@ -2,11 +2,11 @@
 
 建议在 [BCW2011 Refinancing 逐步讲解](./bcw2011-refinancing-walkthrough.md) 之后阅读。
 
-这一页是下面这个仓库脚本的“公式到代码”讲解：
+这里对应的仓库脚本是：
 
 - `src/example/BCW2011Hedging.py`
 
-## 目标
+## 这一页重点看什么
 
 读完以后，你应该能理解：
 
@@ -15,7 +15,7 @@
 - 为什么对冲策略会自然分成 maximum-hedging、interior、zero-hedging 三段；
 - costly margin 解和 frictionless comparison object 在实现上到底有什么区别。
 
-## 运行约定
+## 复现命令
 
 请在仓库根目录执行：
 
@@ -189,7 +189,7 @@ for label, result in bundle["results"].items():
 
 它最适合那些“复杂性来自策略，而不是来自多状态变量”的一维模型。
 
-## 下一步
+## 相关页面
 
 - 继续看 [BCW2011 Credit Line 逐步讲解](./bcw2011-credit-line-walkthrough.md)。
 - 当你想从求解器角度看 `psi`、`psi_interior` 和切点诊断时，再配合 [结果与诊断](./results-and-diagnostics.md) 一起看。

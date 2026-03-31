@@ -1,14 +1,8 @@
 # Adapting BCW To Your Model
 
-This page is the bridge from the BCW path into your first custom model.
+Use this page once you can reproduce BCW and the question becomes: how do I change the economics without breaking the numerical structure all at once?
 
-Read it after [BCW2011 Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md), [BCW2011 Refinancing Walkthrough](./bcw2011-refinancing-walkthrough.md), [BCW2011 Hedging Walkthrough](./bcw2011-hedging-walkthrough.md), [BCW2011 Credit Line Walkthrough](./bcw2011-credit-line-walkthrough.md), and [Modeling Guide](./modeling-guide.md).
-
-Read [Library Quickstart](./quickstart-library.md) instead if you are not using BCW as your template.
-
-This page answers the practical question:
-
-"I can reproduce BCW. How do I turn it into my own model without breaking everything at once?"
+Read it after the four BCW walkthroughs and [Modeling Guide](./modeling-guide.md). If you are not using BCW as the starting template, return to [Library Quickstart](./quickstart-library.md) instead.
 
 The guiding principle is simple:
 
@@ -18,7 +12,7 @@ The guiding principle is simple:
 
 Treat the four BCW walkthroughs as the theory-to-code source material. This page starts after you already understand how each paper equation was turned into a `Parameter` / `Boundary` / `PolicyDict` / `Policy` / `Model` implementation.
 
-## Read This After
+## Suggested Prerequisites
 
 - [Getting Started](./getting-started.md)
 - [BCW2011 Liquidation Walkthrough](./bcw2011-liquidation-walkthrough.md)
@@ -276,7 +270,7 @@ That means:
 
 That "boring" path is the fastest way to get to a credible research workflow.
 
-## Next Step
+## Related Pages
 
 - Return to [Modeling Guide](./modeling-guide.md) for interface details.
 - Return to [Solver Guide](./solver-guide.md) for workflow decisions.

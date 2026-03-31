@@ -106,8 +106,8 @@ def test_docs_indexes_link_skill_page():
 
     assert "finhjb-model-coder" in docs_index_en
     assert "finhjb-model-coder" in docs_index_zh
-    assert "runnable FinHJB environment" in docs_index_en
-    assert "可运行环境" in docs_index_zh
+    assert "actually run `finhjb`" in docs_index_en
+    assert "真的运行 `finhjb`" in docs_index_zh
 
 
 def test_docs_and_readme_describe_environment_numerics_and_test_loop():
@@ -145,11 +145,11 @@ def test_docs_and_readme_describe_environment_numerics_and_test_loop():
     assert "mathematics still needs derivation before it maps into code" in skill_en
     assert "数学表达还不能直接对应到代码，需要先做推导" in skill_zh
     assert "split the deliverable into solve, data, and plotting files" in readme_en
-    assert "默认拆成求解文件、数据保存文件、绘图文件" in readme_zh
-    assert "stop and confirm the missing derivation steps" in readme_en
-    assert "需要先做推导" in readme_zh
-    assert "If You Plan To Use `finhjb-model-coder`" in install_en
-    assert "如果你打算使用 `finhjb-model-coder`" in install_zh
+    assert "拆成求解、数据和绘图文件" in readme_zh
+    assert "derivations" in readme_en
+    assert "推导" in readme_zh
+    assert "Before You Ask `finhjb-model-coder` For Runnable Code" in install_en
+    assert "在要求 `finhjb-model-coder` 交付可运行代码之前" in install_zh
     assert "When Not To Use `central`" in solver_en
     assert "什么时候不该继续用 `central`" in solver_zh
 

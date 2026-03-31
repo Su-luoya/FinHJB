@@ -1,12 +1,12 @@
 # BCW2011 Hedging Walkthrough
 
-Read this page after [BCW2011 Refinancing Walkthrough](./bcw2011-refinancing-walkthrough.md).
+Work through this page after [BCW2011 Refinancing Walkthrough](./bcw2011-refinancing-walkthrough.md).
 
-This page is the formula-first walkthrough for:
+The code discussed here is:
 
 - `src/example/BCW2011Hedging.py`
 
-## Goal
+## What To Watch
 
 By the end of this page, you should understand:
 
@@ -15,7 +15,7 @@ By the end of this page, you should understand:
 - why the hedge rule splits into maximum-hedging, interior, and zero-hedging regions,
 - how the costly-margin solution differs from the frictionless comparison object.
 
-## Run Contract
+## Reproduction
 
 Run this example from the repository root:
 
@@ -189,7 +189,7 @@ Start from this case if your own model has:
 
 It is the right template for one-dimensional models whose complexity comes from policies, not from extra state variables.
 
-## Next Step
+## Related Pages
 
 - Continue to [BCW2011 Credit Line Walkthrough](./bcw2011-credit-line-walkthrough.md).
 - Use [Results and Diagnostics](./results-and-diagnostics.md) when you want a solver-oriented way to inspect `psi`, `psi_interior`, and the inferred region boundaries.

@@ -85,8 +85,10 @@ def test_readme_points_to_existing_docs_entrypoints():
     readme_en = (ROOT / "README.md").read_text()
     readme_zh = (ROOT / "README.zh-CN.md").read_text()
 
+    shared_targets = [
+        "./docs/index.md",
+    ]
     en_targets = [
-        "./docs/en/index.md",
         "./docs/en/installation-and-environment.md",
         "./docs/en/getting-started.md",
         "./docs/en/quickstart-library.md",
@@ -96,7 +98,6 @@ def test_readme_points_to_existing_docs_entrypoints():
         "./docs/en/adapting-bcw-to-your-model.md",
     ]
     zh_targets = [
-        "./docs/zh/index.md",
         "./docs/zh/installation-and-environment.md",
         "./docs/zh/getting-started.md",
         "./docs/zh/quickstart-library.md",
@@ -105,6 +106,11 @@ def test_readme_points_to_existing_docs_entrypoints():
         "./docs/zh/bcw2011-case-study.md",
         "./docs/zh/adapting-bcw-to-your-model.md",
     ]
+
+    for target in shared_targets:
+        assert target in readme_en
+        assert target in readme_zh
+        assert (ROOT / target.removeprefix("./")).exists()
 
     for target in en_targets:
         assert target in readme_en
@@ -144,13 +150,43 @@ def test_public_api_names_are_documented():
         assert symbol in readme_zh or symbol in api_zh
 
 
-def test_docs_root_contains_only_language_directories():
+def test_docs_root_contains_portal_and_language_directories():
     docs_root = ROOT / "docs"
     files_in_root = [p for p in docs_root.iterdir() if p.is_file()]
     dirs_in_root = {p.name for p in docs_root.iterdir() if p.is_dir()}
 
-    assert files_in_root == []
+    assert {p.name for p in files_in_root} == {"index.md"}
     assert dirs_in_root == {"en", "zh"}
+
+
+def test_docs_portal_and_language_indexes_define_expected_structure():
+    conf = _load_sphinx_conf_module()
+    portal = (ROOT / "docs" / "index.md").read_text()
+    index_en = (ROOT / "docs" / "en" / "index.md").read_text()
+    index_zh = (ROOT / "docs" / "zh" / "index.md").read_text()
+
+    assert conf.root_doc == "index"
+    assert "en/index" in portal
+    assert "zh/index" in portal
+
+    for text in (index_en, index_zh):
+        assert "getting-started" in text
+        assert "finhjb-model-coder" in text
+
+    assert ":caption: Shared Setup" in index_en
+    assert ":caption: BCW Reproduction And Adaptation" in index_en
+    assert ":caption: Direct Package Use" in index_en
+    assert ":caption: Model Coder" in index_en
+    assert ":caption: Reference" in index_en
+
+    assert ":caption: 共享起点" in index_zh
+    assert ":caption: BCW 复现与迁移" in index_zh
+    assert ":caption: 直接使用 Package" in index_zh
+    assert ":caption: Model Coder" in index_zh
+    assert ":caption: 参考" in index_zh
+
+    assert "../zh/index" not in index_en
+    assert "../en/index" not in index_zh
 
 
 def test_sphinx_conf_enables_markdown_math_rendering():

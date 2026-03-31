@@ -1,6 +1,8 @@
 # 安装与环境
 
-这一页服务三条文档路径的共同前置问题：你的目标工作流到底需要安装什么。
+FinHJB 最先要回答的通常不是方程怎么写，而是应该装发布版 package 还是整个仓库。
+
+下游项目优先装发布版。需要 BCW 示例、源码树或 `finhjb-model-coder` 时，再切到仓库源码。
 
 ## 先选安装模式
 
@@ -40,7 +42,7 @@ uv run python -c "import finhjb as fjb; print(fjb.__all__[:5])"
 export MPLBACKEND=Agg
 ```
 
-## 发布版包不会带上什么
+## 仓库专用材料
 
 发布到 PyPI 的 wheel 不包含这些仓库内文件：
 
@@ -52,9 +54,9 @@ export MPLBACKEND=Agg
 
 如果你的任务依赖这些文件，就不要只装发布版包。
 
-## 如果你打算使用 `finhjb-model-coder`
+## 在要求 `finhjb-model-coder` 交付可运行代码之前
 
-Skill 和 Python 包是两件不同的东西。
+Skill 和 Python 包是两个独立对象。只有环境已经可用时，Skill 才能诚实地交付“可运行代码”。
 
 在要求 Codex 交付“可运行代码”之前，先按下面的清单确认：
 
@@ -64,7 +66,7 @@ Skill 和 Python 包是两件不同的东西。
 
 如果 smoke test 失败，正确的下一步是先解决环境，而不是继续生成代码。
 
-## 下一步看什么
+## 相关页面
 
 - Package 路径：[库快速上手](./quickstart-library.md)
 - BCW 路径：[快速开始](./getting-started.md)

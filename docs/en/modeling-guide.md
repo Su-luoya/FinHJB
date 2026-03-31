@@ -1,10 +1,8 @@
 # Modeling Guide
 
-This page belongs to the package path and the custom-model stage of the BCW path.
+Use this page when the main question is not "what does the API export?" but "which part of the economics belongs in which FinHJB object?"
 
-Read it after [Library Quickstart](./quickstart-library.md) if you are using FinHJB directly, or after [BCW2011 Case Study](./bcw2011-case-study.md) if you are coming from the repository examples.
-
-Read [API Reference](./api-reference.md) instead if you only need exact exported names and signatures rather than interface design guidance.
+Read it after [Library Quickstart](./quickstart-library.md) for direct package use, or after [BCW2011 Case Study](./bcw2011-case-study.md) when you are turning a benchmark structure into your own model. If you only need exact exported names and signatures, go straight to [API Reference](./api-reference.md).
 
 ## The Four Core Components
 
@@ -313,7 +311,7 @@ class Model(fjb.AbstractModel[Parameter, PolicyDict]):
         return -p.r * v + (s - inv) * dv + 0.5 * p.sigma**2 * d2v
 ```
 
-## Next Step
+## Related Pages
 
 - Read [Solver Guide](./solver-guide.md) to choose the right workflow.
 - Read [Adapting BCW to Your Model](./adapting-bcw-to-your-model.md) if you want a migration checklist from the BCW track.

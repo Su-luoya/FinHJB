@@ -1,10 +1,8 @@
 # FAQ
 
-This page is the short-answer companion to the BCW and package paths.
+Use this page for repeated practical questions once the main workflow is already familiar.
 
-Read it after [Getting Started](./getting-started.md) or [Library Quickstart](./quickstart-library.md) when you have repeated practical questions but do not need a full tutorial again.
-
-Read [API Reference](./api-reference.md) instead if your question is only about exact names or signatures.
+Read it after [Getting Started](./getting-started.md) or [Library Quickstart](./quickstart-library.md). If the question is only about exact names or signatures, go to [API Reference](./api-reference.md).
 
 ## Should I start from the API reference?
 
@@ -144,7 +142,7 @@ For BCW, good questions are:
 - is `d2v[-1]` near zero?
 - do the policies have the expected left-tail and right-tail behavior?
 
-## Next Step
+## Related Pages
 
 - [Results and Diagnostics](./results-and-diagnostics.md) for interpretation
 - [Modeling Guide](./modeling-guide.md) for interfaces

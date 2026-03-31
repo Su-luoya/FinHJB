@@ -2,11 +2,11 @@
 
 建议在 [BCW2011 Liquidation 逐步讲解](./bcw2011-liquidation-walkthrough.md) 之后阅读。
 
-这一页是下面这个仓库脚本的“公式到代码”讲解：
+这里对应的仓库脚本是：
 
 - `src/example/BCW2011Refinancing.py`
 
-## 目标
+## 这一页重点看什么
 
 读完以后，你应该能理解：
 
@@ -15,7 +15,7 @@
 - 发行后的目标现金比率 `m` 是如何从数值解里恢复出来的；
 - `phi=1%` 与 `phi=0` 的对照为什么对应 Figure 3。
 
-## 运行约定
+## 复现命令
 
 请在仓库根目录执行：
 
@@ -197,7 +197,7 @@ for label, result in bundle["results"].items():
 
 很多融资模型其实不需要 Hedging 或 Credit Line 那么复杂，但很需要这一页的结构。
 
-## 下一步
+## 相关页面
 
 - 继续看 [BCW2011 Hedging 逐步讲解](./bcw2011-hedging-walkthrough.md)。
 - 如果你想专门看 `m` 是如何从 `grid.dv` 里识别出来的，再配合 [结果与诊断](./results-and-diagnostics.md) 一起看。

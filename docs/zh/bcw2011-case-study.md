@@ -1,10 +1,8 @@
 # BCW2011 案例总览
 
-这一页是仓库 BCW 路径的总入口。
+这一页把四个 BCW 仓库案例放在同一张图里看。跑过 [快速开始](./getting-started.md) 以后，先回到这里统一记号、数值检查和代码映射，会比直接跳进某一个 walkthrough 更稳。
 
-如果你已经读过 [快速开始](./getting-started.md)，并想系统理解 `src/example/` 里四个 BCW 案例分别在教什么，就从这里继续。
-
-仓库现在提供四个与论文主图对应的案例：
+仓库当前覆盖四个和论文对应的案例：
 
 - `src/example/BCW2011Liquidation.py`
 - `src/example/BCW2011Refinancing.py`
@@ -15,7 +13,7 @@
 
 - `src/example/A_unified_theory_of_tobin's_q,_corporate_investment,_financing,_and_risk_management.md`
 
-## BCW 路径到底是用来干什么的
+## BCW 路径到底教什么
 
 BCW 主线的价值，在于它把“连续时间公司金融论文”到“可运行的一维 FinHJB 实现”这段桥搭得非常完整。
 
@@ -118,7 +116,7 @@ $$
 - hedging：多控制与控制进入扩散项；
 - credit line：单一网格上的 regime-dependent residual。
 
-## 下一步
+## 相关页面
 
 - 从 [BCW2011 Liquidation 逐步讲解](./bcw2011-liquidation-walkthrough.md) 开始。
 - 当你想从求解器对象角度读 `run_case()` 返回值时，再配合 [结果与诊断](./results-and-diagnostics.md) 一起看。

@@ -2,7 +2,7 @@
 
 `finhjb-model-coder` is the repository's Codex skill for turning continuous-time finance models into executable one-dimensional FinHJB code.
 
-This page is now the consolidated hub for the Model Coder path.
+Use this page when you want the full working protocol in one place: scope, environment checks, numerical choices, file layout, and the test-repair loop.
 
 If you are entering this path fresh, read these pages in order:
 
@@ -10,9 +10,7 @@ If you are entering this path fresh, read these pages in order:
 - [Inputs and Readiness](./finhjb-model-coder-inputs-and-readiness.md)
 - [Output and Validation](./finhjb-model-coder-output-and-validation.md)
 
-Keep this page open when you want the full all-in-one reference on scope, readiness, numerical choices, testing, and failure modes.
-
-This page is for researchers who want to start from equations, paper notes, or LaTeX rather than from an existing Python file.
+Keep this page open when the input is a paper, a LaTeX note, or a set of HJB equations rather than an existing Python implementation.
 
 ## What The Skill Does
 

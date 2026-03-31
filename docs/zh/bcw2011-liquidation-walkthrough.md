@@ -2,11 +2,11 @@
 
 建议在 [快速开始](./getting-started.md) 和 [BCW2011 案例总览](./bcw2011-case-study.md) 之后阅读这一页。
 
-这一页是下面这个仓库脚本的“公式到代码”讲解：
+这里对应的仓库脚本是：
 
 - `src/example/BCW2011Liquidation.py`
 
-## 目标
+## 这一页重点看什么
 
 读完以后，你应该能够双向理解这个案例：
 
@@ -20,7 +20,7 @@
 - 一个内生边界 target，
 - 没有再融资，也没有分段 regime。
 
-## 运行约定
+## 复现命令
 
 请在仓库根目录执行：
 
@@ -230,7 +230,7 @@ print(result["grid"].df.tail())
 - 多控制变量，
 - 或按区域切换 residual。
 
-## 下一步
+## 相关页面
 
 - 继续看 [BCW2011 Refinancing 逐步讲解](./bcw2011-refinancing-walkthrough.md)。
 - 当你想从“求解器对象”的角度读 `grid`、`summary` 和边界诊断时，再配合 [结果与诊断](./results-and-diagnostics.md) 一起看。
