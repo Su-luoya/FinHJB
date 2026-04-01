@@ -40,6 +40,213 @@ solver = fjb.Solver(
 - `number`：网格点数，越大越精细，也越耗时；
 - `config`：控制导数方法、迭代上限、容忍度、边界搜索参数等。
 
+## 一维 HJB 在 FinHJB 中是怎么被求解的
+
+前面的表告诉你“该用哪个工作流”，这一节补的是“这些工作流在一维 HJB 上到底做了什么”。
+
+抽象地说，仓库要解的是这一类问题：
+
+$$
+0 = \sup_{\pi \in \Pi} \mathcal{H}\bigl(V(s), V_s(s), V_{ss}(s), s; \pi\bigr),
+$$
+
+其中控制变量可以是一维，也可以是多维；如果模型有 jump 项，代码会把它作为 `jump` 单独传进 `Model.hjb_residual(...)`。
+
+### 第一步：把连续问题离散成内部网格方程
+
+`Grid.reset()` 先把状态区间离散成
+
+$$
+s_0 = s_{\min} < s_1 < \cdots < s_{N-2} < s_{N-1} = s_{\max},
+$$
+
+然后把边界值固定为
+
+$$
+v_0 = v_{\text{left}}, \qquad v_{N-1} = v_{\text{right}},
+$$
+
+真正作为未知量迭代的是内部向量
+
+$$
+v_{\text{inter}} = (v_1, \dots, v_{N-2}).
+$$
+
+对每个内部点 $s_i$，代码都会构造一个离散残差
+
+$$
+F_i(v_{i-1}, v_i, v_{i+1}; \pi_i) = 0.
+$$
+
+当前实现里，一阶导在内部点使用 `Config.dv_func` 指定的差分格式，默认是 central：
+
+$$
+D_h v_i = \frac{v_{i+1} - v_{i-1}}{2h}.
+$$
+
+二阶导在内部点使用中心差分：
+
+$$
+D_{hh} v_i = \frac{v_{i+1} - 2v_i + v_{i-1}}{h^2}.
+$$
+
+而 `Grid.update_with_v_inter()` 在重建整条 `v`、`dv`、`d2v` 时，会在左右边界额外使用二阶单边 stencil，所以边界导数诊断和内部差分是连在一起的：
+
+```python
+v = [v_left, *v_inter, v_right]
+dv = [left one-sided, dv_func(interior), right one-sided]
+d2v = [left one-sided, centered interior, right one-sided]
+```
+
+这也是为什么 FinHJB 的主要求解未知量不是整条 `v`，而是边界已经给定后的 `v_inter`。
+
+### 第二步：固定策略，做 policy evaluation
+
+给定当前策略 $\pi$ 后，`PolicyEvaluation` 解的是固定策略下的离散 HJB 系统：
+
+$$
+F(v; \pi) = 0.
+$$
+
+当前实现不是把它当成简单的逐点替换，而是做 Newton 型更新：
+
+$$
+J(v^{(k)}; \pi)\,\Delta v^{(k)} = -F(v^{(k)}; \pi),
+\qquad
+v^{(k+1)} = v^{(k)} + \Delta v^{(k)}.
+$$
+
+这里 Jacobian 会是三对角矩阵，因为每个 $F_i$ 只依赖相邻的三个值点 $(v_{i-1}, v_i, v_{i+1})$。代码对应关系就是：
+
+- `residual_pointwise(...)`：在单个内部点上调用 `Model.hjb_residual(...)`；
+- `jax.jacrev(..., argnums=(0, 1, 2))`：自动拿到 $\partial F_i / \partial v_{i-1}$、$\partial F_i / \partial v_i$、$\partial F_i / \partial v_{i+1}$；
+- `jax.vmap(...)`：把这个单点计算复制到全部内部点；
+- `jax.lax.linalg.tridiagonal_solve(...)`：解 Newton 步对应的三对角线性系统。
+
+机制上可以把它读成：
+
+```python
+residuals, dl, d, du = vmapped_pointwise_system(grid)
+dv_update = tridiagonal_solve(dl, d, du, -residuals)
+grid = grid.replace(v_inter=grid.v_inter + dv_update)
+```
+
+`EvaluationState` 记录的是这一内层循环的数值状态，包括：
+
+- `hjb_residuals`：当前内部网格上的点态残差；
+- `last_update_step`：本轮 Newton 更新的范数；
+- `best_error` 和 `patience_counter`：是否还在继续改善；
+- `converged`：是否满足 `pe_tol`。
+
+停止规则也在这一层定义：更新步长小于 `pe_tol`，或者长期没有改善达到 `pe_patience`，都会触发 early stop。
+
+### 第三步：更新策略，做 policy improvement
+
+`PolicyIteration` 的外层循环是：
+
+1. 固定当前策略，先做一次 policy evaluation；
+2. 用新的 `v`、`dv`、`d2v` 更新策略；
+3. 比较新旧策略变化是否已经足够小。
+
+数学上可以写成
+
+$$
+v^{k+1} = \operatorname{Eval}(\pi^k), \qquad
+\pi^{k+1} = \operatorname{Improve}(v^{k+1}),
+$$
+
+直到
+
+$$
+\max_j \lVert \pi^{k+1}_j - \pi^k_j \rVert
+$$
+
+小于 `pi_tol`。
+
+实现上，`AbstractPolicy.update()` 会按声明顺序执行两类更新：
+
+- `@explicit_policy`：直接把闭式控制更新写进 `grid.policy[...]`；
+- `@implicit_policy`：把 FOC 写成根问题，在每个网格点上解局部非线性系统。
+
+对后一类，当前仓库支持的点态求解器包括 `GaussNewton`、`Broyden`、`LevenbergMarquardt` 和自定义 `NewtonRaphson`。因此 policy improvement 不是“固定写死一条公式”，而是“由 `Policy` 类决定控制怎么从值函数里反推出来”。
+
+`PolicyIteration` 目前有两个 backend：
+
+- `scan`：显式地做 evaluation $\rightarrow$ improvement 循环，并保留逐轮误差历史；
+- `anderson`：把整个映射视为固定点问题，再对 `grid -> next_grid` 做 Anderson acceleration。
+
+无论用哪一种，当前默认的外层误差量都是“每个策略数组变化范数的最大值”。
+
+### 第四步：如果边界未知，把它变成 boundary search
+
+当边界本身未知时，FinHJB 不是直接把边界塞进 policy iteration 里一起更新，而是额外构造外层 residual map：
+
+$$
+G(b) = C\bigl(\mathrm{Solve}(b)\bigr),
+$$
+
+其中 $b$ 是候选边界向量，`Solve(b)` 表示“在该边界下先把内部 HJB 解出来”，而 $C$ 来自 `BoundaryConditionTarget.condition_func`。
+
+`boundary_search()` 在 `_create_objective_func(...)` 里的真实流程就是：
+
+1. 用候选边界 `b` 覆盖当前待搜索的边界字段；
+2. 对新边界调用 `reset()`，重建网格、值函数猜测和策略起点；
+3. 运行内层 HJB 求解器；
+4. 在已求解的 `solved_grid` 上重新读取 `boundary_condition()`；
+5. 计算各个 target 的 residual，并把 residual 向量和 `solved_grid` 一起返回。
+
+对应的代码骨架可以概括成：
+
+```python
+def residual_func(boundary_params):
+    boundary = initial_grid.boundary.update_boundaries(...)
+    temp_grid = initial_grid.replace(boundary=boundary).reset()
+    pi_state, _ = inner_func(temp_grid)
+    solved_grid = pi_state.grid
+    residuals = jnp.array([
+        target.condition_func(solved_grid) for target in final_targets
+    ])
+    return residuals, solved_grid
+```
+
+这意味着 `boundary_search()` 真正求解的是“边界条件 residual 为零”的外层问题，而不是直接改写 HJB 本体。
+
+### 第五步：不同 boundary search 方法到底在做什么
+
+当前方法可以按算法角色分成三类：
+
+- `bisection`：标量 bracket search。如果有多个 target，当前实现会按 `boundary_condition()` 列表顺序做嵌套递归，因此这个顺序就是从外层到内层的搜索顺序。它使用的是每个 `BoundaryConditionTarget` 自带的 `low`、`high`、`tol`、`max_iter`。
+- `hybr`、`broyden`、`broyden1`、`krylov`：把 $G(b)=0$ 当成向量 root problem，统一使用 `Config.bs_tol` 和 `Config.bs_max_iter`。
+- `lm`、`gauss_newton`、`lbfgs`：更接近 least-squares 风格。前两者直接利用残差映射做 least-squares root search，`lbfgs` 则最小化 $\sum_k G_k(b)^2$，所以它不是严格意义上的“直接求根”。
+
+因此，`boundary_search()` 里的方法切换，本质上是在换“外层边界 residual 怎么解”，而不是在换内部 HJB 的离散化方式。
+
+### `boundary_update()` 和 `boundary_search()` 的区别
+
+这两个工作流的外层逻辑看起来都像“边界在动”，但数学结构并不一样。
+
+`boundary_search()` 解的是
+
+$$
+G(b) = 0,
+$$
+
+也就是“找到一个边界，让某个接触条件或光滑贴合条件成立”。
+
+而 `boundary_update()` 不是对残差做 root search。它要求模型直接返回
+
+```python
+boundary_dict, boundary_error = model.update_boundary(grid)
+```
+
+所以外层逻辑更接近：
+
+1. 先在当前边界下求解；
+2. 直接从已求解网格读出新的边界值；
+3. 用 `boundary_error` 判断是否继续迭代。
+
+如果你的模型能从当前解直接推出“下一轮边界应该是多少”，`boundary_update()` 就更自然；如果你只有一个“某个条件必须等于零”的 target，应该用 `boundary_search()`。
+
 ## `solve()`：固定边界下的策略迭代
 
 用法：
@@ -47,6 +254,8 @@ solver = fjb.Solver(
 ```python
 state, history = solver.solve()
 ```
+
+如果你想先理解它背后的离散化和内外层迭代逻辑，请先看上一节“[一维 HJB 在 FinHJB 中是怎么被求解的](#一维-hjb-在-finhjb-中是怎么被求解的)”。
 
 适合在这些时候用：
 
@@ -114,6 +323,8 @@ NotImplementedError: `Solver.boundary_update()` requires the model class to impl
 ```python
 state = solver.boundary_search(method="bisection", verbose=False)
 ```
+
+如果你想先看“候选边界如何被包装成 residual map，再交给外层搜索器”，请先看上一节“[一维 HJB 在 FinHJB 中是怎么被求解的](#一维-hjb-在-finhjb-中是怎么被求解的)”。
 
 这正是 BCW 主线最关键的工作流。适合在这些时候用：
 
