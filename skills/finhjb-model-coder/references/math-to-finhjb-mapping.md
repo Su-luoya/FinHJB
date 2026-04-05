@@ -73,4 +73,4 @@ If the model has:
 - path dependence that cannot be folded into one state
 - regime switching that requires coupled value functions
 
-then stop and consult `unsupported-models.md` before generating code.
+then stop and consult `readiness-and-scope.md` before generating code.

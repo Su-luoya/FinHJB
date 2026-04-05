@@ -1,79 +1,54 @@
 # Clarification Checklist
 
-Ask questions only when the answer will materially change the generated FinHJB implementation.
+Read this file only after the spec exists and before code or search generation.
 
-## Stage 1: Direct Blockers Before Coding
+Your decision after reading: which missing facts materially change implementation, and which defaults are safe to state explicitly.
 
-- Which Python environment should be treated as the execution target, and can it already import `finhjb`?
-- What is the single continuous state variable and what interval should the grid cover?
-- Which objects are controls, and are they chosen continuously inside the HJB?
-- Does the current material already map directly into code, or do we still need derivations for the normalized state, HJB residual, FOC, or boundary formulas?
-- What are the exact left and right boundary conditions for the value function?
-- Is any boundary endogenous and therefore solved with `boundary_search()` or `boundary_update()`?
-- Does the diffusion term stay away from zero at both edges, or does one boundary require `forward` or `backward` differences?
-- If `boundary_search()` is needed, how many boundary targets are being solved for, and do we have credible brackets for `bisection`?
-- What is the control update rule: closed form, FOC residual, clipping rule, or regime-by-regime logic?
-- Does the HJB contain a non-zero jump term that needs `Model.jump(...)`?
-- Which parameters and calibration values should be hard-coded into the first executable version?
-- If the document names parameters but does not give usable numeric values, which baseline calibration should the runnable version use?
-- If the user wants plots or figures, which quantities should be plotted and how should the outputs be organized?
-- If the task combines sensitivity analysis with plotting, should the deliverable be split into separate solve, data-save, and plotting files?
-- If the model is runnable but the parameters are not reliable, which parameters must stay fixed and which may be searched?
-- For each searchable parameter, what interval and scale should the rescue search use?
-- Which conditions are mandatory hard constraints and which are only soft preferences?
-- If the user describes a desired figure or state shape, which computable diagnostics should stand in for that description?
-- What counts as a successful solve in economic or numerical terms?
+## Ask Only When The Answer Changes The Build
 
-## Stage 2: Paper-Excerpt Follow-Ups
+- Which Python environment is the execution target, and can it already import `finhjb`?
+- What is the single continuous state variable and its interval?
+- Which objects are controls, and how are they updated: closed form, FOC residual, clipping, or regime logic?
+- Does the current material already map directly into code, or are derivations still missing?
+- What are the exact left and right boundary conditions?
+- Is any boundary endogenous and solved by `boundary_search()` or `boundary_update()`?
+- Does diffusion degenerate near either edge strongly enough to change the derivative scheme?
+- If `boundary_search()` is needed, how many targets exist, and are credible brackets available?
+- Which numeric parameter values belong in the first runnable version?
+- If figures are requested, what exactly should be plotted?
+- If the task mixes sensitivity analysis with plotting, should the deliverable be split into solve, export, and plot files?
+- If rescue mode is needed, which parameters are fixed, which may move, and what counts as a successful result?
 
-- Confirm every equation that is only referenced by number rather than written out.
-- Ask the user to confirm any derivation step that turns paper notation into implementation-ready formulas.
-- Ask for pasted text when the excerpt omits the boundary conditions.
-- Ask for the calibration table or pasted parameter values when the excerpt defines symbols but omits their numeric values.
-- Ask what the deliverable figure should contain when the paper excerpt does not make the target plot explicit.
-- Ask whether sensitivity outputs should be saved and plotted through separate scripts rather than a single notebook-style file.
-- Ask for pasted text when the FOC, Kuhn-Tucker condition, or regime split is only shown in an image.
-- Ask the user whether they want the first runnable implementation to stay close to the paper notation or to adopt more descriptive variable names.
-- Ask whether rescue mode should return a reusable search runner plus task adapter, rather than only one hard-coded baseline.
+## Rescue-Mode Questions
 
-## Stage 3: Safe Defaults
+Ask these only when the model is already runnable and calibration is the only blocker:
 
-If the model is otherwise fully specified, you may propose and label these defaults:
+- Confirm the fixed/search parameter split explicitly.
+- Which parameters must stay fixed?
+- For each searchable parameter, what are `low`, `high`, `scale`, and `initial_center`?
+- Which conditions are hard constraints?
+- Which outcomes are soft preferences with weights or target closeness?
+- Which diagnostics should stand in for statements like “smooth,” “paper-like,” or “right shape”? If the user gives natural-language preferences, translate them into metrics before searching.
+- What search budget is acceptable for the first pass?
+- Which numeric fallbacks are allowed if the solve fails for numeric reasons?
 
-- `Config(derivative_method="central", pi_method="scan", pi_max_iter=50, pi_tol=1e-6)` only when the diffusion term is not edge-degenerate
-- `number=500` for a first-pass solve
-- `policy_guess=True` when the user gives a meaningful initialization
-- `LinearInitialValue` unless the boundary geometry clearly calls for `QuadraticInitialValue`
+## Safe Defaults
+
+State these as defaults, not facts, when the user does not care:
+
+- `Config(derivative_method="central", pi_method="scan", pi_max_iter=50, pi_tol=1e-6)` only when diffusion is not edge-degenerate
+- `number=500` for a first solve
+- `policy_guess=True` when a meaningful initialization exists
 - `boundary_search(method="bisection")` for one or two targets with credible brackets
-- `boundary_search(method="hybr")` for three or more targets, or when the smaller-target default fails the post-generation test loop
-- `search_budget = {coarse_samples: 5, shrink_rounds: 1, keep_ratio: 0.4}` for a first-pass rescue search
-- a small numeric fallback set such as `bisection -> hybr` or `number=400 -> number=800`, but only for solver failures
+- `boundary_search(method="hybr")` for three or more targets, or when the smaller-target default fails after testing
+- `search_budget = {coarse_samples: 5, shrink_rounds: 1, keep_ratio: 0.4}` for a first rescue-search pass
 
-## Stage 4: Do Not Silently Assume
+## Do Not Silently Assume
 
-- a second state variable can be collapsed into a parameter
-- an economic parameter can be assigned a paper-like number just because a nearby example used it
-- the plot should copy a standard paper figure when the user only said "please plot" but did not specify the target figure
-- sensitivity analysis plus plotting should be packed into one file just because the baseline solve can be
-- an unconfirmed algebraic derivation can be treated as settled just because it looks standard
-- an endogenous boundary target is `d2v[-1] = 0` just because BCW uses it
-- a multi-control problem can be reduced to one control without economic consequences
-- an implicit FOC can be safely rewritten as an explicit update without algebra
-- the user's environment is ready just because the repository contains FinHJB source code
-- `central` is always acceptable near a degenerate diffusion boundary
-- `bisection` should remain the final method after testing if the generated solve clearly fails under it
-- a vague request like “make the figure look smoother” is already a usable rescue-search objective without turning it into diagnostics
-- every numeric setting should be thrown into the rescue search just because the first candidate failed
-
-## Question Style
-
-- Ask only the blocking questions first.
-- Prefer short, concrete questions tied to code consequences.
-- If you can recommend a default, state it explicitly so the user can confirm or override it.
-- If parameter names are present but the numeric calibration is missing, ask before code generation instead of inventing a baseline.
-- If the user asked for plots but did not specify what to plot, ask before writing plotting code instead of guessing the figure layout.
-- If the model does not yet map directly into code, list the missing derivation steps explicitly and confirm them before code generation.
-- If the task includes sensitivity analysis plus plotting, default to a split file layout and make that explicit in the spec.
-- If rescue mode is appropriate, ask for the fixed/search parameter split, hard constraints, soft preferences, diagnostics, and budget before generating the runner.
-- If the user describes a preferred state shape or figure shape, translate it into metrics before you search.
-- After code generation, do not stop at "here is the code." Run the test loop, and only ask follow-up questions if the failure is caused by missing model information rather than a fixable implementation issue.
+- missing calibration values
+- missing figure definitions
+- missing derivation steps
+- unsupported extra state variables
+- vague shape preferences without diagnostics
+- every numeric setting should become part of the search space
+- a boundary-search default should remain final if executed tests say otherwise

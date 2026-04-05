@@ -9,15 +9,12 @@ INSTALL_SCRIPT = ROOT / "scripts" / "install_skill.py"
 
 EXPECTED_REFERENCES = {
     "clarification-checklist.md",
-    "environment-readiness.md",
+    "delivery-and-validation.md",
+    "implementation-decision-rules.md",
     "math-to-finhjb-mapping.md",
     "model-spec-schema.md",
-    "numerical-method-selection.md",
-    "output-contract.md",
     "parameter-search-protocol.md",
-    "template-selection.md",
-    "unsupported-models.md",
-    "validation-checklist.md",
+    "readiness-and-scope.md",
 }
 
 EXPECTED_TEMPLATES = {
@@ -71,26 +68,18 @@ def test_skill_workflow_mentions_environment_and_test_loop():
     skill_text = (SKILL_DIR / "SKILL.md").read_text()
     schema_text = (SKILL_DIR / "references" / "model-spec-schema.md").read_text()
     checklist_text = (SKILL_DIR / "references" / "clarification-checklist.md").read_text()
-    env_text = (SKILL_DIR / "references" / "environment-readiness.md").read_text()
-    numeric_text = (SKILL_DIR / "references" / "numerical-method-selection.md").read_text()
-    output_text = (SKILL_DIR / "references" / "output-contract.md").read_text()
+    readiness_text = (SKILL_DIR / "references" / "readiness-and-scope.md").read_text()
+    decision_text = (SKILL_DIR / "references" / "implementation-decision-rules.md").read_text()
+    delivery_text = (SKILL_DIR / "references" / "delivery-and-validation.md").read_text()
+    search_text = (SKILL_DIR / "references" / "parameter-search-protocol.md").read_text()
 
     assert "## Mission" in skill_text
-    assert "## Workflow" in skill_text
-    assert "## Hard Blockers" in skill_text
-    assert "## Generation Rules" in skill_text
-    assert "## Test-Repair Loop" in skill_text
-    assert "## Delivery" in skill_text
-    assert "## Parameter-Search Rescue Mode" in skill_text
-    assert "environment is not ready for `finhjb`" in skill_text
-    assert "parameter symbols are given but usable numeric values are not" in skill_text
-    assert "task asks for figures but the actual plot contents are unspecified" in skill_text
-    assert "sensitivity analysis with plotting" in skill_text
-    assert "Treat unmapped mathematics as a blocker" in skill_text
-    assert "Run the post-generation test loop" in skill_text
-    assert "`fixed_parameters`" in skill_text
-    assert "`search_parameters`" in skill_text
-    assert "hard constraints before ranking soft preferences" in skill_text
+    assert "## Use This Skill When" in skill_text
+    assert "## Fast Routing" in skill_text
+    assert "## Stage Protocol" in skill_text
+    assert "## Output Rule" in skill_text
+    assert "parameter-search rescue mode" in skill_text
+    assert "hard constraints before soft preferences" in skill_text
     assert "`derivative_method`" in schema_text
     assert "no confirmed numeric calibration" in schema_text
     assert "`plot_requirements`" in schema_text
@@ -101,21 +90,22 @@ def test_skill_workflow_mentions_environment_and_test_loop():
     assert "## Stage 1: Delivery Context" in schema_text
     assert "## Stage 4: Solve Plan" in schema_text
     assert "target “shape” has not yet been translated into diagnostics" in schema_text
-    assert "ask before code generation instead of inventing a baseline" in checklist_text
-    assert "ask before writing plotting code instead of guessing the figure layout" in checklist_text
-    assert "default to a split file layout" in checklist_text
-    assert "list the missing derivation steps explicitly" in checklist_text
+    assert "Ask Only When The Answer Changes The Build" in checklist_text
+    assert "Rescue-Mode Questions" in checklist_text
     assert "fixed/search parameter split" in checklist_text
-    assert "translate it into metrics before you search" in checklist_text
-    assert "## Stage 1: Direct Blockers Before Coding" in checklist_text
+    assert "translate them into metrics" in checklist_text
     assert "`post_generation_tests`" in schema_text
-    assert "## Hard Gate" in env_text
-    assert "Final executable code delivery is allowed only after a smoke test" in env_text
-    assert "## Derivative Scheme" in numeric_text
-    assert "## Boundary Search Method" in numeric_text
-    assert "Choose the finite-difference scheme" in numeric_text
-    assert "five deliverables for rescue-search tasks" in output_text
-    assert "runner plus task-adapter layout summary" in output_text
+    assert "## Hard Gate" in readiness_text
+    assert "Final executable delivery is allowed only after a smoke test" in readiness_text
+    assert "## Derivative Scheme" in decision_text
+    assert "## Boundary Search Method" in decision_text
+    assert "## Template Choice" in decision_text
+    assert "## Project Layout" in decision_text
+    assert "Rescue-Search Delivery Contract" in delivery_text
+    assert "executed test-and-repair summary" in delivery_text
+    assert "search runner plus task-adapter layout summary" in delivery_text
+    assert "Activation Rule" in search_text
+    assert "Translating Vague Preferences Into Diagnostics" in search_text
 
 
 def test_docs_indexes_link_skill_page():
@@ -140,32 +130,16 @@ def test_docs_and_readme_describe_environment_numerics_and_test_loop():
 
     assert "confirm that the target Python environment can actually run `finhjb`" in readme_en
     assert "先确认目标 Python 环境是否真的能运行 `finhjb`" in readme_zh
-    assert "## Stage 1: Before Code Generation" in skill_en
-    assert "## 第一阶段：生成代码前" in skill_zh
-    assert "Environment And Preconditions" in skill_en
-    assert "运行环境与前置条件" in skill_zh
-    assert "## Stage 2: Mapping, Methods, And Layout" in skill_en
-    assert "## 第二阶段：映射、数值方法与文件结构" in skill_zh
-    assert "Choosing The Derivative Scheme" in skill_en
-    assert "差分格式如何选" in skill_zh
-    assert "Choosing The Boundary Search Method" in skill_en
-    assert "边界搜索方法如何选" in skill_zh
-    assert "## Stage 3: Generation, Testing, And Delivery" in skill_en
-    assert "## 第三阶段：生成、测试与交付" in skill_zh
     assert "parameter-search rescue mode" in skill_en
     assert "parameter-search rescue mode" in skill_zh
-    assert "post-generation test loop" in skill_en
-    assert "生成后的测试修复闭环" in skill_zh
-    assert "defines parameters but does not give the calibration" in skill_en
-    assert "定义了参数，但没有给出数值校准" in skill_zh
-    assert "the user requests figures but has not specified what to plot" in skill_en
-    assert "要求画图但没有说明具体画什么" in skill_zh
     assert "`fixed_parameters`" in skill_en
     assert "`fixed_parameters`" in skill_zh
-    assert "File Layout For Sensitivity Analysis And Plotting" in skill_en
-    assert "敏感性分析加作图时的文件结构" in skill_zh
-    assert "mathematics still needs derivation before it maps into code" in skill_en
-    assert "数学表达还不能直接对应到代码，需要先做推导" in skill_zh
+    assert "current one-dimensional FinHJB interface" in skill_en
+    assert "当前一维 FinHJB 接口" in skill_zh
+    assert "generate runnable FinHJB code" in skill_en
+    assert "生成可运行的 FinHJB 代码" in skill_zh
+    assert "post-generation test loop" in skill_en
+    assert "生成后的测试修复闭环" in skill_zh
     assert "split the deliverable into solve, data, and plotting files" in readme_en
     assert "拆成求解、数据和绘图文件" in readme_zh
     assert "derivations" in readme_en
