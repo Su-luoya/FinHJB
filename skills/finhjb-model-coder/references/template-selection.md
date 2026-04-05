@@ -48,10 +48,19 @@ Use when:
 - one or more boundaries must be chosen by residual search
 - the model needs several `BoundaryConditionTarget` entries
 
+### `parameter-search-task.py`
+
+Use around the solve-layer template when:
+
+- the model is already runnable
+- the calibration or boundary guesses are not yet reliable
+- the user can specify fixed parameters, search ranges, hard constraints, and soft preferences
+
 ## Pass 2: Choose The Project Layout
 
 - If the task is a compact baseline solve, keep the deliverable small and runnable.
 - If the task combines sensitivity analysis with plotting, treat the template as the solve-layer only and add separate data-export and plotting files around it.
+- If the task uses rescue mode, treat `parameter-search-task.py` as the adapter layer around the chosen solve template or repository example.
 
 ## Selection Rules
 

@@ -41,6 +41,15 @@ Use this checklist to keep generated code numerically honest.
 - inspect `result.df` for convergence and boundary errors
 - confirm the comparative statics have the expected economic direction
 
+## Parameter-Search Rescue Checks
+
+- confirm the fixed/search parameter split matches the agreed spec
+- confirm every candidate is filtered through hard constraints before scoring
+- confirm infeasible candidates are not ranked against feasible ones
+- confirm the shrink-and-rerun step narrows the admitted ranges around strong feasible candidates
+- confirm numeric fallbacks stay inside the predeclared toggle set
+- confirm the saved result table records parameters, feasibility, score, diagnostics, and failure reasons
+
 ## Scholar-Facing Validation Notes
 
 Always include at least one model-specific economic sanity check such as:

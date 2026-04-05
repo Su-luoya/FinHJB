@@ -16,6 +16,8 @@ The goal is to evaluate whether the skill behaves like a real model-coding assis
   The model specification confirmed from the paper and the interaction.
 - `BCWrefinancing.py`
   The generated FinHJB implementation artifact.
+- `BCWrefinancing_search_task.py`
+  A parameter-search rescue adapter that wraps the BCW refinancing case in a fixed-parameter / searchable-parameter protocol.
 - `artifacts/`
   Runtime outputs such as the Figure 3-style comparison plot and optional summaries.
 
@@ -48,3 +50,4 @@ The fixture is intended to verify that the skill:
 - generates a refinancing-only one-control model rather than the hedging extension
 - runs a post-generation solve loop and archives the repair note if the default search choice must change
 - reproduces the qualitative Figure 3 comparison for `phi = 1%` and `phi = 0`
+- can also express the same case as a structured parameter-search rescue task when calibration must be searched rather than hard-coded

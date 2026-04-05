@@ -5,6 +5,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SKILL_TEST_DIR = ROOT / "skills" / "finhjb-model-coder" / "tests"
 FIXTURE_FILE = SKILL_TEST_DIR / "BCWrefinancing.py"
+SEARCH_TASK_FILE = SKILL_TEST_DIR / "BCWrefinancing_search_task.py"
+RUNNER_FILE = ROOT / "skills" / "finhjb-model-coder" / "scripts" / "parameter_search_runner.py"
 
 EXPECTED_TRACKED_FILES = {
     "README.md",
@@ -13,11 +15,21 @@ EXPECTED_TRACKED_FILES = {
     "case_ii_refinancing_scripted_protocol.md",
     "case_ii_refinancing_confirmed_spec.md",
     "BCWrefinancing.py",
+    "BCWrefinancing_search_task.py",
 }
 
 
 def load_fixture_module():
     spec = importlib.util.spec_from_file_location("bcw_refinancing_fixture", FIXTURE_FILE)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_runner_module():
+    spec = importlib.util.spec_from_file_location("parameter_search_runner", RUNNER_FILE)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
@@ -99,3 +111,38 @@ def test_refinancing_fixture_stays_single_control():
     assert "rho" not in text
     assert 'DEFAULT_DERIVATIVE_METHOD = "central"' in text
     assert 'DEFAULT_SEARCH_METHOD = "hybr"' in text
+
+
+def test_refinancing_parameter_search_task_runs(tmp_path, monkeypatch):
+    monkeypatch.setenv("MPLBACKEND", "Agg")
+    runner = load_runner_module()
+
+    bundle = runner.run_parameter_search(task_path=SEARCH_TASK_FILE, output_dir=tmp_path)
+
+    assert bundle["best_trial"] is not None
+    best_trial = bundle["best_trial"]
+    assert 0.004 <= best_trial.candidate_parameters["phi"] <= 0.016
+    assert best_trial.feasible
+    assert "payout_boundary" in best_trial.diagnostics
+    assert best_trial.used_numeric_toggles is not None
+    assert best_trial.used_numeric_toggles["boundary_search_method"] in {"bisection", "hybr"}
+
+    artifacts = bundle["artifacts"]
+    for path in artifacts.values():
+        assert path.exists()
+
+    summary_text = artifacts["summary_json"].read_text()
+    assert "coarse-search ranges" not in summary_text or "rounds" in summary_text
+    assert "fallback_numeric_toggles" in summary_text
+    assert "reproduce_command" in summary_text
+
+    best_text = artifacts["best_parameters_json"].read_text()
+    assert "candidate_parameters" in best_text
+    assert "used_numeric_toggles" in best_text
+
+    history_text = artifacts["history_json"].read_text()
+    assert "failed_constraints" in history_text
+    assert "total_score" in history_text
+
+    plot_path = tmp_path / "best_candidate_plot.png"
+    assert plot_path.exists()

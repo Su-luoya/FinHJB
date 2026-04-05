@@ -14,16 +14,22 @@ EXPECTED_REFERENCES = {
     "model-spec-schema.md",
     "numerical-method-selection.md",
     "output-contract.md",
+    "parameter-search-protocol.md",
     "template-selection.md",
     "unsupported-models.md",
     "validation-checklist.md",
 }
 
 EXPECTED_TEMPLATES = {
+    "parameter-search-task.py",
     "single-control-fixed-boundary.py",
     "single-control-boundary-search.py",
     "multi-control-boundary-update.py",
     "multi-control-boundary-search.py",
+}
+
+EXPECTED_SCRIPTS = {
+    "parameter_search_runner.py",
 }
 
 
@@ -54,9 +60,11 @@ def test_skill_frontmatter_and_openai_metadata():
 def test_skill_resources_exist():
     references = {path.name for path in (SKILL_DIR / "references").glob("*.md")}
     templates = {path.name for path in (SKILL_DIR / "assets" / "templates").glob("*.py")}
+    scripts = {path.name for path in (SKILL_DIR / "scripts").glob("*.py")}
 
     assert EXPECTED_REFERENCES <= references
     assert EXPECTED_TEMPLATES <= templates
+    assert EXPECTED_SCRIPTS <= scripts
 
 
 def test_skill_workflow_mentions_environment_and_test_loop():
@@ -73,23 +81,32 @@ def test_skill_workflow_mentions_environment_and_test_loop():
     assert "## Generation Rules" in skill_text
     assert "## Test-Repair Loop" in skill_text
     assert "## Delivery" in skill_text
+    assert "## Parameter-Search Rescue Mode" in skill_text
     assert "environment is not ready for `finhjb`" in skill_text
     assert "parameter symbols are given but usable numeric values are not" in skill_text
     assert "task asks for figures but the actual plot contents are unspecified" in skill_text
     assert "sensitivity analysis with plotting" in skill_text
     assert "Treat unmapped mathematics as a blocker" in skill_text
     assert "Run the post-generation test loop" in skill_text
+    assert "`fixed_parameters`" in skill_text
+    assert "`search_parameters`" in skill_text
+    assert "hard constraints before ranking soft preferences" in skill_text
     assert "`derivative_method`" in schema_text
     assert "no confirmed numeric calibration" in schema_text
     assert "`plot_requirements`" in schema_text
     assert "`project_layout`" in schema_text
+    assert "`parameter_search.fixed_parameters`" in schema_text
+    assert "## Stage 5: Parameter Search Rescue" in schema_text
     assert "`derivation_requirements`" in schema_text
     assert "## Stage 1: Delivery Context" in schema_text
     assert "## Stage 4: Solve Plan" in schema_text
+    assert "target “shape” has not yet been translated into diagnostics" in schema_text
     assert "ask before code generation instead of inventing a baseline" in checklist_text
     assert "ask before writing plotting code instead of guessing the figure layout" in checklist_text
     assert "default to a split file layout" in checklist_text
     assert "list the missing derivation steps explicitly" in checklist_text
+    assert "fixed/search parameter split" in checklist_text
+    assert "translate it into metrics before you search" in checklist_text
     assert "## Stage 1: Direct Blockers Before Coding" in checklist_text
     assert "`post_generation_tests`" in schema_text
     assert "## Hard Gate" in env_text
@@ -97,7 +114,8 @@ def test_skill_workflow_mentions_environment_and_test_loop():
     assert "## Derivative Scheme" in numeric_text
     assert "## Boundary Search Method" in numeric_text
     assert "Choose the finite-difference scheme" in numeric_text
-    assert "produce four deliverables" in output_text
+    assert "five deliverables for rescue-search tasks" in output_text
+    assert "runner plus task-adapter layout summary" in output_text
 
 
 def test_docs_indexes_link_skill_page():
@@ -134,12 +152,16 @@ def test_docs_and_readme_describe_environment_numerics_and_test_loop():
     assert "边界搜索方法如何选" in skill_zh
     assert "## Stage 3: Generation, Testing, And Delivery" in skill_en
     assert "## 第三阶段：生成、测试与交付" in skill_zh
+    assert "parameter-search rescue mode" in skill_en
+    assert "parameter-search rescue mode" in skill_zh
     assert "post-generation test loop" in skill_en
     assert "生成后的测试修复闭环" in skill_zh
     assert "defines parameters but does not give the calibration" in skill_en
     assert "定义了参数，但没有给出数值校准" in skill_zh
     assert "the user requests figures but has not specified what to plot" in skill_en
     assert "要求画图但没有说明具体画什么" in skill_zh
+    assert "`fixed_parameters`" in skill_en
+    assert "`fixed_parameters`" in skill_zh
     assert "File Layout For Sensitivity Analysis And Plotting" in skill_en
     assert "敏感性分析加作图时的文件结构" in skill_zh
     assert "mathematics still needs derivation before it maps into code" in skill_en

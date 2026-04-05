@@ -20,10 +20,11 @@
 - 判断模型是否适合当前一维 FinHJB 接口
 - 确认目标 Python 环境能否导入 `finhjb`
 - 在生成代码前，停下来确认缺失的推导、校准、画图要求或文件结构决策
+- 如果模型已可运行但校准或边界初值仍不可靠，切换到 `parameter-search rescue mode`
 - 在这些选择会影响实现时，明确确认差分格式和边界搜索方法
 - 生成可运行的 FinHJB 代码
 - 在交付前运行生成后的测试修复闭环，并先修复失败项
-- 返回结构化规格摘要、代码、已执行测试摘要和验证清单
+- 返回结构化规格摘要、代码或搜索 bundle、已执行测试/搜索摘要和验证清单
 
 它的核心产出不是复现 BCW，而是把理论模型翻译成代码。
 
@@ -84,6 +85,20 @@
 - 任务同时包含敏感性分析和画图，但交付物的文件结构还不清楚
 
 这也是这个 Skill 最核心的安全规则：不要静默补全缺失的数学步骤或交付要求。
+
+### 什么时候允许进入 Rescue Search
+
+如果模型本身已经能映射成可执行的一维 FinHJB 代码，但参数值或边界初值还不够可靠，这个 Skill 可以切换到 `parameter-search rescue mode`，而不是只要求一个拍脑袋的基准校准值。
+
+进入 rescue mode 前，至少要明确：
+
+- `fixed_parameters`
+- `search_parameters`
+- `hard_constraints`
+- `soft_preferences`
+- `diagnostics_to_extract`
+- `search_budget`
+- `fallback_numeric_toggles`
 
 ## 第二阶段：映射、数值方法与文件结构
 
@@ -174,13 +189,14 @@ uv run python -c "import finhjb"
 4. Skill 提炼出一份结构化模型规格。
 5. Skill 只追问那些会改变代码生成结果的关键问题。
 6. Skill 明确确认差分格式、边界搜索方法和文件结构。
-7. Skill 选择最接近的 FinHJB 模板。
-8. Skill 生成代码。
-9. Skill 运行测试修复闭环，并在必要时先修复再交付。
-10. Skill 输出：
+7. 如果需要，Skill 激活 `parameter-search rescue mode` 并结构化搜索规格。
+8. Skill 选择最接近的 FinHJB 模板。
+9. Skill 生成代码或 runner + adapter 形式的 rescue bundle。
+10. Skill 运行测试修复闭环或搜索闭环，并在必要时先修复再交付。
+11. Skill 输出：
    - 结构化模型规格
-   - 可执行的 FinHJB 代码
-   - 已执行测试与修复摘要
+   - 可执行的 FinHJB 代码或可复用的 rescue-search bundle
+   - 已执行测试与修复摘要或搜索摘要
    - 验证清单
 
 ### 生成后的测试修复闭环

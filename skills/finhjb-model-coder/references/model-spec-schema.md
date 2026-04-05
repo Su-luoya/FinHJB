@@ -14,6 +14,8 @@ These fields decide whether runnable delivery is even possible yet.
   Whether plots are requested, which quantities should be visualized, output file expectations, and any remaining figure questions that still require user confirmation.
 - `project_layout`
   Whether the deliverable should stay single-file or be split into separate solve, data, and plotting files. Sensitivity-analysis-plus-plotting tasks should default to the split layout.
+- `parameter_search`
+  Whether rescue search is off or active, which parameters are fixed, which can move, what counts as feasible, how preferences are scored, and which limited numeric fallbacks are allowed.
 
 ## Stage 2: Economic Model
 
@@ -58,6 +60,27 @@ These fields define how the implementation will run.
 - `diagnostics`
   Quantities that should be checked after the solve to judge whether the implementation is healthy.
 
+## Stage 5: Parameter Search Rescue
+
+Use this block only when the model is runnable but the parameter choice is not yet reliable.
+
+- `parameter_search.mode`
+  Use `off` for ordinary code generation and `rescue` when the skill should generate a structured search bundle.
+- `parameter_search.fixed_parameters`
+  Parameters the user requires the skill to hold fixed during rescue search.
+- `parameter_search.search_parameters`
+  Each searchable parameter with at least `name`, `low`, `high`, `scale`, `fixed`, and `initial_center`.
+- `parameter_search.hard_constraints`
+  Must-pass conditions, each with at least `name`, `metric`, `operator`, `target_or_interval`, and `tolerance`.
+- `parameter_search.soft_preferences`
+  Ranked preferences, each with at least `name`, `metric`, `target`, `weight`, and `scoring_rule`.
+- `parameter_search.diagnostics_to_extract`
+  The metrics that should be computed from each candidate solve before feasibility filtering and scoring.
+- `parameter_search.search_budget`
+  Coarse sample count, keep ratio, shrink rounds, max candidates, and any early-stop rule.
+- `parameter_search.fallback_numeric_toggles`
+  A small predeclared set of allowed numeric fallback toggles for solver failures, such as `boundary_search_method` or grid size.
+
 ## Blocking Gaps
 
 Treat these as code-generation blockers unless the user explicitly authorizes a simplifying assumption:
@@ -73,6 +96,9 @@ Treat these as code-generation blockers unless the user explicitly authorizes a 
 - the task requests sensitivity analysis plus plotting but the file layout is still ambiguous
 - the model clearly needs an outer-loop boundary method but the target condition is unspecified
 - the diffusion degeneracy pattern is unclear but the derivative scheme choice would change the code
+- rescue search is requested but the skill does not yet know which parameters are fixed and which are allowed to move
+- rescue search is requested but the hard constraints versus soft preferences split is still unspecified
+- rescue search is requested but the target “shape” has not yet been translated into diagnostics
 
 ## Defaultable Items
 
@@ -176,10 +202,41 @@ These may be filled with explicit, labeled defaults if the user does not care:
 ## Diagnostics
 - ...
 
+## Parameter Search
+- mode: off / rescue
+- fixed_parameters:
+- search_parameters:
+  - name:
+  - low:
+  - high:
+  - scale:
+  - fixed:
+  - initial_center:
+- hard_constraints:
+  - name:
+  - metric:
+  - operator:
+  - target_or_interval:
+  - tolerance:
+- soft_preferences:
+  - name:
+  - metric:
+  - target:
+  - weight:
+  - scoring_rule:
+- diagnostics_to_extract:
+- search_budget:
+  - coarse_samples:
+  - keep_ratio:
+  - shrink_rounds:
+  - max_candidates:
+  - early_stop_score:
+- fallback_numeric_toggles:
+
 ## Remaining Questions
 - ...
 ```
 
 ## Output Rule
 
-Before generating code, restate the specification in clear prose using the same economic vocabulary the user used, then map the paper symbols to FinHJB names. Before final delivery, append the executed test-and-repair summary from the post-generation loop.
+Before generating code, restate the specification in clear prose using the same economic vocabulary the user used, then map the paper symbols to FinHJB names. If rescue mode is active, restate the fixed parameters, search parameters, hard constraints, soft preferences, and search budget before generating the search bundle. Before final delivery, append the executed test-and-repair summary or executed search summary, whichever applies.

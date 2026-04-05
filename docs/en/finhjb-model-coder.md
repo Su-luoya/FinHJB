@@ -20,10 +20,11 @@ The skill is designed to:
 - decide whether the model fits the current one-dimensional FinHJB interface
 - confirm that the target Python environment can import `finhjb`
 - stop and confirm missing derivations, calibrations, plotting requirements, or layout decisions before code generation
+- switch into `parameter-search rescue mode` when the model is runnable but the calibration or boundary guesses are still unreliable
 - confirm the derivative scheme and boundary-search method when those choices affect the implementation
 - generate runnable FinHJB code
 - run a post-generation test loop and repair failures before delivery
-- return a structured specification summary, the code, an executed test summary, and a validation checklist
+- return a structured specification summary, the code or rescue-search bundle, an executed test/search summary, and a validation checklist
 
 The core output is not a BCW reproduction. The core output is theory-to-code translation.
 
@@ -84,6 +85,27 @@ The skill should stop and ask before code generation when:
 - the task combines sensitivity analysis with plotting but the output layout is still unclear
 
 This is the main safety rule of the skill: do not silently fill in missing mathematics or deliverable requirements.
+
+### When Rescue Search Is Allowed
+
+Once the model is already runnable, the skill may switch into `parameter-search rescue mode` instead of insisting on one guessed baseline calibration.
+
+Use rescue mode when:
+
+- the environment is ready
+- the model already maps into executable FinHJB code
+- the remaining uncertainty is about parameter values or boundary guesses
+- the user can separate must-pass conditions from nice-to-have shape preferences
+
+Before generating a search artifact, the skill should confirm:
+
+- `fixed_parameters`
+- `search_parameters`
+- `hard_constraints`
+- `soft_preferences`
+- `diagnostics_to_extract`
+- `search_budget`
+- `fallback_numeric_toggles`
 
 ## Stage 2: Mapping, Methods, And Layout
 
@@ -174,13 +196,14 @@ The intended workflow is:
 4. The skill extracts a structured model specification.
 5. The skill asks only the blocking questions that change code generation.
 6. The skill confirms the derivative scheme, boundary-search method, and file layout.
-7. The skill chooses the closest FinHJB template.
-8. The skill generates code.
-9. The skill runs a test loop and repairs failures before delivery.
-10. The skill returns:
+7. If needed, the skill activates `parameter-search rescue mode` and structures the search spec.
+8. The skill chooses the closest FinHJB template.
+9. The skill generates code or a runner-plus-adapter rescue bundle.
+10. The skill runs a test loop or search loop and repairs failures before delivery.
+11. The skill returns:
    - a structured model spec
-   - executable FinHJB code
-   - an executed test-and-repair summary
+   - executable FinHJB code or a reusable rescue-search bundle
+   - an executed test-and-repair summary or executed search summary
    - a validation checklist
 
 ### Post-Generation Test Loop

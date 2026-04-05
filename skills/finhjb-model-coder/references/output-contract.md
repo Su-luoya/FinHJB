@@ -1,6 +1,6 @@
 # Output Contract
 
-Every successful run of this skill should produce four deliverables.
+Every successful run of this skill should produce four deliverables for ordinary code-generation tasks, or five deliverables for rescue-search tasks.
 
 ## Deliverable 1: Structured Specification Summary
 
@@ -20,6 +20,9 @@ Organize the summary around the same stages used internally:
 - explicit note when a parameter value had to be confirmed with the user before code generation
 - explicit note when plotting requirements had to be confirmed with the user before code generation
 - explicit note when the task required a split multi-file layout for sensitivity analysis plus plotting
+- explicit note when `parameter-search rescue mode` was activated
+- the fixed/search parameter split when rescue mode is active
+- the hard constraints, soft preferences, diagnostics, search budget, and fallback numeric toggles when rescue mode is active
 - explicit assumptions or unresolved items
 
 ## Deliverable 2: Executable FinHJB Code
@@ -46,6 +49,14 @@ Use a split layout with at least:
 - a data-save or data-export file
 - a plotting file
 
+### Rescue-Search Tasks
+
+Use a split layout with at least:
+
+- the generic Python search runner
+- a task-specific adapter or config layer
+- optional plotting support for the best feasible candidate
+
 ### Code-Level Expectations
 
 Regardless of layout:
@@ -70,7 +81,20 @@ Include:
 - repairs applied before final delivery
 - residual risks or untested branches that still remain
 
-## Deliverable 4: Validation Checklist
+## Deliverable 4 For Rescue Mode: Executed Search Summary
+
+Include:
+
+- fixed parameters and search parameters
+- hard-constraint feasibility rule
+- soft-preference scoring rule
+- coarse-search ranges
+- shrink-and-rerun history
+- numeric fallback toggles that were allowed
+- best feasible candidate and several strong alternatives
+- saved artifact locations for tables, summaries, and plots
+
+## Deliverable 4 Or 5: Validation Checklist
 
 Include:
 
@@ -84,12 +108,14 @@ Include:
 
 - `finhjb_<model-slug>.py`
 - `finhjb_<model-slug>_spec.md`
+- `parameter_search_<model-slug>.py`
 
 When the deliverable is split:
 
 - `solve_<model-slug>.py`
 - `export_<model-slug>_data.py`
 - `plot_<model-slug>.py`
+- `search_task_<model-slug>.py`
 
 ## Final Answer Format
 
@@ -99,6 +125,14 @@ Use this order:
 2. code block or code layout summary
 3. executed test-and-repair summary
 4. validation checklist
+
+Use this order for rescue-search tasks:
+
+1. specification summary
+2. runner plus task-adapter layout summary
+3. executed search summary
+4. recommended parameter sets
+5. validation checklist
 
 If the model is unsupported, replace the code block with:
 

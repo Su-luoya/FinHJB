@@ -18,6 +18,10 @@ Ask questions only when the answer will materially change the generated FinHJB i
 - If the document names parameters but does not give usable numeric values, which baseline calibration should the runnable version use?
 - If the user wants plots or figures, which quantities should be plotted and how should the outputs be organized?
 - If the task combines sensitivity analysis with plotting, should the deliverable be split into separate solve, data-save, and plotting files?
+- If the model is runnable but the parameters are not reliable, which parameters must stay fixed and which may be searched?
+- For each searchable parameter, what interval and scale should the rescue search use?
+- Which conditions are mandatory hard constraints and which are only soft preferences?
+- If the user describes a desired figure or state shape, which computable diagnostics should stand in for that description?
 - What counts as a successful solve in economic or numerical terms?
 
 ## Stage 2: Paper-Excerpt Follow-Ups
@@ -30,6 +34,7 @@ Ask questions only when the answer will materially change the generated FinHJB i
 - Ask whether sensitivity outputs should be saved and plotted through separate scripts rather than a single notebook-style file.
 - Ask for pasted text when the FOC, Kuhn-Tucker condition, or regime split is only shown in an image.
 - Ask the user whether they want the first runnable implementation to stay close to the paper notation or to adopt more descriptive variable names.
+- Ask whether rescue mode should return a reusable search runner plus task adapter, rather than only one hard-coded baseline.
 
 ## Stage 3: Safe Defaults
 
@@ -41,6 +46,8 @@ If the model is otherwise fully specified, you may propose and label these defau
 - `LinearInitialValue` unless the boundary geometry clearly calls for `QuadraticInitialValue`
 - `boundary_search(method="bisection")` for one or two targets with credible brackets
 - `boundary_search(method="hybr")` for three or more targets, or when the smaller-target default fails the post-generation test loop
+- `search_budget = {coarse_samples: 5, shrink_rounds: 1, keep_ratio: 0.4}` for a first-pass rescue search
+- a small numeric fallback set such as `bisection -> hybr` or `number=400 -> number=800`, but only for solver failures
 
 ## Stage 4: Do Not Silently Assume
 
@@ -55,6 +62,8 @@ If the model is otherwise fully specified, you may propose and label these defau
 - the user's environment is ready just because the repository contains FinHJB source code
 - `central` is always acceptable near a degenerate diffusion boundary
 - `bisection` should remain the final method after testing if the generated solve clearly fails under it
+- a vague request like “make the figure look smoother” is already a usable rescue-search objective without turning it into diagnostics
+- every numeric setting should be thrown into the rescue search just because the first candidate failed
 
 ## Question Style
 
@@ -65,4 +74,6 @@ If the model is otherwise fully specified, you may propose and label these defau
 - If the user asked for plots but did not specify what to plot, ask before writing plotting code instead of guessing the figure layout.
 - If the model does not yet map directly into code, list the missing derivation steps explicitly and confirm them before code generation.
 - If the task includes sensitivity analysis plus plotting, default to a split file layout and make that explicit in the spec.
+- If rescue mode is appropriate, ask for the fixed/search parameter split, hard constraints, soft preferences, diagnostics, and budget before generating the runner.
+- If the user describes a preferred state shape or figure shape, translate it into metrics before you search.
 - After code generation, do not stop at "here is the code." Run the test loop, and only ask follow-up questions if the failure is caused by missing model information rather than a fixable implementation issue.

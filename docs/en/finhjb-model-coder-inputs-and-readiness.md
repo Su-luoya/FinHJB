@@ -42,6 +42,8 @@ The skill should stop and ask before code generation when:
 - the mathematics still needs derivation before it maps into code
 - the task asks for figures but the actual plot contents are unspecified
 - the task combines sensitivity analysis with plotting but the output layout is still unclear
+- rescue search is requested but the skill still does not know the fixed/search parameter split
+- rescue search is requested but the desired “shape” has not been translated into diagnostics
 
 ## Environment Readiness
 
@@ -86,6 +88,21 @@ Use this heuristic:
 - 3 or more targets: start with `hybr` or another multidimensional root solver
 
 If the first default fails the test-repair loop, the final implementation should be upgraded explicitly.
+
+## Rescue Search Inputs
+
+If the model is already runnable but the calibration or boundary guesses are not trustworthy, `finhjb-model-coder` can switch into `parameter-search rescue mode`.
+
+The minimum extra inputs are:
+
+- which parameters must stay fixed
+- which parameters may move, with a range and scale
+- which conditions are hard constraints
+- which outcomes are just soft preferences
+- which diagnostics should be extracted from each solve
+- how large the initial search budget should be
+
+The skill should not search until vague shape requests such as “make the plot smoother” have been turned into explicit diagnostics.
 
 ## Related Pages
 

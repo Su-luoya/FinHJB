@@ -7,8 +7,8 @@
 正确的交付目标不是“看起来像样的代码”，而是：
 
 - 一份结构化模型摘要
-- 可执行的 FinHJB 代码
-- 一份已执行测试摘要
+- 可执行的 FinHJB 代码或 rescue-search runner bundle
+- 一份已执行测试或搜索摘要
 - 一份第一次求解的验证清单
 
 ## 典型交互流程
@@ -20,9 +20,10 @@
 3. Skill 确认环境是否就绪。
 4. Skill 只追问那些会改变代码生成结果的关键问题。
 5. Skill 显式确认差分格式和边界搜索设置。
-6. Skill 生成代码。
-7. Skill 运行 post-generation test loop。
-8. Skill 先修复可修复的失败项，再正式交付。
+6. 如果需要校准救援，Skill 先结构化 fixed parameters、search parameters、hard constraints 和 soft preferences。
+7. Skill 生成代码或 rescue-search bundle。
+8. Skill 运行 post-generation test loop 或搜索闭环。
+9. Skill 先修复可修复的失败项，再正式交付。
 
 ## 生成后的测试修复闭环
 
@@ -34,6 +35,13 @@
 - 如果任务要求图或摘要文件，再检查这些产物是否真的生成
 
 如果这些检查因为实现问题而失败，Skill 应先修复代码并重跑。
+
+如果启用了 rescue mode，输出 bundle 还应该包含：
+
+- 一张机器可读的搜索历史表
+- 最优参数配置
+- 一份缩圈重搜过程摘要
+- 可选的最佳候选图形或诊断输出
 
 ## 文件结构规则
 

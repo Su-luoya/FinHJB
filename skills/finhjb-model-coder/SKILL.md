@@ -30,6 +30,8 @@ Read only the references needed for the current stage.
   Use when translating economics and notation into FinHJB interfaces.
 - `references/numerical-method-selection.md`
   Use before locking derivative schemes, boundary-search methods, or post-test method repairs.
+- `references/parameter-search-protocol.md`
+  Use when the model is already runnable but the parameter choice is unreliable enough to require a structured rescue search.
 - `references/unsupported-models.md`
   Use when the model looks out of scope or only partially mappable.
 
@@ -51,9 +53,32 @@ Read only the references needed for the current stage.
 2. Check scope. Current FinHJB here is one-dimensional; do not fake multidimensional support.
 3. Confirm environment readiness before promising runnable code.
 4. Identify blockers and ask only the questions that materially change the implementation.
-5. Lock the model mapping, derivation status, numerical methods, plotting requirements, and file layout.
-6. Choose the closest core template and generate the code.
-7. Run the post-generation test loop, repair failures, and only then deliver the artifact.
+5. If the model is runnable but the calibration or boundary guesses are unreliable, switch into `parameter-search rescue mode` instead of asking for only one hard-coded baseline.
+6. Lock the model mapping, derivation status, numerical methods, plotting requirements, file layout, and any rescue-search requirements.
+7. Choose the closest core template and generate the code or the rescue-search bundle.
+8. Run the post-generation test loop, repair failures, and only then deliver the artifact.
+
+## Parameter-Search Rescue Mode
+
+Use rescue mode only when the model already maps into runnable one-dimensional FinHJB code and the remaining uncertainty is about parameter choice or boundary guesses rather than missing mathematics.
+
+Before generating a rescue-search artifact, confirm or structure these fields explicitly:
+
+- `fixed_parameters`
+- `search_parameters`
+- `hard_constraints`
+- `soft_preferences`
+- `diagnostics_to_extract`
+- `search_budget`
+- `fallback_numeric_toggles`
+
+When rescue mode is active:
+
+- keep the search space focused on economic parameters and boundary guesses by default
+- keep numerical methods fixed unless a predeclared fallback toggle is needed for numeric failures
+- prefer a coarse deterministic sweep plus shrink-and-rerun rather than opaque black-box optimization
+- translate figure-shape or state-shape requests into explicit diagnostics before searching
+- generate a reusable Python search runner plus a task-specific adapter/config layer instead of only a one-off hard-coded script
 
 ## Hard Blockers
 
@@ -65,6 +90,8 @@ Treat these as blockers for runnable delivery unless the user explicitly confirm
 - the mathematics does not yet map directly into implementation-ready formulas and still needs derivation
 - sensitivity analysis plus plotting is requested but the file layout is still ambiguous
 - the model is outside current FinHJB scope
+- rescue search is requested but the user has not separated hard constraints from soft preferences
+- rescue search is requested but the desired state or figure shape has not been translated into diagnostics
 
 When a blocker exists, say so explicitly. Do not silently repair the missing math, calibration, or plotting spec inside the code.
 
@@ -78,8 +105,12 @@ When a blocker exists, say so explicitly. Do not silently repair the missing mat
 - Treat missing economic parameter values as a hard blocker unless the user explicitly confirms the baseline calibration.
 - Treat unspecified plotting requirements as a blocker whenever figures are requested.
 - Treat unmapped mathematics as a blocker. If derivation is still needed, list the missing derivation steps and confirm them with the user before generating code.
+- In rescue mode, generate a reusable Python runner plus a task adapter that exposes `build_solver(...)`, `extract_diagnostics(...)`, `check_constraints(...)`, and `score_preferences(...)`.
+- In rescue mode, filter candidates by hard constraints before ranking soft preferences.
+- In rescue mode, search economic parameters and boundary guesses first; do not silently promote every numeric choice into a free search dimension.
 - Use `central` only when the diffusion term stays materially away from zero at both edges. Consider `forward` for left-edge degeneracy and `backward` for right-edge degeneracy.
 - If `boundary_search()` has one or two endogenous targets, start from `bisection` when the brackets are credible. For three or more targets, or when the smaller-target default fails the post-generation test loop, promote the final method to `hybr` or another supported multidimensional backend and say why.
+- If rescue mode needs numeric fallbacks, keep them to a small predeclared toggle set such as boundary-search backend or grid size.
 - Keep comments short and useful. Explain equation-to-code mappings, method choices, and any post-test repairs.
 
 ## Test-Repair Loop
@@ -90,16 +121,25 @@ Before final delivery, run as many of these as the task requires:
 - `Solver(...)` construction
 - at least one baseline solve
 - figure and summary artifact checks when those artifacts are part of the deliverable
+- rescue-search artifact checks when rescue mode was part of the deliverable
 
 If the generated code fails for fixable reasons, repair it and rerun the loop. If the failure is blocked by missing equations, missing derivations, missing calibration values, missing plotting requirements, missing environment, or unsupported model structure, stop and surface that blocker.
 
 ## Delivery
 
-Emit the final answer in four parts:
+Emit the final answer in four parts for ordinary code-generation tasks:
 
 1. structured specification summary
 2. executable FinHJB code
 3. executed test-and-repair summary
 4. validation checklist
+
+Emit the final answer in five parts for rescue-search tasks:
+
+1. structured specification summary, including fixed parameters, search parameters, hard constraints, and soft preferences
+2. generated search runner plus task-specific adapter/config layer
+3. executed search summary
+4. recommended parameter sets, including the best feasible combination and a few alternatives
+5. validation checklist
 
 Use suggested names such as `finhjb_<model-slug>.py` and `finhjb_<model-slug>_spec.md` when the user has not provided a naming convention.
